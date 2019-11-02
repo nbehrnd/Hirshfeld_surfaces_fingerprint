@@ -24,9 +24,9 @@
 ! ifort fingerprint.F90 -o fingerprint.x
 !
 ! Usage instructions:
-! ./fingerprint.x  input.csx [standard | translated | extendeed ] output.dat
+! ./fingerprint.x  input.cxs [standard | translated | extended] output.dat
 !
-! input.csx contains the Hirshfeld surfaces generated using the 
+! input.cxs contains the Hirshfeld surfaces generated using the 
 ! CrystalExplorer code at very high resolution by unchecking 
 ! the Remove working files option with the Expert plane 
 ! of the Preferences dialog box
@@ -89,7 +89,7 @@ program fingerprint
 ! Parameters for the definition of the grid as in Crystal Explorer
   dx=0.01d0
 
-! Reading the first command line argument - csx input filename
+! Reading the first command line argument - cxs input filename
   call getarg(1,inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
   open(11,file=inpfile,status='old',form='formatted')
