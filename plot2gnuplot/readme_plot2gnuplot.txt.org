@@ -41,4 +41,18 @@ At present, the sub-folder contains these scripts:
   reorganized, too.  Assuming a 300 dpi resolution, the .png bitmap
   (3674x3229 px) is about 12.2 x 10.8 in or about 4.8 x 4.2 cm wide.
 
++ plot_finger_pdf.sh, added 2019-11-04.
+
+  Derived from plot_finger_png.sh to provide a fingerprint map with a
+  color scheme as with CrystalExplorer (version 17.5) in the vector
+  format .pdf.  Canvas size originally set up to 6.0 x 6.0 cm (about
+  2.4 x 2.4 in).
+
++ plot_diff_finger_pdf.sh, added 2019-11-04.
+
+  Derived from plot_finger_pdf.sh and plot_diff_finger_png.sh to
+  provide an export in the resolution independent .pdf format of the
+  difference map of two 2D fingerprint maps.  Canvas size originally
+  set up to 6.0 x 6.0 cm (about 2.4 x 2.4 in).
+
 END
