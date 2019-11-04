@@ -61,7 +61,8 @@
     On the CLI, your instructions are:
     #+BEGIN_SRC shell
       gfortran fingerprint.F90 -o fingerprint.x
-      ./fingerprint.x in.cxs [standard | translated | extended] out.dat
+      ./fingerprint.x in.cxs [standard | translated | extended] out.dat  # options
+      ./fingerprint.x input.cxs standart output.dat  # specific example
     #+END_SRC
 
   + The difference between two normalized 2D Hirshfeld maps, for
@@ -72,25 +73,39 @@
     
     On the CLI, your instructions are:
     #+BEGIN_SRC shell
-	    gcc diff_finger.c -o diff_finger
-	    ./diff_finger map_A.dat map_B.dat > diff_map_A_map_B.dat
+      gcc diff_finger.c -o diff_finger
+      ./diff_finger map_A.dat map_B.dat > diff_map_A_map_B.dat
     #+END_SRC
     For obvious reasons only maps of same type (standard, translated,
     extended) should be compared this way with each other.
 
-  + Aiming for a representation quite similar to the one by
-    CrystalExplorer, the normalized 2D fingerprint maps may be
-    generated with =plot_finger.sh=.  The difference of two normalized
-    2D fingerprint maps may be plot in a blue-white-red scale with
-    =plot_diff_finger.sh=.  /Possibly/ both scripts have to be
-    provided the 'executable bit' prior to their deployment, which may
-    be adjusted at a local level without administrator privileges.
-    Both scripts are set up to generate a 4094 \times 4094 px wide
-    .png file.
+  + Aiming for a visual representation of the results, sub-folder
+    =plot2gnuplot= contains two groups of auxilliary bash scripts to
+    relay the results stored in =.dat= files to the freely available
+    =gnuplot= in either bitmap (.png) or vector (.pdf) format:
+    + Similar to CrystalExplorer, the individual normalized 2D
+      fingerprint maps may be generated with scripts like
+      =plot_finger.sh=.
+
+    + The difference of two normalized 2D fingerprint maps may be plot
+      in a blue-white-red scale with scripts like
+      =plot_diff_finger.sh=.
+    /Possibly/ both scripts have to be provided the 'executable bit'
+    prior to their deployment, which may be adjusted at a local level
+    without administrator privileges.  A local readme provides further
+    information about them.
 
     Hence, your instructions on the CLI follow the pattern of:
     #+BEGIN_SRC shell
       chmod u+x plot_finger.sh           # provision of the executable bit
       ./plot_finger.sh example.dat       # plot of a 2D fingerprint map
       ./plot_diff_finger.sh example.dat  # plot the difference fingerprint map
+    #+END_SRC
+
+  + Ruby script =sum_abs_diffs.rb= assignes an absolute value by
+    "summing up the absolute value of each point in the difference
+    plot between normalized 2D fingerplots [when] compared with each
+    other."  It is launched from the CLI by
+    #+BEGIN_SRC ruby
+      ruby sum_abs_diffs.rb example.dat
     #+END_SRC
