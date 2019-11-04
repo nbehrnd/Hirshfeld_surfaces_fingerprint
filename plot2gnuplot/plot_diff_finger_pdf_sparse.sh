@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# name:    plot_diff_finger_pdf.sh
+# name:    plot_diff_finger_pdf_sparse.sh
 # authors: Paolo Raiteri, Andrew Rohl, Norwid Behrnd
 # license: GPLv2, or later
 # edit:    2019-11-04 (YYYY-MM-DD)
@@ -13,11 +13,16 @@
 # the plot provided as .pdf vector file.  The color scheme deployed in the
 # map discerns blue (negative), white (zero-level), and red (positive) for
 # the difference of normalized fingerprint_A minus normalized fingerprint_B.
+# By virtue of conditional printing, only pixels with an absolute z-value
+# greater than zero will be considered for the scatter plot.  Without
+# loosing information from the .dat file read, this translates into the
+# generation of a much smaller .pdf file.  Thanks to Ethan Merrit
+# suggesting this improvement.
 #
 # On the CLI, your instructions follow the pattern of:
 #
-# chmod u+x plot_diff_finger_pdf.sh      # provision of the executable bit
-# ./plot_diff_finger_pdf.sh example.dat  # generation of the .pdf plot
+# chmod u+x plot_diff_finger_pdf_sparse.sh      # provision of the executable bit
+# ./plot_diff_finger_pdf_sparse.sh example.dat  # generation of the .pdf plot
 #
 # to generate example.pdf.
 #
@@ -34,6 +39,11 @@ gnuplot  -e "input = '$1';
              root = substr(input, 1, len_root);
              output_file = root . '.pdf';
              set output(output_file);
+             stats input u 1 nooutput;
+             x_min = STATS_min;
+             y_min = STATS_min;
+             x_max = STATS_max;
+             y_max = STATS_max;
              set term pdfcairo size 6cm,6cm font 'Arial,8' enha lw 1;
              set grid lw 0.5; set size square;
              set xtics 0.4,0.2; set ytics 0.4,0.2;
@@ -46,6 +56,8 @@ gnuplot  -e "input = '$1';
              set palette defined (-1 'blue', 0 'white', 1 'red');
              set g;
              set cbrange [-0.025:0.025];
-             sp'$1' u 1:2:3  w p pt 5 ps 0.001 lc palette z"
+             set xrange [x_min:x_max];
+             set yrange [y_min:y_max];
+             sp '$1' u 1:2:((abs(\$3)>0) ? \$3 : NaN) w p pt 5 ps 0.001 lc palette z"
 
 # END

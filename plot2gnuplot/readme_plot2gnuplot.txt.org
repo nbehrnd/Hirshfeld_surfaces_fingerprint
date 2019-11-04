@@ -55,4 +55,54 @@ At present, the sub-folder contains these scripts:
   difference map of two 2D fingerprint maps.  Canvas size originally
   set up to 6.0 x 6.0 cm (about 2.4 x 2.4 in).
 
++ plot_finger_pdf_sparse.sh, added 2019-11-04.
+
+  Derived from plot_finger_pdf.sh.  As indicated by Ethan Merrit,
+  gnuplot includes the concept of 'conditional printing', which here
+  considers only tiles to contribute to the scatter plot if their
+  z-value is greater than zero.  By visual inspection, the difference
+  may be invisible if the threshold criterion's color representation
+  (here, 0-level = white) equates the visual perception (e.g., white
+  paper backgroun).  However, the size of a .pdf map generated this
+  way may be less than a half of a 'classic map', with similar gain in
+  overall processing, too.
+
+  Resolution independent .pdf export with a canvas originally set up
+  to 6.0 x 6.0 cm (about 2.4 x 2.4 in).
+
++ plot_diff_finger_pdf_sparse.sh, added 2019-11-04.
+
+  Derived from plot_diff_finger_pdf.sh and Ethan Merrit's hint about
+  'conditional plotting'.  Contrasting to the former example then
+  using an unilateral criterion, now a bilateral criterion is deployed
+  (the absolute value of z).
+
+  Resolution independent .pdf export with a canvas originally set up
+  to 6.0 x 6.0 cm (about 2.4 x 2.4 in).
+
++ plot_finger_png_sparse.sh, added 2019-11-04.
+
+  Derived from plot_finger_png.sh, starting with an otherwise
+  transparent .png 4096x4096 px bitmap and requesting the 'conditional
+  printing'.  In comparison to the output by analogue output script
+  plot_finger_pdf_sparse.sh, the volume of the .png file actually is
+  10...20% greater than the .pdf file.
+
+  Assuming a 300 dpi resolution, the .png bitmap (3674x3229 px)
+  eventually provided is about 12.2 x 10.8 in (about 4.8 x 4.2 cm).
+
++ plot_diff_finger_png_sparse.sh, added 2019-11-04.
+
+  Derived from plot_diff_finger_png.sh, modified along the patterns in
+  script plot_finger_png_sparse.sh (transparent canvas for pngcairo)
+  as well as conditional printing with bilateral threshold (as in
+  script plot_diff_finger_pdf_sparse.sh.  Savings in file size in
+  reference to a conventional .png exported map are small (about 10%),
+  depending on picture viewer, however, the visual recognition of
+  pixels annotated by pale red or pale blue only may be easier than
+  with a bright white background.
+
+  Assuming a 300 dpi resolution, the .png bitmap (3674x3229 px)
+  eventually provided is about 12.2 x 10.8 in (about 4.8 x 4.2 cm).
+
 END
