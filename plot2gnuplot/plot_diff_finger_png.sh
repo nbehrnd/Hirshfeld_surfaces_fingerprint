@@ -26,23 +26,26 @@
 # instruction) on the fly by pngcairo to box of 3672 x 3229 px (about
 # 12.2 x 10.8 in or about 4.8 x 4.2 cm).
 
-gnuplot  -e "input = '$1';
-             len_root = strlen(input) - 4;
-             root = substr(input, 1, len_root);
-             output_file = root . '.png';
-             set output(output_file);
-             set term pngcairo size 4096,4096 crop font 'Arial,64' enha lw 10;
-             set grid lw 0.5; set size square;
-             set xtics 0.4,0.2; set ytics 0.4,0.2;
-             set xtics format '%2.1f'; set ytics format '%2.1f';
-             set label 'd_e' at graph 0.05,0.90 left front font 'Arial,104';
-             set label 'd_i' at graph 0.90,0.05 left front font 'Arial,104';
-             set label root at graph 0.05,0.05 left front font 'Arial,104' noenhanced;
-             set pm3d map;
-             unset key;
-             set palette defined (-1 'blue', 0 'white', 1 'red');
-             set g;
-             set cbrange [-0.025:0.025];
-             sp'$1' u 1:2:3  w p pt 5 ps 0.05 lc palette z"
+gnuplot  -e "
+  input = '$1';
+  len_root = strlen(input) - 4;
+  root = substr(input, 1, len_root);
+  output_file = root . '.png';
+  set output(output_file);
+
+  set term pngcairo size 4096,4096 crop font 'Arial,64' enha lw 10;
+  set grid lw 0.5; set size square;
+  set xtics 0.4,0.2; set ytics 0.4,0.2;
+  set xtics format '%2.1f'; set ytics format '%2.1f';
+  set label 'd_e' at graph 0.05,0.90 left front font 'Arial,104';
+  set label 'd_i' at graph 0.90,0.05 left front font 'Arial,104';
+  set label root at graph 0.05,0.05 left front font 'Arial,104' noenhanced;
+
+  set pm3d map;
+  unset key;
+  set palette defined (-1 'blue', 0 'white', 1 'red');
+  set g;
+  set cbrange [-0.025:0.025];
+  sp'$1' u 1:2:3  w p pt 5 ps 0.05 lc palette z"
 
 # END

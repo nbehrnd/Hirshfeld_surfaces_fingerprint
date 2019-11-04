@@ -28,21 +28,24 @@
 #
 # a .pdf with a box of 2.18 x 1.86 in (about 5.5 x 4.7 cm).
 
-gnuplot  -e "input = '$1';
-             len_root = strlen(input) - 4;
-             root = substr(input, 1, len_root);
-             output_file = root . '.pdf';
-             set output(output_file);
-             set term pdfcairo size 6cm,6cm font 'Arial,8' enha lw 1;
-             set grid lw 0.5; set size square;
-             set xtics 0.4,0.2; set ytics 0.4,0.2;
-             set xtics format '%2.1f'; set ytics format '%2.1f';
-             set label 'd_e' at graph 0.07,0.90 left front;
-             set label 'd_i' at graph 0.90,0.07 left front;
-             set label root at graph 0.07,0.07 left front noenhanced;
-             set pm3d map;
-             unset key;
-             set palette defined (0  1.0 1.0 1.0, \
+gnuplot  -e "
+  input = '$1';
+  len_root = strlen(input) - 4;
+  root = substr(input, 1, len_root);
+  output_file = root . '.pdf';
+  set output(output_file);
+
+  set term pdfcairo size 6cm,6cm font 'Arial,8' enha lw 1;
+  set grid lw 0.5; set size square;
+  set xtics 0.4,0.2; set ytics 0.4,0.2;
+  set xtics format '%2.1f'; set ytics format '%2.1f';
+  set label 'd_e' at graph 0.07,0.90 left front;
+  set label 'd_i' at graph 0.90,0.07 left front;
+  set label root at graph 0.07,0.07 left front noenhanced;
+
+  set pm3d map;
+  unset key;
+  set palette defined (0  1.0 1.0 1.0, \
                    0.00001  0.0 0.0 1.0, \
                    1  0.0 0.5 1.0, \
                    2  0.0 1.0 1.0, \
@@ -50,8 +53,8 @@ gnuplot  -e "input = '$1';
                    4  1.0 1.0 0.0, \
                    5  1.0 0.5 0.0, \
                    6  1.0 0.0 0.0 );
-             set g;
-             set cbrange [0:0.08];
-             sp'$1' u 1:2:3  w p pt 5 ps 0.001 lc palette z"
+  set g;
+  set cbrange [0:0.08];
+  sp'$1' u 1:2:3  w p pt 5 ps 0.001 lc palette z"
 
 # END
