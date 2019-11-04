@@ -1,0 +1,44 @@
+# name:    readme_plot2gnuplot.txt.org
+# author:  Norwid Behrnd
+# license: GPLv2
+# edit:    2019-11-04 (YYYY-MM-DD)
+
+This folder, plot2gnuplot, contains a few bash scripts requiring a
+.dat data file and gnuplot.  Because these relate to visualization,
+rather than to the computation the Fortran, C and Ruby code provide,
+they were brought into this sub-folder.  This readme provides a brief
+description about these scripts relaying to gnuplot.  They either
+
++ provide 2D fingerprint maps of Hirshfeld surfaces as already
+  introduced by CrystalExplorer.  Their expected input is the .dat
+  file provided by the compiled Fortan executable of fingerprint.F90.
+  These scripts are named in line of plot_finger.  Or
+
++ provide difference maps of 2D fingerprints.  Their expected input is
+  the .dat file provided by the compiled C executable diff_finger.c.
+  These scripts are named in line of plot_diff_finger.
+
+At present, the sub-folder contains these scripts:
+
++ plot_finger_png.sh, added 2019-11-03.
+
+  Initially provided as plot_finger by Paolo Raiteri and Andrew Rohl
+  to provide a fingerprint map in a color scheme as seen in
+  CrystalExplorer (version 17.5).  After regrouping the instructions,
+  the .png generated now equally contains both the de and di label, as
+  well as the stem of the file read.  In reference to the original,
+  the point size of was lowered to prevent overlap of the tiles within
+  the scatter plot.  Assuming a 300 dpi resolution, the bitmap
+  (3674x3229 px) is about 12.2 x 10.8 in or about 4.8 x 4.2 cm wide.
+
++ plot_diff_finger_png.sh, added 2019-11-03.
+
+  Initially set up as plot_diff_finger by Paolo Raiteri and Andrew
+  Rohl to provide a difference map of two Hirshfeld surface
+  fingerprints.  The map's color scheme ranges from blue (negative
+  values) over white (neuter level) to red (positive values).
+  Mirroring the pattern in plot_finger_png.sh, the original script was
+  reorganized, too.  Assuming a 300 dpi resolution, the .png bitmap
+  (3674x3229 px) is about 12.2 x 10.8 in or about 4.8 x 4.2 cm wide.
+
+END
