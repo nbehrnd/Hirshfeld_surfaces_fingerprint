@@ -1,0 +1,58 @@
+
+#######################################################################
+#
+#                 Cambridge Crystallographic Data Centre
+#                                CCDC 
+#
+#######################################################################
+#
+# If this CIF has been generated from an entry in the Cambridge 
+# Structural Database, then it will include bibliographic, chemical, 
+# crystal, experimental, refinement or atomic coordinate data resulting 
+# from the CCDC's data processing and validation procedures.
+#
+#######################################################################
+
+data_BZAMID11
+_symmetry_cell_setting           monoclinic
+_symmetry_space_group_name_H-M   'P 21/n'
+_symmetry_Int_Tables_number      14
+_space_group_name_Hall           '-P 2yn'
+loop_
+_symmetry_equiv_pos_site_id
+_symmetry_equiv_pos_as_xyz
+1 x,y,z
+2 1/2-x,1/2+y,1/2-z
+3 -x,-y,-z
+4 1/2+x,1/2-y,1/2+z
+_cell_length_a                   5.0521(15)
+_cell_length_b                   5.4242(12)
+_cell_length_c                   21.949(7)
+_cell_angle_alpha                90
+_cell_angle_beta                 90.907(12)
+_cell_angle_gamma                90
+_cell_volume                     601.406
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+O1 O 0.6961 0.2015 0.5527
+N1 N 0.2615 0.2266 0.5276
+H1 H 0.094 0.266 0.5388
+H2 H 0.275 0.1 0.502
+C1 C 0.4732 0.2936 0.5605
+C2 C 0.4356 0.4875 0.6083
+C3 C 0.6153 0.498 0.6569
+H3 H 0.7572 0.3832 0.6592
+C4 C 0.5886 0.6754 0.702
+H4 H 0.7104 0.68 0.7354
+C5 C 0.3836 0.8463 0.6983
+H5 H 0.3661 0.9687 0.7289
+C6 C 0.2055 0.8374 0.6499
+H6 H 0.0658 0.9544 0.6472
+C7 C 0.2295 0.6588 0.6051
+H7 H 0.1055 0.653 0.5721
+
+#END
