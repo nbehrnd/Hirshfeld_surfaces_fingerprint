@@ -1,3 +1,9 @@
+
+# name:    README.org
+# author:  Norwid Behrnd
+# license: GPLv2
+# edit:    2019-11-05 (YYYY-MM-DD)
+
 #+OPTIONS: toc:nil
 
 #+LATEX_CLASS:    koma-article  
@@ -11,89 +17,125 @@
 #+LATEX_HEADER:   \setcapindent{0em}  \setkomafont{caption}{\small}
 
 
-
 * Background
 
-  While reading crystallographic models as =.cif= file,
-  CrystalExplorer is capable to visualize intermolecular interactions
-  by Hirshfeld surfaces, and subsequently project these as a 2D
-  fingerprint map.  As intermolecular interactions differ among
-  polymorphs, Carter /et al./ suggest the inspection of the
-  differences of these 2D fingerprint maps as aide to recognize
-  differences more easily.  Contrasting to a qualitative discern of
-  the maps (e.g. by =compare= provided by ImageMagick), these scripts
-  allow a quantification of the differences, too.
+  Reading crystallographic models as =.cif= file,
+  CrystalExplorer[fn:1] is capable to assess the electronic
+  interactions of a molecule with its surrounding crystal.  This is
+  visualized with Hirshfeld surfaces,[fn:2] and may be projected as a
+  2D fingerprint map.[fn:3]
+
+  Carter /et al./ suggest the inspection of /the differences/ of these
+  2D fingerprint maps[fn:4] to ease discern of similarities and
+  differences when comparing these fingerprints: Contrasting to a
+  qualitative discern of the maps (e.g. =compare= by
+  ImageMagick),[fn:5] this approach allows both a visual as well as
+  numeric quantification of the differences.  This is illustrated
+  below with the example of two crystallographic model data describing
+  two polymorphs of benzamide (fig. [[alignment]]).  The scope of this
+  analysis may be extended to isostructural materials, too.
+  #+NAME:    alignment
+  #+CAPTION: 2D fingerprint maps of Hirshfeld surfaces for CCDC model BZAMID01 and BZAMID11 (left and left center), derived from the analysis by CrystalExplorer at /very high/ resolution (d_e and d_i in the range of 0.40(0.01)3.00 \AA).  Qualitative difference assignment by superposition as provided by ImageMagick (right center).  Simultaneous qualitative and quantitative spatial information provided by the /difference map/ generated with the scripts of this repository.
+  #+ATTR_LATEX: :width 15cm
+  #+ATTR_HTML:  :width 75%
+  [[./alignment.png]]
+
 
 * Basic use
 
-  The following sequence allows you to compute difference Hirshfeld
-  surface plots in Linux Xubuntu 18.04.3LTS.
+  The following sequence describes the analysis of the two benzamide
+  model data on Linux Xubuntu 18.04.3LTS, CrystalExplorer
+  (version 17.5) and the scripts of this repository.  The results were
+  visualized with =gnuplot= (version 5.2.7beta).
 
-  + By default CrystalExplorer will remove working files right after
-    providing the visual output. To retain the =csx= files needed
-    here, access the preferences menu (File -> Preferences) and
-    uncheck the corresponding entry located under the expert tab, and
-    close the preference menu. Then, load the =.cif= and compute the
-    Hirshfeld surface at /very high/ resolution (i.e., one level
-    higher than by default).
+  + By default CrystalExplorer removes intermediate working files,
+    including the =.csx= this analysis requires.  To retain this
+    information, access the preferences menu (File -> Preferences) and
+    uncheck the corresponding entry located under the expert tab. Now
+    close the preference menu and load the =.cif= file in question.
+    Compute the Hirshfeld surface at /very high/ resolution (i.e., one
+    level higher than by default).
 
-    Starting with =example.cif=, CrystalExplorer will provide you
+    Starting with =example.cif=, CrystalExplorer provides you
     =example_example.csx=.  For convenience of file management, it is
-    recommended to shorten the file name to =example.csx= though.
+    recommended to shorten the file name to =example.csx=.
 
   + Compile the Fortran sourcecode, for example with the freely
-    available =gfortran=. The then obtained executable allows you to
-    normalize CrystalExplorer’s output (the =.csx= file) and write the
-    result into a =.dat= file. Similar to CrystalExplorer, you opt for
-    either one of the following three map ranges to be considered for
-    output:
-    + standard map: d_i and d_e in the range of 0.40...2.6 \AA
+    available =gfortran=.[fn:6] The then obtained executable is used
+    to normalize CrystalExplorer’s output (the =.csx= file), exported
+    as a =.dat= file. Similar to CrystalExplorer, you opt for either
+    one of the following three map ranges to be considered for output:
+    + standard map: d_i and d_e in the range of 0.40...2.60 \AA
       (221 bins in each dimension),
 
-    + translated map: d_i and d_e in the range of 0.8...3.0 \AA
+    + translated map: d_i and d_e in the range of 0.80...3.00 \AA
       (221 bins in each dimension), or
 
-    + extended map: d_i and d_e in the range of 0.4...3.0 \AA
+    + extended map: d_i and d_e in the range of 0.40...3.00 \AA
       (261 bins in each dimension)
-    with a resolution of about 0.01 \AA/bin. For an initial survey,
-    the extended map may be the most suitable.
+    Independent of your choice, since CrystalExplorer's computation
+    was set to /very high/ resolution, the increment into each
+    direction is 0.01 \AA. For and initial survey, the extended map
+    range is the most suitable.
 
-    On the CLI, your instructions are:
+    On the CLI, your instructions follow the pattern of:
     #+BEGIN_SRC shell
-      gfortran fingerprint.F90 -o fingerprint.x
-      ./fingerprint.x in.cxs [standard | translated | extended] out.dat  # options
-      ./fingerprint.x input.cxs standart output.dat  # specific example
+      gfortran fingerprint.F90 -o fingerprint.x    # compilation
+      ./fingerprint.x in.cxs [standard | translated | extended] out.dat # your options
+      ./fingerprint input.cxs standard output.dat  # usage of the executable
     #+END_SRC
 
-  + The difference between two normalized 2D Hirshfeld maps, for
-    example =map_A.dat= and =map_B.dat= may be assessed with the C
-    program =diff_finger.c= . After compilation of an executable,
-    e.g. with the freely available =gcc= , indicate the two files to
-    compare with each other and the file to write the results to.
-    
-    On the CLI, your instructions are:
+  + The difference between two normalized Hirshfeld surface 2D
+    fingerprints, for example =map_A.dat= and =map_B.dat= is assessed
+    with the C program =diff_finger.c=.  After compilation of an
+    executable, e.g. with the freely available =gcc=,[fn:7] indicate
+    the two files to compare with each other and the file to write the
+    results to.
+
+    On the CLI, your instructions follow the pattern of:
     #+BEGIN_SRC shell
-      gcc diff_finger.c -o diff_finger
-      ./diff_finger map_A.dat map_B.dat > diff_map_A_map_B.dat
+      gcc diff_finger.c -o diff_finger  # compilation
+      ./diff_finger map_A.dat map_B.dat > diff_map_A_map_B.dat  # application
     #+END_SRC
-    For obvious reasons only maps of same type (standard, translated,
-    extended) should be compared this way with each other.
+    Since only maps of same type (standard, translated, extended)
+    should be compared with each other, it may be helpful to name the
+    =.dat= files accordingly.
 
-  + Aiming for a visual representation of the results, sub-folder
-    =plot2gnuplot= contains two groups of auxilliary bash scripts to
-    relay the results stored in =.dat= files to the freely available
-    =gnuplot= in either bitmap (.png) or vector (.pdf) format:
-    + Similar to CrystalExplorer, the individual normalized 2D
-      fingerprint maps may be generated with scripts like
-      =plot_finger.sh=.
+  + Ruby script =sum_abs_diffs.rb= assigns an absolute value by
+    "summing up the absolute value of each point in the difference
+    plot between normalized 2D fingerplots [when] compared with each
+    other."  It is launched from the CLI with the difference map data
+    just obtained as sole parameter:
+    #+BEGIN_SRC ruby
+      ruby sum_abs_diffs.rb example.dat             # general pattern
+      sum_abs_diffs.rb diff_BZAMID01_BZAMID11.dat   # example input
+      >>> diff_BZAMID01_BZAMID11.dat  61.4040       # example output
+    #+END_SRC
 
-    + The difference of two normalized 2D fingerprint maps may be plot
-      in a blue-white-red scale with scripts like
-      =plot_diff_finger.sh=.
-    /Possibly/ both scripts have to be provided the 'executable bit'
-    prior to their deployment, which may be adjusted at a local level
-    without administrator privileges.  A local readme provides further
-    information about them.
+  + Aiming for a visual representation, sub-folder =plot2gnuplot=
+    contains two sets of auxiliary bash scripts to relay the results
+    stored in =.dat= files to the freely available =gnuplot=[fn:10] in
+    either bitmap (.png) or vector (.pdf) format.[fn:9] If functional
+    + /individual/ normalized 2D fingerprint maps may be generated
+      with scripts like =plot_finger.sh=.  The color scheme is the one
+      already introduced by CrystalExplorer.
+
+    + The /difference/ of two normalized 2D fingerprint maps may be
+      plot with scripts like =plot_diff_finger.sh=.  The color scheme
+      deploys a blue-white-red scale.
+
+    To save file size, scripts including the =sparse= string in the
+    file name consider tiles to be put into the diagrams only if /i/)
+    they either represent a /z/-value different from zero, or /ii/)
+    are surrounded both in d_i and d_e direction by other tiles with a
+    non-zero /z/-value.  By virtue of this 'conditional
+    plotting',[fn:8] the overall processing time per file equally
+    decreases.
+
+    The =.sh= scripts /may/ require 'executable bit' prior to their
+    deployment.  This may be adjusted at a local level without
+    administrator privileges.  A local =readme= in the sub-folder
+    provides additional information about them.
 
     Hence, your instructions on the CLI follow the pattern of:
     #+BEGIN_SRC shell
@@ -102,10 +144,50 @@
       ./plot_diff_finger.sh example.dat  # plot the difference fingerprint map
     #+END_SRC
 
-  + Ruby script =sum_abs_diffs.rb= assignes an absolute value by
-    "summing up the absolute value of each point in the difference
-    plot between normalized 2D fingerplots [when] compared with each
-    other."  It is launched from the CLI by
-    #+BEGIN_SRC ruby
-      ruby sum_abs_diffs.rb example.dat
-    #+END_SRC
+    =END=
+* Footnotes
+
+[fn:10] http://gnuplot.info
+
+[fn:9] Note that if you would like to use these bash =.sh= scripts as
+gnuplot =.plt= files, occasionally instructions like =\$= (with
+backslash) escaping the shell need to be reset as =$= (without
+backslash).
+
+[fn:8] Thanks to Ethan Merrit who suggested this additional
+improvement in a private communication.  Savings in time and file
+volume are especially noticed for the generation of .pdf.
+
+[fn:7] In preparation of this how-to, gcc in 7.4.0 was used
+successfully.
+
+[fn:6] The script successfully works with gfortran (version 7.4.0).
+The optimization of the executable (=-O= parameter) does not offer a
+noticeable advantage if comparing a few model data.
+
+[fn:5] https://imagemagick.org/ Within the bundle, the instruction
+following the basic pattern of =compare image_A image_B= provides a
+check.  Additional information on
+https://imagemagick.org/script/compare.php.
+
+[fn:4] "Difference Hirshfeld fingerprint plots: a tool for studying
+polymorphs." Carter, D. J.; Raiteri, P.; Barnard, K. R.; Gielink, R.;
+Mocerino, M.; Skelton, B. W.; Vaughan, J. G.; Ogden, M. I.; Rohl,
+A. L. in CrystEngComm, 2017, 19, 2207--2215, DOI: [[https://pubs.rsc.org/en/content/articlelanding/2017/ce/c6ce02535h#!divAbstract][10.1039/c6ce02535h]].
+
+
+[fn:3] "Fingerprinting Intermolecular Interactions in Molecular
+Crystals", Spackman, M. A.; McKinnon, J. J. in CrystEngComm, 2002, 4,
+378--392, doi [[https://pubs.rsc.org/en/content/articlelanding/2002/ce/b203191b#!divAbstract][10.1039/B203191B]].
+
+[fn:2]  a) "A novel definition of a molecule in a crystal", Spackman,
+M. A.; Byrom, P. G. in Chem. Phys. Lett., 1997, 267, 215--220, doi
+[[https://www.sciencedirect.com/science/article/pii/S0009261497001000?via%3Dihub][10.1016/S0009-2614(97)00100-0]]. b) "Novel tools for visualizing and
+exploring intermolecular interactions in molecular crystals",
+McKinnon, J. J.; Spackman, M. A.; Mitchell, A. S. in Acta Cryst. B,
+2004, 60, 627-- 668, doi [[http://scripts.iucr.org/cgi-bin/paper?S0108768104020300][10.1107/S0108768104020300]]. c)
+http://130.95.176.70/wiki/index.php/The_Hirshfeld_Surface
+
+[fn:1] http://crystalexplorer.scb.uwa.edu.au/
+
+# END
