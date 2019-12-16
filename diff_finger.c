@@ -1,8 +1,60 @@
+/* name:    diff_finger.c
+** authors: Paolo Raiteri (p.raiteri@curtin.edu.au),
+**          Andrew Rohl (a.rohl@curtin.edu.au),
+**          Norwid Behrnd (nbehrnd@yahoo.com)
+** license: GPLv2 or (at your option) any later
+** edit:    2019-11-08 (YYYY-MM-DD)
+**
+** This C program was developed in the Computational Materials Science
+** group at Curtin University (Australia) to extend the analysis of
+** fingerprints of Hirshfeld surfaces assessed by CrystalExplorer.  Its
+** first presentation to the scientific community was in CrystEngComm,
+** 2017, 19, 2207--2215 (doi 10.1039/c6ce02535h).
+**
+** Firstly, compile this code into an executable.  With gcc, for example,
+** your input on the CLI is
+**
+** gcc diff_finger.c -o diff_finger
+**
+** Subsequently, indicate two fingerprint .dat files to be compared with
+** each other, and where to store permanently the results.  The later is
+** again a map, now about the differences of the two fingerprint maps
+** just read.  On the CLI, your instruction follows the pattern of
+**
+** ./diff_finger input_A.dat input_B.dat > difference.dat
+**
+** You may visualize the result for example with gnuplot.  While this is
+** not a task for this code, a minimal set of instructions to relay this
+** to gnuplot is offered below.  It assumes file "difference.dat" to be
+** read and yields the map as "difference.png":
+**
+** ### ---- gnuplot script ---- ####
+** set output "difference.png"
+**
+** set terminal pngcairo size 4096,4096 font "Arial, 64" enha lw 10
+** set grid
+** set xtics 0.4, 0.2
+** set ytics 0.4, 0.2
+** set label 'd_e' at graph 0.05, 0.90 left front font 'Arial, 104'
+** set label 'd_i' at graph 0.90, 0.05 left front font 'Arial, 104'
+**
+** set pm3d map
+** unset key
+** set palette defined (-1 "blue", 0 "white", 1 "red")
+** set g
+** set cbrange [-0.025:0.025]
+** sp "difference.dat" u 1:2:3  w p pt 5 ps 0.05 lc palette z
+** ### ------------------------ ####
+**
+** The script is known to work with gnuplot (release 5.2.7beta).  There
+** is additional information provided on the project's github sites,
+** including test data. */
+
 #include <stdlib.h>
 #include <stdio.h>
 
 int main (int argc, char *argv[]) {
-  if ( argc != 3 ) {/* argc should be 2 for correct execution */
+  if ( argc != 3 ) {/* argc should be 3 for correct execution */
      printf("usage: %s file1 file2\n", argv[0]);
      exit(EXIT_FAILURE);
   }
