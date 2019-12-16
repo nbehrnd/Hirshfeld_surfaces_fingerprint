@@ -2,7 +2,7 @@
 # name:    README.org
 # author:  Norwid Behrnd
 # license: GPLv2
-# edit:    2019-11-05 (YYYY-MM-DD)
+# edit:    2019-12-16 (YYYY-MM-DD)
 
 #+OPTIONS: toc:nil
 
@@ -38,15 +38,15 @@
   #+CAPTION: 2D fingerprint maps of Hirshfeld surfaces for CCDC model BZAMID01 and BZAMID11 (left and left center), derived from the analysis by CrystalExplorer at /very high/ resolution (d_e and d_i in the range of 0.40(0.01)3.00 \AA).  Qualitative difference assignment by superposition as provided by ImageMagick (right center).  Simultaneous qualitative and quantitative spatial information provided by the /difference map/ generated with the scripts of this repository.
   #+ATTR_LATEX: :width 15cm
   #+ATTR_HTML:  :width 75%
-  [[./alignment.png]]
+  [[./doc_support/alignment_normal.png]]
 
 
 * Basic use
 
   The following sequence describes the analysis of the two benzamide
-  model data on Linux Xubuntu 18.04.3LTS, CrystalExplorer
-  (version 17.5) and the scripts of this repository.  The results were
-  visualized with =gnuplot= (version 5.2.7beta).
+  model data on Linux Xubuntu 18.04.3LTS with CrystalExplorer
+  (version 17.5).  The results of computation were visualized with
+  =gnuplot= (version 5.2.7beta).
 
   + By default CrystalExplorer removes intermediate working files,
     including the =.csx= this analysis requires.  To retain this
