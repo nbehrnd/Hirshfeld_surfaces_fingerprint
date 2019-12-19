@@ -1,0 +1,147 @@
+#!/bin/python3
+
+# name:    diff_finger.py
+# author:  nbehrnd@yahoo.com
+# license: 2019, GPLv2
+# date:    2019-12-19 (YYYY-MM-DD)
+# edit:
+""" Compute difference maps of normalized 2D Hirshfeld surface maps
+
+    The number of programming languages around the computation of already
+    normalized 2D Hirshfeld surface maps and difference Hirshfeld surface
+    maps may be considered as higher, than necessary.  Potentially, their
+    number may be lowered.  There already is one moderator script written
+    in CPython, i.e., Hirshfeld_moderator.py, suggesting to continue with
+    this language, too.
+
+    So far, this script serves as a proof-of-concept for the comparison
+    of two 2D Hirshfeld surface fingerprint maps (by fingerprint.f90)
+    in a round-Robin tournament.  It assumes the two files to be compared
+    with each other account for matching map ranges de/di.  Setting the
+    minimal y(de) value to 0.40 manually thus limits the use of this
+    script to maps normalized either for the standard, or the extended
+    map range. -- Script hirshfeld_moderator.py causes fingerprint.f90
+    to normalize the 2D fingerprint maps to the extended map range (i.e.,
+    [0.4,3.0] A), matching the requirement of this script.
+
+    This script diff_finger.py still is independent to the actions by
+    hirshfeld_moderator.py.  It is neither called, nor are its results
+    explicitly used by hirshfeld_moderator.  Except for numpy (1.13.3),
+    all of this script's dependencies are met by the default installation
+    of CPython (version 3.6.9) in Linux Xubuntu 18.04.3 LTS."""
+
+import fnmatch
+import os
+import sys
+
+from decimal import Decimal
+import numpy as np
+
+diff_register = []
+
+# identification of the files to work with:
+for file in os.listdir("."):
+    if fnmatch.fnmatch(file, "*.dat") and \
+            (fnmatch.fnmatch(file, "diff*.dat") is False):
+
+        diff_register.append(file)
+diff_register.sort()
+
+# comparing the normalized 2D Hirshfeld surface maps
+if len(diff_register) > 1:
+    for entry in diff_register[1:]:
+        ref_file = diff_register[0]
+        probe_file = entry
+        print("Comparing {} with {}.".format(ref_file, probe_file))
+
+        # to be inserted here:
+        # + probe the consistency of ref_file and probe_file for their
+        #   consistency along de/di
+        # + transmit the minimal y-value to adjust automatically the
+        #   re-insertion of the separating blank lines (currently manually
+        #   set to 0.40, which for the translated map range is False)
+
+        # branch about the reference file:
+        content_ref_file = []
+        with open(ref_file, mode="r") as source_ref:
+            for line in source_ref:
+                trimmed_line = str(line).strip()  # remove line feed
+
+                split = trimmed_line.split()
+                # branch about lines just prior to y-reset:
+                if len(split) is None:
+                    pass
+                # branch about lines 'with visible entries':
+                if len(split) == 3:
+                    retain = split
+                    content_ref_file.append(retain)
+
+        # convert the list into an array, treat entries as floats
+        ref_array = np.array(content_ref_file)
+        ref_array = ref_array.astype(np.float)
+
+        # branch about the probe file
+        content_probe_file = []
+        with open(probe_file, mode="r") as source_probe:
+            for line2 in source_probe:
+                trimmed_line2 = str(line2).strip()  # remove line feed
+
+                split2 = trimmed_line2.split()
+                # branch about lines just prior to y-reset:
+                if len(split2) is None:
+                    pass
+                # branch about lines 'with visible entries':
+                if len(split2) == 3:
+                    retain2 = split2
+                    content_probe_file.append(retain2)
+
+        # convert the list into an array, treat entries as floats
+        probe_array = np.array(content_probe_file)
+        probe_array = probe_array.astype(np.float)
+
+        # work at level of the matrix-like arrays
+        # construct an array of the first two columns of the ref_array
+        coordinates_array = ref_array
+        coordinates_array = np.delete(coordinates_array, 2, axis=1)
+
+        # subtract z-values of probe_file from z-values of ref_file;
+        # prior to this, remove 'x-' and 'y-coordinate column'
+        z_probe_array = np.delete(probe_array, 0, axis=1)
+        z_probe_array = np.delete(z_probe_array, 0, axis=1)
+
+        z_ref_array = np.delete(ref_array, 0, axis=1)
+        z_ref_array = np.delete(z_ref_array, 0, axis=1)
+
+        diff_array = z_probe_array - z_ref_array
+
+        # append diff_array to the coordinates_array:
+        result = np.append(coordinates_array, diff_array, axis=1)
+
+        # deposit a permanent record of results by numpy 'as-such'
+        # This lacks the linefeed to be re-inserted, and often carries
+        # many more decimals, than wished.
+        # np.savetxt("result_subtraction.csv", result)
+
+        # return from array to list level, start a moderated formatting
+        result_list = result.tolist()
+
+        output = str("diff_") + str(ref_file)[:-4] + \
+                    str("_") + str(probe_file)
+
+        with open(output, mode="w") as newfile:
+            for result_entry in result_list:
+                to_reformat = str(result_entry).split()
+
+                x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
+                y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
+                z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
+
+                # re-insert the blanks met in normalized 2D fingerprints:
+                if str(y_value) == "0.40":  # the minimum value to spot
+                    newfile.write("\n")
+
+                retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
+                newfile.write(retain)
+
+print("done")
+sys.exit(0)
