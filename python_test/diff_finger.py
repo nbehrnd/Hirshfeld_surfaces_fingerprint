@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:
+# edit:    2019-12-19 (YYYY-MM-DD)
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -54,12 +54,23 @@ if len(diff_register) > 1:
         probe_file = entry
         print("Comparing {} with {}.".format(ref_file, probe_file))
 
-        # to be inserted here:
-        # + probe the consistency of ref_file and probe_file for their
-        #   consistency along de/di
-        # + transmit the minimal y-value to adjust automatically the
-        #   re-insertion of the separating blank lines (currently manually
-        #   set to 0.40, which for the translated map range is False)
+        # consistency check for de/di
+        ref_screen = []
+        with open(ref_file, mode="r") as ref_source:
+            for line in ref_source:
+                ref_screen.append(str(line.strip()))
+        ref_y_min = str(ref_screen[0].split()[1])[:4]
+
+        probe_screen = []
+        with open(probe_file, mode="r") as probe_source:
+            for line in probe_source:
+                probe_screen.append(str(line.strip()))
+        probe_y_min = str(probe_screen[0].split()[1])[:4]
+
+        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
+            pass
+        else:
+            continue
 
         # branch about the reference file:
         content_ref_file = []
@@ -137,11 +148,11 @@ if len(diff_register) > 1:
                 z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
 
                 # re-insert the blanks met in normalized 2D fingerprints:
-                if str(y_value) == "0.40":  # the minimum value to spot
+                if str(y_value) == ref_y_min:
                     newfile.write("\n")
 
                 retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
                 newfile.write(retain)
 
 print("done")
-sys.exit(0)
+# sys.exit(0)
