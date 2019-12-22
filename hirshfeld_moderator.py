@@ -1,16 +1,17 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
-# name:    Hirshfeld_moderator.py
+# name:    hirshfeld_moderator.py
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2019-12-17 (YYYY-MM-DD)
+# edit:    2019-12-22 (YYYY-MM-DD)
+#
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  After their
 normalization, their mutual subtraction yields difference maps.  Intended
 for the Linux CLI of CPython3.  The help menu is accessed by
 
-python e_tpg.py -h
+python hirshfeld_moderator -h
 
 Beside CPython3, both fingerprint.f90 and diff_finger.c source files, and
 compilers (gfortran (for .f90) / gcc (for either .f90 or .c)) are required.
@@ -20,11 +21,11 @@ As about further analyses:
   to a number by Ruby script sum_abs_diffs.rb.  Its output to the CLI
   requires
 
-  python e_tpg.py -r
+  python hirshfeld_moderator -r
 
   but may be retained as permanent record, e.g.
 
-  python e_tpg.py -r > differences.log
+  python hirshfeld_moderator.py -r > differences.log
 
   This allows further processing, e.g. a subsequent numeric sort by
 
@@ -44,7 +45,9 @@ As about further analyses:
 
   The sections interacting with gnuplot were set up and proved to work
   with Gnuplot.py (version 1.8), CPython 3.6.8 (Oct 7, 2019), and gnuplot
-  (5.2.7b, 2019-05-14) in Linux Xubuntu 18.04.3 LTS. """
+  (5.2.7b, 2019-05-14) in Linux Xubuntu 18.04.3 LTS.  It is very likely
+  in its present form this script will not work in a different OS, such
+  as Windows. """
 
 import argparse
 import fnmatch
