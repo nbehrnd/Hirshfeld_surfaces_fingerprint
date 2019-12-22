@@ -1,5 +1,11 @@
+! name:    fingerprint.f90
+! authors: Paolo Raiteri (praiteri@curtins.edu.au)
+!          Andrew Rohl (arohl@curtins.edu.au)
+!          Norwid Behrnd (nbehrnd@yahoo.com)
+! licence: GPLv2 or (at your option) any later version
+! edit:    2019-11-21 (YYYY-MM-DD)
 !
-! Program developed in the Caomputational Materials Science group
+! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
 ! of Hirshfeld surfaces produced by Crystal Explorer
 ! http://crystalexplorer.scb.uwa.edu.au/index.html
@@ -18,10 +24,10 @@
 !
 ! Compilation instructions:
 ! The program can be compiled with gfortran 
-! gfortran fingerprint.F90 -o fingerprint.x
+! gfortran fingerprint.f90 -o fingerprint.x
 !
 ! or the intel fortran compiler
-! ifort fingerprint.F90 -o fingerprint.x
+! ifort fingerprint.f90 -o fingerprint.x
 !
 ! Usage instructions:
 ! ./fingerprint.x  input.cxs [standard | translated | extended] output.dat
@@ -242,7 +248,7 @@ program fingerprint
 ! Tally of the fingerprint map
     dist(idi,ide) = dist(idi,ide) + area
 
-#ifdef DEBUG
+! #ifdef DEBUG
 !   write(0,*)i
 !   write(0,*)'indices : ',idx(:,i)
 !   write(0,*)'vertex 1: ',vert(:,idx(1,i))
@@ -251,10 +257,11 @@ program fingerprint
 !   write(0,*)'area    : ',area
 !   write(0,*)'di      : ',ddi,idi
 !   write(0,*)'de      : ',dde,ide
-#endif
+! #endif
 
   enddo
   write(*,'(a,f10.5)')"Total surface area        :: ",sum(dist)
+  write(*,*) " " ! place holder between multiple data sets 
 
 ! Writing the fingerprint map to a file
   dist=100.*dist/sum(dist)
