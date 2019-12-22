@@ -2,7 +2,7 @@
 # name:    README.org
 # author:  Norwid Behrnd
 # license: GPLv2
-# edit:    2019-12-16 (YYYY-MM-DD)
+# edit:    2019-12-22 (YYYY-MM-DD)
 
 #+OPTIONS: toc:nil
 
@@ -104,9 +104,10 @@
 
 ** Python moderated interaction
 
-     Starting with this release, Python script =Hirshfeld_moderator.py=
-     is set up to facilitate the interaction with the =*.cxs= files in
-     Linux.  Its /help/ menu is invoked by
+     Starting with this release, Python script
+     =Hirshfeld_moderator.py= is set up to facilitate the interaction
+     with the =*.cxs= files in Linux.  This script file is deposit in
+     sub-folder =python_testing=.[fn:14]  Its /help/ menu is invoked by
      #+BEGIN_SRC shell
      python3 Hirshfeld_moderator.py -h
      #+END_SRC
@@ -241,6 +242,13 @@
   the bitmap.
 
 * Footnotes
+
+[fn:14] Users of other operating systems (e.g., Windows) may find
+=diff_finger.py= and =sum_abs_diffs.py= useful.  These proofs of
+concept mimic the action of the C, and of the ruby script in CPython.
+For one, to work with them, a dedicated C or ruby compiler is not
+required.  However, their functionality is not yet implemented into
+the moderator script, =hirshfeld_moderator.py=.
 
 [fn:13] In preparation of this guide, =Gnuplot.py= in version 1.8 was
 used successfully.
