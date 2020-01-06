@@ -57,27 +57,9 @@ import subprocess as sub
 import sys
 
 import numpy as np
-
-try:
-    import Gnuplot as gp
-except:
-    print("Third party CPython module 'Gnuplot.py' is not accessible.")
-    print("Check its installation, e.g. with pip.  Otherwise this script")
-    print("will not call gnuplot to plot diagnostic scatter plots.")
-
-    print("\n[0]\t to stop the script.")
-    print("[1]\t work with this script continues without gnuplot.")
-
-    try:
-        gnuplot_check = int(input())
-    except:
-        print("Invalid input, the script closes now.")
-        sys.exit(0)
-    if gnuplot_check == 0:
-        print("\nThe script closes.")
-        sys.exit(0)
-    if gnuplot_check == 1:
-        print("\nScript continues to work, no interaction by gnuplot.")
+# After the determination of the difference number, the script will check
+# for the presence of third-party CPython module, too.  The computations
+# of the earlier sections are not affected by its presence / absence.
 
 global root
 root = os.getcwd()
@@ -590,6 +572,17 @@ def search_dat(map_type="delta"):
     os.chdir(root)
 
 
+def probe_gnuplot():
+    """ Attempt to load CPython module Gnuplot (available with pip2). """
+    try:
+        import Gnuplot as gp
+    except:
+        print("\nThird party CPython module 'Gnuplot.py' is not accessible.")
+        print("Check its installation, e.g. with pip.  Otherwise this script")
+        print("will generate diagnostic scatter plots.")
+        sys.exit(0)
+
+
 def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     """ The general pattern for any of the maps if deposit as .png.
 
@@ -601,6 +594,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     Contrasting to pdf_map, png_map includes instructions to screen the
     two map types.  This allows subsequent adjustment of map range along
     de/di and applied z-scaling in the high resolution plots. """
+    import Gnuplot as gp
     os.chdir("cxs_workshop")
     for entry in dat_register:
         if entry.startswith("diff"):
@@ -735,6 +729,7 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     With minor modifications, the design idea mirrors the experiences
     with function png_map just before this definition. """
     os.chdir("cxs_workshop")
+    import Gnuplot as gp
 
     for entry in dat_register:
         if entry.startswith("diff"):
@@ -921,6 +916,7 @@ if __name__ == "__main__":
 
     # quick overviews with fixed extended range de/di and default z:
     if args.overview:
+        import Gnuplot as gp
         search_dat(map_type="fingerprint")
         xmin = 0.4
         xmax = 3.0
