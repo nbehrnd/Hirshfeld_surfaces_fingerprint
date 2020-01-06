@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2019-12-22 (YYYY-MM-DD)
+# edit:    2020-01-06 (YYYY-MM-DD)
 #
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  After their
@@ -172,7 +172,6 @@ def compile_f90():
     print("Compilation of fingerprint.f90 with either gfortran or gcc.")
     try:
         sub.call(compile_gfo_f90, shell=True)
-        print("fingerprint.f90 was compiled successfully (gfortran).")
     except IOError:
         print("Compilation attempt with gfortran failed.")
         print("Independent compilation attempt with gcc.")
@@ -184,6 +183,7 @@ def compile_f90():
             print("Maybe fingerprint.f90 is not in the project folder.")
             print("Equally ensure gfortran's or gcc compiler's installation.")
             sys.exit(0)
+        print("fingerprint.f90 was compiled successfully (gfortran).")
 
 
 def shuttle_f90():
