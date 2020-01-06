@@ -48,12 +48,15 @@ As about further analyses:
   (5.2.7b, 2019-05-14) in Linux Xubuntu 18.04.3 LTS. """
 
 import argparse
+from decimal import Decimal
 import fnmatch
 import os
 import platform
 import shutil
 import subprocess as sub
 import sys
+
+import numpy as np
 
 try:
     import Gnuplot as gp
@@ -228,71 +231,124 @@ def normalize_cxs():
     print("\nNormalization of .cxs files is completed.")
 
 
-def compile_C():
-    """ Compile diff_finger.c with gcc. """
-    print("\nCompilation of 'diff_finger.c' was started.")
-    try:
-        compile_diff = str("gcc diff_finger.c -o diff_finger")
-        sub.call(compile_diff, shell=True)
-        print("Successful compilation of 'diff_finger.c' with gcc.\n")
-    except IOError:
-        print("Compilation of diff_finger.c failed.")
-        print(
-            "Check for the presence of diff_finger.c in project's root folder."
-        )
-        print("Check for the presence of the gcc compiler, too.")
-        sys.exit(0)
+def difference_maps():
+    """ Round-Robin tournament of the normalized 2D fingerprint maps. """
 
-
-def shuttle_C():
-    """ Shuttle the executable of diff_finger.c to the data. """
-    try:
-        shutil.copy("diff_finger", "cxs_workshop")
-    except IOError:
-        print("Error while copying C executable to the data.")
-        print("Check the presence of folder 'cxs_workshop'.")
-        sys.exit(0)
-
-    # space cleaning of the project's root folder:
-    try:
-        os.remove("diff_finger")
-    except IOError:
-        pass
-
-
-def map_differences():
-    """ Compare each of the 2D fingerprints with each other. """
-    print("\nComputation of difference maps starts:")
-
+    # identification of the files to work with:
     os.chdir("cxs_workshop")
-    fingerprint_register = []
+    diff_register = []
 
     for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "*.dat"):
-            if fnmatch.fnmatch(file, "diff*.dat") is False:
-                fingerprint_register.append(file)
-    fingerprint_register.sort()
+        if fnmatch.fnmatch(file, "*.dat") and \
+                (fnmatch.fnmatch(file, "diff*.dat") is False):
 
-    while len(fingerprint_register) > 1:
-        for entry in fingerprint_register[1:]:
-            reference_map = fingerprint_register[0]
-            test_map = entry
-            difference_map = (str("diff_") + str(reference_map)[:-4] +
-                              str("_") + str(test_map))
+            diff_register.append(file)
+    diff_register.sort()
 
-            print("{} vs. {} to yield {}".format(reference_map, test_map,
-                                                 difference_map))
-            difference_test = str("./diff_finger {} {} > {}".format(
-                reference_map, test_map, difference_map))
-            try:
-                sub.call(difference_test, shell=True)
-            except IOError:
-                print("Problem to compute {}.".format(difference_map))
+    # comparing the normalized 2D Hirshfeld surface maps
+    if len(diff_register) > 1:
+        for entry in diff_register[1:]:
+            ref_file = diff_register[0]
+            probe_file = entry
+            print("Comparing {} with {}.".format(ref_file, probe_file))
 
-        del fingerprint_register[0]
-    print("\nComputation of difference maps is completed.")
+            # consistency check for de/di
+            ref_screen = []
+            with open(ref_file, mode="r") as ref_source:
+                for line in ref_source:
+                    ref_screen.append(str(line.strip()))
+            ref_y_min = str(ref_screen[0].split()[1])[:4]
 
-    os.remove("diff_finger")
+            probe_screen = []
+            with open(probe_file, mode="r") as probe_source:
+                for line in probe_source:
+                    probe_screen.append(str(line.strip()))
+            probe_y_min = str(probe_screen[0].split()[1])[:4]
+
+            if (len(ref_screen) == len(probe_screen)) and \
+                    (ref_y_min == probe_y_min):
+                pass
+            else:
+                continue
+
+            # branch about the reference file:
+            content_ref_file = []
+            with open(ref_file, mode="r") as source_ref:
+                for line in source_ref:
+                    trimmed_line = str(line).strip()  # remove line feed
+
+                    split = trimmed_line.split()
+                    # branch about lines just prior to y-reset:
+                    if len(split) is None:
+                        pass
+                    # branch about lines 'with visible entries':
+                    if len(split) == 3:
+                        retain = split
+                        content_ref_file.append(retain)
+
+            # convert the list into an array, treat entries as floats
+            ref_array = np.array(content_ref_file)
+            ref_array = ref_array.astype(np.float)
+
+            # branch about the probe file
+            content_probe_file = []
+            with open(probe_file, mode="r") as source_probe:
+                for line2 in source_probe:
+                    trimmed_line2 = str(line2).strip()  # remove line feed
+
+                    split2 = trimmed_line2.split()
+                    # branch about lines just prior to y-reset:
+                    if len(split2) is None:
+                        pass
+                    # branch about lines 'with visible entries':
+                    if len(split2) == 3:
+                        retain2 = split2
+                        content_probe_file.append(retain2)
+
+            # convert the list into an array, treat entries as floats
+            probe_array = np.array(content_probe_file)
+            probe_array = probe_array.astype(np.float)
+
+            # work at level of the matrix-like arrays
+            # construct an array of the first two columns of the ref_array
+            coordinates_array = ref_array
+            coordinates_array = np.delete(coordinates_array, 2, axis=1)
+
+            # subtract z-values of probe_file from z-values of ref_file;
+            # prior to this, remove 'x-' and 'y-coordinate column'
+            z_probe_array = np.delete(probe_array, 0, axis=1)
+            z_probe_array = np.delete(z_probe_array, 0, axis=1)
+
+            z_ref_array = np.delete(ref_array, 0, axis=1)
+            z_ref_array = np.delete(z_ref_array, 0, axis=1)
+
+            diff_array = z_probe_array - z_ref_array
+
+            # append diff_array to the coordinates_array:
+            result = np.append(coordinates_array, diff_array, axis=1)
+
+            # deposit a permanent record of results by numpy 'as-such'
+            # return from array to list level, start a moderated formatting
+            result_list = result.tolist()
+
+            output = str("diff_") + str(ref_file)[:-4] + \
+                        str("_") + str(probe_file)
+
+            with open(output, mode="w") as newfile:
+                for result_entry in result_list:
+                    to_reformat = str(result_entry).split()
+
+                    x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
+                    y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
+                    z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
+
+                    # re-insert the blanks met in normalized 2D fingerprints:
+                    if str(y_value) == ref_y_min:
+                        newfile.write("\n")
+
+                    retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
+                    newfile.write(retain)
+
     os.chdir(root)
 
 
@@ -868,9 +924,7 @@ if __name__ == "__main__":
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
     if args.compute:
-        compile_C()  # render diff_finger.c executable
-        shuttle_C()  # bring the .c executable to the data
-        map_differences()  # compute the difference map diff*.dat files
+        difference_maps()  # comparison of the 2D fingerprint maps
     if args.ruby_number:
         shuttle_ruby_script()  # bring the Ruby script to the data
         ruby_difference_number()  # work with the Ruby script locally
