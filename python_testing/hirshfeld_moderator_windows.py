@@ -351,45 +351,28 @@ def difference_maps():
 
     os.chdir(root)
 
+def ruby_number():
+    """ Add the absolute values of differences per difference map. """
 
-def shuttle_ruby_script():
-    """ If possible, shuttle sum_abs_diffs.rb to the data. """
-    script_missing = "True"
-    for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "sum_abs_diffs.rb"):
-            script_missing = "False"
-            break
-    if script_missing == "True":
-        print("Script 'sum_abs_diffs.rb' is missing, script stops. ")
-        sys.exit(0)
-    if script_missing == "False":
-        try:
-            shutil.copy("sum_abs_diffs.rb", "cxs_workshop")
-        except IOError:
-            print("Problem copying 'sum_abs_diffs.rb' to 'cxs_workshop'.")
-            print("Maybe the Ruby script is missing.  Exit.")
-            sys.exit(0)
-
-
-def ruby_difference_number():
-    """ Report the Ruby difference numbers from the diff*.dat data. """
+    # identification of the files to work with:
     os.chdir("cxs_workshop")
-    register = []
+    file_register = []
 
     for file in os.listdir("."):
         if fnmatch.fnmatch(file, "diff*.dat"):
-            register.append(file)
-    register.sort()
+            file_register.append(file)
+    file_register.sort()    
 
-    for entry in register:
-        test = str("ruby sum_abs_diffs.rb {}".format(entry))
-        try:
-            sub.call(test, shell=True)
-        except IOError:
-            print("Problem to determine the difference number.")
-            print("Ensure a callable installation of Ruby in first place.")
-            sys.exit(0)
+    # computation of the difference number:
+    for entry in file_register:
+        diff_number = 0
 
+        with open(entry, mode="r") as source:
+            for line in source:
+                if len(line) > 2:
+                    diff_number += abs(Decimal(str(line.strip()).split()[2]))
+        print("{}:  {}".format(entry, diff_number))
+    
     os.chdir(root)
 
 
@@ -926,8 +909,7 @@ if __name__ == "__main__":
     if args.compute:
         difference_maps()  # comparison of the 2D fingerprint maps
     if args.ruby_number:
-        shuttle_ruby_script()  # bring the Ruby script to the data
-        ruby_difference_number()  # work with the Ruby script locally
+        ruby_number()
     if args.bg:
         global bg  # an option: a neutral gray background
     if args.alternate:
