@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    (YYYY-MM-DD)
+# edit:    2020-01-06 (YYYY-MM-DD)
 #
 """ This script assists in the normalization of 2D Hirshfeld surface
 fingerprints, the computation of difference maps and difference numbers.
@@ -50,6 +50,7 @@ As about further analyses:
 import argparse
 import fnmatch
 import os
+import platform
 import shutil
 import subprocess as sub
 import sys
@@ -170,7 +171,6 @@ def compile_f90():
     print("Compilation of fingerprint.f90 with either gfortran or gcc.")
     try:
         sub.call(compile_gfo_f90, shell=True)
-        print("fingerprint.f90 was compiled successfully (gfortran).")
     except IOError:
         print("Compilation attempt with gfortran failed.")
         print("Independent compilation attempt with gcc.")
@@ -182,7 +182,7 @@ def compile_f90():
             print("Maybe fingerprint.f90 is not in the project folder.")
             print("Equally ensure gfortran's or gcc compiler's installation.")
             sys.exit(0)
-
+        print("fingerprint.f90 was compiled successfully.")
 
 def shuttle_f90():
     """ Shuttle the executable of fingerprint.f90 into the workshop. """
@@ -212,8 +212,15 @@ def normalize_cxs():
 
     for entry in register:
         dat_file = str(entry)[:-4] + str(".dat")
-        normalize = str("./fingerprint.x {} extended {}".format(
-            entry, dat_file))
+        # clause for Linux-based computers:
+        if platform.system().startswith("Linux"):
+            normalize = str("./fingerprint.x {} extended {}".format(
+                entry, dat_file))
+        # clause for Windows-based computers:
+        if platform.system().startswith("Windows"):
+            normalize = str("fingerprint.x {} extended {}".format(
+                entry, dat_file))
+
         sub.call(normalize, shell=True)
 
     os.remove("fingerprint.x")
