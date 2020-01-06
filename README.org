@@ -2,7 +2,7 @@
 # name:    README.org
 # author:  Norwid Behrnd
 # license: GPLv2
-# edit:    2019-12-22 (YYYY-MM-DD)
+# edit:    2020-01-06 (YYYY-MM-DD)
 
 #+OPTIONS: toc:nil
 
@@ -104,10 +104,10 @@
 
 ** Python moderated interaction
 
-     Starting with this release, Python script
-     =Hirshfeld_moderator.py= is set up to facilitate the interaction
-     with the =*.cxs= files in Linux.  This script file is deposit in
-     sub-folder =python_testing=.[fn:14]  Its /help/ menu is invoked by
+     Python script =Hirshfeld_moderator.py= is set up to facilitate
+     the interaction with the =*.cxs= files in Linux.[fn:15]  This script
+     file is deposit in sub-folder =python_testing=.[fn:14] Its /help/
+     menu is invoked by
      #+BEGIN_SRC shell
      python3 Hirshfeld_moderator.py -h
      #+END_SRC
@@ -232,7 +232,7 @@
   #+NAME:  alternate_gray
   #+CAPTION: Optional simultaneous processing with the alternate color palettes (toggle =-a=) and the optional neutral gray background (toggle =-g=).
   #+ATTR_LATEX:  :width 15cm
-  #+ATTR_HTML:  :width 75%
+  #+ATTR_HTML:   :width 75%
   [[./doc_support/alignment_alternate_gray.png]]
 
   Note that the diagrams plot may be either =*.png= (e.g., by invoking
@@ -242,6 +242,12 @@
   the bitmap.
 
 * Footnotes
+
+[fn:15] Script =hirshfeld_moderator_windows.py= in the same directory
+reduces the dependency of the calculations to CPython (e.g., the
+portable WinPython 3.6.7) and Fortran (e.g., gfortran) for an analysis
+in either Windows or Linux.  At present, the script's subsequent
+visualizaion of the maps with gnuplot works only from Linux.
 
 [fn:14] Users of other operating systems (e.g., Windows) may find
 =diff_finger.py= and =sum_abs_diffs.py= useful.  These proofs of
