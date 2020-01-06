@@ -12,13 +12,12 @@ fingerprints, the computation of difference maps and difference numbers.
 Derived from the earlier hirshfeld_moderator.py wrapper, this script
 reduces the number of computational languages used 'in the background'
 to Python3 (e.g., the portable WinPython) and Fortran (either gfortran,
-or gcc).  Contrasting to the former, this approach no longer depends
-on the additional installation of a C compiler and of ruby and hence may
-be more accessible for a deployment for either Linux, or Windows.  The
-help menu is accessed by
+or gcc) for fingerprint.f90.  Contrasting to the former, this approach no
+longer depends on the additional installation of a C compiler and of ruby
+and hence may be more accessible for a deployment for either Linux, or
+Windows.  The help menu is accessed by
 
 python hirshfeld_moderator_windows.py -h
-
 
 As about further analyses:
 + Optionally, differences reported in diff*.dat files may be condensed
