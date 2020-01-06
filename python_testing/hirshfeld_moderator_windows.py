@@ -12,7 +12,7 @@ fingerprints, the computation of difference maps and difference numbers.
 Derived from the earlier hirshfeld_moderator.py wrapper, this script
 reduces the number of computational languages used 'in the background'
 to Python3 (e.g., the portable WinPython) and Fortran (either gfortran,
-or gcc).  Contrasting to the former, this approach no longer dependends
+or gcc).  Contrasting to the former, this approach no longer depends
 on the additional installation of a C compiler and of ruby and hence may
 be more accessible for a deployment for either Linux, or Windows.  The
 help menu is accessed by
@@ -60,17 +60,17 @@ import numpy as np
 
 try:
     import Gnuplot as gp
-except IOError:
+except:
     print("Third party CPython module 'Gnuplot.py' is not accessible.")
     print("Check its installation, e.g. with pip.  Otherwise this script")
     print("will not call gnuplot to plot diagnostic scatter plots.")
 
     print("\n[0]\t to stop the script.")
-    print("[1]\t to continue this script.")
+    print("[1]\t work with this script continues without gnuplot.")
 
     try:
         gnuplot_check = int(input())
-    except IOError:
+    except:
         print("Invalid input, the script closes now.")
         sys.exit(0)
     if gnuplot_check == 0:
@@ -186,6 +186,7 @@ def compile_f90():
             print("Equally ensure gfortran's or gcc compiler's installation.")
             sys.exit(0)
         print("fingerprint.f90 was compiled successfully.")
+
 
 def shuttle_f90():
     """ Shuttle the executable of fingerprint.f90 into the workshop. """
@@ -346,10 +347,12 @@ def difference_maps():
                     if str(y_value) == ref_y_min:
                         newfile.write("\n")
 
-                    retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
+                    retain = str("{}, {}, {}\n".format(x_value, y_value,
+                                                       z_value))
                     newfile.write(retain)
 
     os.chdir(root)
+
 
 def ruby_number():
     """ Add the absolute values of differences per difference map. """
@@ -361,7 +364,7 @@ def ruby_number():
     for file in os.listdir("."):
         if fnmatch.fnmatch(file, "diff*.dat"):
             file_register.append(file)
-    file_register.sort()    
+    file_register.sort()
 
     # computation of the difference number:
     for entry in file_register:
@@ -372,7 +375,7 @@ def ruby_number():
                 if len(line) > 2:
                     diff_number += abs(Decimal(str(line.strip()).split()[2]))
         print("{}:  {}".format(entry, diff_number))
-    
+
     os.chdir(root)
 
 
@@ -405,7 +408,7 @@ rainbow = str("""set palette defined (0  1.0 1.0 1.0, \
 # code basis by Andrew Rohl and Paolo Raiteri.
 three_level_old = str("set palette defined (-1 'blue', 0 'white', 1 'red')")
 #
-# Because its neuter level "white" is indiscernable from "paper white",
+# Because its neuter level "white" is indiscernible from "paper white",
 # however, the screening mode uses the softer three-level palette (below,
 # transient with neuter gray) instead.  This selection shall facilitate
 # the choice of the map range in the high-resolution plots.
@@ -421,7 +424,8 @@ three_level_old = str("set palette defined (-1 'blue', 0 'white', 1 'red')")
 #
 # Better though, to toggle --alt to benefit from Kenneth Moreland's
 # bent-cool-warm palette below.
-three_level_new = str("set palette defined (-1 'blue', 0 'light-gray', 1 'red')")
+three_level_new = str(
+    "set palette defined (-1 'blue', 0 'light-gray', 1 'red')")
 
 # The better diverging palette for the difference maps.
 #
@@ -695,7 +699,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
         # color scheme for difference map:
         if (difference_map is True) and (screen == "on"):
-                g(three_level_new)
+            g(three_level_new)
         if (difference_map is True) and (screen == "off"):
             if alt == 0:
                 g(three_level_old)
