@@ -1,10 +1,10 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # name:    diff_finger.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:    2019-12-19 (YYYY-MM-DD)
+# edit:    2020-01-10 (YYYY-MM-DD)
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -145,7 +145,7 @@ if len(diff_register) > 1:
 
                 x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
                 y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
-                z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
+                z_value = round(Decimal(str(to_reformat[2])[0:-1]), 8)
 
                 # re-insert the blanks met in normalized 2D fingerprints:
                 if str(y_value) == ref_y_min:
