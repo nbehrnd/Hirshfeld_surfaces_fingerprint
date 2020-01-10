@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-01-06 (YYYY-MM-DD)
+# edit:    2020-01-10 (YYYY-MM-DD)
 #
 """ This script assists in the normalization of 2D Hirshfeld surface
 fingerprints, the computation of difference maps and difference numbers.
@@ -304,7 +304,7 @@ def difference_maps():
             z_ref_array = np.delete(ref_array, 0, axis=1)
             z_ref_array = np.delete(z_ref_array, 0, axis=1)
 
-            diff_array = z_probe_array - z_ref_array
+            diff_array = z_ref_array - z_probe_array
 
             # append diff_array to the coordinates_array:
             result = np.append(coordinates_array, diff_array, axis=1)
@@ -322,15 +322,24 @@ def difference_maps():
 
                     x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
                     y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
-                    z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
+                    z_value = round(Decimal(str(to_reformat[2])[0:-1]), 8)
 
                     # re-insert the blanks met in normalized 2D fingerprints:
-                    if str(y_value) == ref_y_min:
+                    if float(y_value) == float(ref_y_min):
                         newfile.write("\n")
 
                     retain = str("{}, {}, {}\n".format(x_value, y_value,
                                                        z_value))
                     newfile.write(retain)
+
+            # Remove the very first line in the report file (a blank one):
+            interim = []
+            with open(output, mode='r') as source:
+                for line in source:
+                    interim.append(line)
+            with open(output, mode='w') as newfile:
+                for entry in interim[1:]:
+                    newfile.write(str(entry))
 
     os.chdir(root)
 
