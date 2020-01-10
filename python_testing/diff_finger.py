@@ -123,7 +123,7 @@ if len(diff_register) > 1:
         z_ref_array = np.delete(ref_array, 0, axis=1)
         z_ref_array = np.delete(z_ref_array, 0, axis=1)
 
-        diff_array = z_probe_array - z_ref_array
+        diff_array =  z_ref_array - z_probe_array
 
         # append diff_array to the coordinates_array:
         result = np.append(coordinates_array, diff_array, axis=1)
