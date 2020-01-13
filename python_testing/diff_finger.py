@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:    2020-01-10 (YYYY-MM-DD)
+# edit:    2020-01-13 (YYYY-MM-DD)
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -50,7 +50,7 @@ for file in os.listdir("."):
 diff_register.sort()
 
 # comparing the normalized 2D Hirshfeld surface maps
-if len(diff_register) > 1:
+while len(diff_register) > 1:
     for entry in diff_register[1:]:
         ref_file = diff_register[0]
         probe_file = entry
@@ -166,5 +166,7 @@ if len(diff_register) > 1:
             for entry in interim[1:]:
                 newfile.write(str(entry))
 
+    # enter the next round of the Round robin tournament:
+    del diff_register[0]
 print("done")
 sys.exit(0)
