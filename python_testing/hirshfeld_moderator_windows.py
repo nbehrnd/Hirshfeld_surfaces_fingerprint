@@ -61,7 +61,7 @@ import fnmatch
 import os
 import platform
 import shutil
-import subprocess as sub
+import subprocess as sp # sub
 import sys
 
 # import of the lesser common / non-standard modules:
@@ -609,9 +609,20 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
+    # place holder, start:
+    dat_register = []
+    print("echo place holder")
+    print(str(os.getcwd()))
+    
+    for file in os.listdir("."):
+        if fnmatch.fnmatch(file, "*.dat"):
+            dat_register.append(file)
+    dat_register.sort()
+    print("past collection, {} entries.".format(len(dat_register)))
+    # place holder, end.
     for entry in dat_register:
         # surface the .dat file a level:
-        shutil.copy(entry, root)
+        # shutil.copy(entry, root)
         print(entry)
 
         if entry.startswith("diff"):
@@ -620,29 +631,40 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
             difference_map = False
 
         # define the deposit file:
-        gp.c('input = "{}"'.format(entry))
-        gp.c('len_root = strlen(input) - 4')
-        gp.c('root = substr(input, 1, len_root)')
-        gp.c('output_file = root . ".png"')
-        gp.c('set output(output_file)')
+        input_file = str(entry)
+        output_file = str(entry)[:-4] + str(".png")
 
-        # brief statistics per .cxs file read:
-        gp.c('stats input u 3 nooutput')
-        gp.c('z_min = sprintf("%1.6f", STATS_min)')
-        gp.c('z_low = "zmin: " . z_min')
-        gp.c('z_max = sprintf("%1.6f", STATS_max)')
+        pl = ['input = "{}"'.format(entry)]
+#        gp.c('len_root = strlen(input) - 4')
+#        gp.c('root = substr(input, 1, len_root)')
+#        gp.c('output_file = root . ".png"')
+        pl += ['set output "{}"'.format(output_file)]
+
+#        # brief statistics per .cxs file read:
+        pl += ['stats input u 3 nooutput']
+        pl += ['z_min = sprintf("%1.6f", STATS_min)']
+        pl += ['z_low = "zmin: " . z_min']
+        pl += ['z_max = sprintf("%1.6f", STATS_max)']
+
+        pl += ['print(z_low)']  # place holder
 
         if difference_map is False:
-            gp.c('z_top = "zmax: " . z_max')
+            pl += ['z_top = "zmax: " . z_max']
         if difference_map is True:
             # account for the then used minus sign reporting z_min:
-            gp.c('z_top = "zmax:  " . z_max')
+            pl += ['z_top = "zmax:  " . z_max']
 
-        gp.c('report = "file: " . input . " " . z_low . " " . z_top')
+        pl += ['print(z_top)']  # place holder
+
+        pl += ['report = "file: " . input . " " . z_low . " " . z_top']
+        
+        pl += ['print(report)']  # place holder
+
         if screen == "on":
             # provision of a a permanent STATS record:
-            gp.c('set print "gp_report.txt" append')
-            gp.c('print(report)')
+            pass
+        pl += ['set print "gp_report.txt" append']
+        pl += ['print(report)']
 
         # screening format definition
         #
@@ -650,87 +672,87 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         # equally allows adjustment map range de/di and z-scaling in
         # subsequent high resolution .png and .pdf output.
         if screen == "on":
-            gp.c('set term pngcairo size 819,819 crop font "Arial,13" \
-                enha lw 2')
+            pl += ['set term pngcairo size 819,819 crop font "Arial,13" \
+                enha lw 2']
         # non-screening format definition:
         if screen == "off":
-            gp.c('set term pngcairo size 4096,4096 crop font "Arial,64" \
-                    enha lw 10')
+            pl += ['set term pngcairo size 4096,4096 crop font "Arial,64" \
+                    enha lw 10']
 
-        gp.c('set grid lw 0.5; set size square')
-        gp.c('set xtics 0.4,0.2; set ytics 0.4,0.2')
-        gp.c('set xtics format "%2.1f"; set ytics format "%2.1f"')
+        pl += ['set grid lw 0.5; set size square']
+        pl += ['set xtics 0.4,0.2; set ytics 0.4,0.2']
+        pl += ['set xtics format "%2.1f"; set ytics format "%2.1f"']
         if screen == "off":
-            gp.c('set label "d_e" at graph 0.05,0.90 left front \
-                font "Arial,104"')
-            gp.c('set label "d_i" at graph 0.90,0.05 left front \
-                font "Arial,104"')
-            gp.c('set label root at graph 0.05,0.05 left front \
-                font "Arial,104" noenhanced')
+            pl += ['set label "d_e" at graph 0.05,0.90 left front \
+                font "Arial,104"']
+            pl += ['set label "d_i" at graph 0.90,0.05 left front \
+                font "Arial,104"']
+            pl += ['set label input at graph 0.05,0.05 left front \
+                font "Arial,104" noenhanced']
 
-            gp.c('set label z_top at graph 0.70,0.20 left front \
-                font "Courier,70"')
-            gp.c('set label z_low at graph 0.70,0.17 left front \
-                font "Courier,70"')
+            pl += ['set label z_top at graph 0.70,0.20 left front \
+                font "Courier,70"']
+            pl += ['set label z_low at graph 0.70,0.17 left front \
+                font "Courier,70"']
 
         if screen == "on":
-            gp.c('set label "d_e" at graph 0.05,0.90 left front \
-                font "Arial,21"')
-            gp.c('set label "d_i" at graph 0.90,0.05 left front \
-                font "Arial,21"')
-            gp.c('set label root at graph 0.05,0.05 left front \
-                font "Arial,21" noenhanced')
+            pl += ['set label "d_e" at graph 0.05,0.90 left front \
+                font "Arial,21"']
+            pl += ['set label "d_i" at graph 0.90,0.05 left front \
+                font "Arial,21"']
+            pl += ['set label input at graph 0.05,0.05 left front \
+                font "Arial,21" noenhanced']
 
-            gp.c('set label z_top at graph 0.70,0.20 left front \
-                font "Courier,14"')
-            gp.c('set label z_low at graph 0.70,0.17 left front \
-                font "Courier,14"')
+            pl += ['set label z_top at graph 0.70,0.20 left front \
+                font "Courier,14"']
+            pl += ['set label z_low at graph 0.70,0.17 left front \
+                font "Courier,14"']
 
         if screen == "on":
             # range indicator "standard map" (de and di [0.4,2.6] A)
-            gp.c('set arrow nohead from 0.4,2.6 to 2.6,2.6 dt 2 front')
-            gp.c('set arrow nohead from 2.6,0.4 to 2.6,2.6 dt 2 front')
+            pl += ['set arrow nohead from 0.4,2.6 to 2.6,2.6 dt 2 front']
+            pl += ['set arrow nohead from 2.6,0.4 to 2.6,2.6 dt 2 front']
             # range indicator "translated map" (de and di [0.8,3.0 A)
-            gp.c('set arrow nohead from 0.8,0.8 to 0.8,3.0 dt 3 front')
-            gp.c('set arrow nohead from 0.8,0.8 to 3.0,0.8 dt 3 front')
+            pl += ['set arrow nohead from 0.8,0.8 to 0.8,3.0 dt 3 front']
+            pl += ['set arrow nohead from 0.8,0.8 to 3.0,0.8 dt 3 front']
 
-        gp.c('set pm3d map; \
-            set pm3d depthorder; set hidden; set hidden3d')
-        gp.c('unset key')
+        pl += ['set pm3d map; \
+            set pm3d depthorder; set hidden; set hidden3d']
+        pl += ['unset key']
 
         if bg == 1:  # provide an optional contrast enhancement
-            gp.c('set object 1 rectangle from graph 0,0 to graph 1,1 \
-                fillcolor rgb "gray30" behind')
+            pl += ['set object 1 rectangle from graph 0,0 to graph 1,1 \
+                fillcolor rgb "gray30" behind']
 
         # color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
-            gp.c(rainbow)
+            pl += [rainbow]
         if (difference_map is False) and (alt == 1):
-            gp.c('set palette cubehelix start 0 cycles -1. saturation 1')
+            pl += ['set palette cubehelix start 0 cycles -1. saturation 1']
 
         # color scheme for difference map:
         if (difference_map is True) and (screen == "on"):
-            gp.c(three_level_new)
+            pl += [three_level_new]
         if (difference_map is True) and (screen == "off") and (alt == 0):
-            gp.c(three_level_old)
+            pl += [three_level_old]
         if (difference_map is True) and (screen == "off") and (alt == 1):
-            gp.c(bent_three_level_0064)
+            pl += [bent_three_level_0064]
 
-        gp.c('set xrange ["{}":"{}"]'.format(xmin, xmax))
-        gp.c('set yrange ["{}":"{}"]'.format(xmin, xmax))  # square shaped plot
+        pl += ['set xrange ["{}":"{}"]'.format(xmin, xmax)]
+        pl += ['set yrange ["{}":"{}"]'.format(xmin, xmax)]  # square shaped plot
 
         # adjustment of cbrange parameter
         if difference_map is False:
-            gp.c('set cbrange [0:"{}"]'.format(zmax))
+            pl += ['set cbrange [0:"{}"]'.format(zmax)]
         if (difference_map is False) and (screen == "on"):
             # This default is suggested by P. Raiteri and A. Rohl:
-            gp.c('set cbrange [0:0.08]')
+            pl += ['set cbrange [0:0.08]']
 
         if difference_map is True:
-            gp.c('set cbrange [-"{}":"{}"]'.format(zmax, zmax))
+            pl += ['set cbrange [-"{}":"{}"]'.format(zmax, zmax)]
         if (difference_map is True) and (screen == "on"):
             # This default is suggested by P. Raiteri and A. Rohl:
-            gp.c('set cbrange [-0.025:0.025]')
+            pl += ['set cbrange [-0.025:0.025]']
 
         # A conditional plotting / tiling, as suggested by Ethan Merritt.
         #
@@ -739,16 +761,19 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         # while working with the analogue pdf_map function.
 
 
-#        gp.c('sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
-#            ps 0.001 lc palette z'.format(entry))
+###        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
+###            ps 0.001 lc palette z'.format(entry)]
 
-        gp.c('sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
-            ps 0.05 lc palette z'.format(entry))
+        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
+            ps 0.05 lc palette z'.format(entry)]
 
-        # Re-initiate gnuplot prior to work on a new data set:
-        gp.c('reset session')
+#        # Re-initiate gnuplot prior to work on a new data set:
+#        pl += ['reset session']
+        pt = '\n'.join(pl)
 
-    os.chdir(root)
+        sp.run(['gnuplot'], input=pt.encode('utf-8'), check=True)
+
+#    os.chdir(root)
 
 
 def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
@@ -761,7 +786,7 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     print("\nMap data processed:")
     for entry in dat_register:
         # surface the .dat file a level:
-        shutil.copy(entry, root)
+#        shutil.copy(entry, root)
         print(entry)
 
         if entry.startswith("diff"):
@@ -770,70 +795,81 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
             difference_map = False
 
         # define the deposit file:
-        gp.c('input = "{}"'.format(entry))
-        gp.c('len_root = strlen(input) - 4')
-        gp.c('root = substr(input, 1, len_root)')
-        gp.c('output_file = root . ".pdf"')
-        gp.c('set output(output_file)')
+        input_file = str(entry)
+        output_file = str(entry)[:-4] + str(".pdf")
+
+        pl = ['input = "{}"'.format(entry)]
+#        gp.c('len_root = strlen(input) - 4')
+#        gp.c('root = substr(input, 1, len_root)')
+#        gp.c('output_file = root . ".pdf"')
+        pl += ['set output "{}"'.format(output_file)]
 
         # brief statistics per .cxs file read:
-        gp.c('stats input u 3 nooutput')
-        gp.c('z_min = sprintf("%1.6f", STATS_min)')
-        gp.c('z_low = "zmin: " . z_min')
-        gp.c('z_max = sprintf("%1.6f", STATS_max)')
+        pl += ['stats input u 3 nooutput']
+        pl += ['z_min = sprintf("%1.6f", STATS_min)']
+        pl += ['z_low = "zmin: " . z_min']
+        pl += ['z_max = sprintf("%1.6f", STATS_max)']
 
         if difference_map is False:
-            gp.c('z_top = "zmax: " . z_max')
+            pl += ['z_top = "zmax: " . z_max']
         if difference_map is True:
             # account for the then used minus sign reporting z_min:
-            gp.c('z_top = "zmax:  " . z_max')
+            pl += ['z_top = "zmax:  " . z_max']
 
-        gp.c('set term pdfcairo size 6cm,6cm font "Arial,8" enha lw 1')
-        gp.c('set grid lw 0.5; set size square')
-        gp.c('set xtics 0.4,0.2; set ytics 0.4,0.2')
-        gp.c('set xtics format "%2.1f"; set ytics format "%2.1f"')
+        pl += ['set term pdfcairo size 6cm,6cm font "Arial,8" enha lw 1']
+        pl += ['set grid lw 0.5; set size square']
+        pl += ['set xtics 0.4,0.2; set ytics 0.4,0.2']
+        pl += ['set xtics format "%2.1f"; set ytics format "%2.1f"']
 
-        gp.c('set label "d_e" at graph 0.05,0.90 left front')
-        gp.c('set label "d_i" at graph 0.90,0.05 left front ')
-        gp.c('set label root at graph 0.05,0.05 left front noenhanced')
-        gp.c('set label z_top at graph 0.65,0.20 left front font "Courier,7"')
-        gp.c('set label z_low at graph 0.65,0.17 left front font "Courier,7"')
+        pl += ['set label "d_e" at graph 0.05,0.90 left front']
+        pl += ['set label "d_i" at graph 0.90,0.05 left front ']
+        pl += ['set label input at graph 0.05,0.05 left front noenhanced']
+        pl += ['set label z_top at graph 0.65,0.20 left front font "Courier,7"']
+        pl += ['set label z_low at graph 0.65,0.17 left front font "Courier,7"']
 
-        gp.c(
-            'set pm3d map')  #; set pm3d depthorder; set hidden; set hidden3d')
-        gp.c('unset key')
+        pl += ['set pm3d map']  #; set pm3d depthorder; set hidden; set hidden3d')
+        pl += ['unset key']
 
         if bg == 1:
             # provide an optional contrast enhancement:
-            gp.c('set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
-                fillcolor rgb "gray30" behind')
+            pl += ['set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
+                fillcolor rgb "gray30" behind']
 
         # default color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
-            gp.c(rainbow)
+            print("rainbow currently not available.")
+            sys.exit()
+            # pl += ['rainbow']
         if (difference_map is False) and (alt == 1):
-            gp.c('set palette cubehelix start 0 cycles -1. saturation 1')
+            pl += ['set palette cubehelix start 0 cycles -1. saturation 1']
 
         # default color scheme for difference map:
         if (difference_map is True) and (alt == 0):
-            gp.c(three_level_old)
+            print('three_level_old currentl disabled')
+            sys.exit(0)
+            # pl += ['three_level_old']
         if (difference_map is True) and (alt == 1):
-            gp.c(bent_three_level_0064)
+            print('bent_three_level_0064 currently not available')
+            sys.exit(0)
+            # pl += ['bent_three_level_0064']
 
-        gp.c('set xrange ["{}":"{}"]'.format(xmin, xmax))
-        gp.c('set yrange ["{}":"{}"]'.format(xmin, xmax))  # square shaped plot
+        pl += ['set xrange ["{}":"{}"]'.format(xmin, xmax)]
+        pl += ['set yrange ["{}":"{}"]'.format(xmin, xmax)]  # square shaped plot
         if difference_map is False:
-            gp.c('set cbrange [0:"{}"]'.format(zmax))
+            pl += ['set cbrange [0:"{}"]'.format(zmax)]
         if difference_map is True:
-            gp.c('set cbrange ["-{}":"{}"]'.format(zmax, zmax))
+            pl += ['set cbrange ["-{}":"{}"]'.format(zmax, zmax)]
 
         # conditional tiling:  (significant savings for .pdf)
 
-        gp.c('sp "{}" u 1:2:((abs($3) > 0) ? $3:NaN) w p pt 5 ps 0.001\
-            lc palette z'.format(entry))
+        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3:NaN) w p pt 5 ps 0.001\
+            lc palette z'.format(entry)]
 
         # Re-initiate gnuplot prior to work on a new data set:
-        gp.c('reset session')
+        # pl += ['reset session']
+        pt = '\n'.join(pl)
+        
+        sp.run(['gnuplot'], input=pt.encode('utf-8'), check=True)        
 
     os.chdir(root)
 
