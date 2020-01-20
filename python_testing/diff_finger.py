@@ -148,7 +148,7 @@ if len(diff_register) > 1:
                 z_value = round(Decimal(str(to_reformat[2])[0:-1]), 8)
 
                 # re-insert the blanks met in normalized 2D fingerprints:
-                if str(y_value) == ref_y_min:
+                if float(y_value) == float(ref_y_min):
                     newfile.write("\n")
 
                 retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
