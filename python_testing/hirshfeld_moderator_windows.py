@@ -4,56 +4,52 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-01-13 (YYYY-MM-DD)
+# edit:    2020-01-20 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
-To work with (under eiter Linux or Windows CPython2 or 3) from the CLI, deposit
-this script altogether with fingerprint.f90 in the folder containing the .cxs
-CrystalExplorer files about the Hirshfeld surfaces computed at very high
-resolution.  Launch, from the CLI
+The addition of 'windows' to this script's name only reflects some initial
+difficulties to access both Fortran and C compiler, ruby, and eventually
+moderating Python on one and the same computer.  Different to its brother,
+hirshfeld_moderator.py, the Hirshfeld analysis with this script requires
+only a working installation of Python and Fortran for the computations.
 
-python3 hirshfeld_moderator.py -h
+Note that the eased, now almost unified, Python-based access to this type
+of scrutiny may equate to a drop in computational performance compared of
+the C-based comparison of already normalized fingerprints.  This is why a)
+hirshfeld_moderator.py still is provided side-by-side to this script.
+This is b) why the task of generation of normalized 2D Hirshfeld surface
+fingerprints still is relayed to the Fortran script fingerprint.f90, which
+is the sole other file beside this script (hirshfeld_moderator_windows.py)
+you need to put into the folder of .cxs to analyze.
 
-to enter the help menu.  Launch
+With the exception of numpy, considerably supporting the underlying work
+to compute the difference maps, again this script uses Python modules a
+typical Python installation already includes.  (To find more about numpy,
+see for example http://www.numpy.org/.)  Thus, the script should work on
+Windows, Linux, and MacOS.
 
-python3 hirshfeld_moderator.py -l
+In the course of running the script, fingerprint.f90 needs to be compiled.
+The script attempts to do this on the fly with either gfortran, or gcc,
+both freely available.  It is optional to visualize the maps computed from
+within this script, relaying to gnuplot (www.gnuplot.info).
 
-to list, -j to join the .cxs files into an automatically generated directory,
-cxs_workshop.  Use then toggle -n to generate normalized 2D Hirshfeld surface
-fingerprints.  Their subsequent comparison (-c) yields difference maps about
-which you may compute the ruby difference number (-r).
+In case of using Windows as hosting operational system, add Python, your
+Fortran compiler (gfortran or gcc), and gnuplot -- if you want to display
+the results on the fly -- to the system's PATH variable.
 
-If you have an installation of gnuplot (www.gnuplot.info) and CPython module
-PyGnuplot.py (from PyPi package index), you then may generate an overview (-o)
-about the computations.  These intentionally small images allow you to adjust
-the map range to use in the subsequent generation of high resolution fingerprint
-or difference maps.  Call for example either 
+This moderator script offers the same functions as its sibling and equally
+is launched from the terminal, e.g. by
 
-python hirshfeld_moderator_windows --fpng e
+python hirshfeld_moderator_windows.py -h
 
-for fingerprint maps of extended map range, or
+Hints how to use the program are provided both in hirshfeld_moderator.py,
+and the README.org.
 
-python hirshfeld_moderator_windows --dpng s
-
-for difference maps of standard map range.  Both map types require one of the
-following parameters:
-
-s   standard map range (0.6 to 2.6 A)
-t   translated map range (0.8 to 3.0 A), or
-e   extended map range (0.6 to 3.0 A)
-
-An additional adjustment of the representation is to use a different intensity
-scaling (--z_max parameter) than the default constrain of 0.080 for fingerpring,
-and |0.025| for difference maps; which may be set as an option.  As a help, the
-z_min and z_max values met in the .dat file currently read are print on the
-corresponding .png / .pdf map.  The overview (-o) equally writes these data into
-gp_report.txt, too.
-
-In addition to these parameters, you may add -- ein either consecution or number
--- the toggle -a for an alternative set of color scheme for either map type.
-Secondly, -g changes the background from colorless / bright white (default) to a
-neuter gray. """
+source WinPython: http://winpython.github.io/
+source TortoiseGit:  https://tortoisegit.org
+source gnuplot: http://www.gnuplot.info
+"""
 
 import argparse
 from decimal import Decimal
@@ -61,23 +57,15 @@ import fnmatch
 import os
 import platform
 import shutil
-import subprocess as sp # sub
+import subprocess as sub
 import sys
 
-# import of the lesser common / non-standard modules:
+# Numpy is not from Python's core library.
 try:
     import numpy as np
-except:
+except IOError:
     print("\nThis script requires the CPython module numpy.  Exit.")
     sys.exit(0)
-
-try:
-    import PyGnuplot as gp
-except:
-    print("\nWithout CPython module PyGnuplot (available e.g. on PyPi)")
-    print("this script is not able to reach for gnuplot to visualize")
-    print("the results of the computation.  This does not affect the")
-    print("computations with and of the maps, though.")
 
 global root
 root = os.getcwd()
@@ -122,7 +110,7 @@ def listing(extension="*.cxs", copy=False):
             if copy is True:
                 try:
                     shutil.copy(file, "cxs_workshop")
-                except IOError:
+                except OSError:
                     print("{} wasn't copied to 'cxs_workshop'.".format(file))
     print("\n{} files of type {} were identified.\n".format(
         len(file_register), extension))
@@ -142,16 +130,16 @@ def file_crawl(copy=False):
                         shutil.copy(
                             os.path.join(os.getcwd(), file),
                             os.path.join(root, "cxs_workshop"))
-                    except IOError:
+                    except OSError:
                         print("{} wasn't copied to workshop.".format(file))
 
 
 def rename_cxs():
     """ Truncate file names of CrystalExplorer surface files.
 
-/media/norwid2/TOSHIBA/joining_back/possible_merger_hirshfeld_moderator_windows.pyz_v    CrystalExplorer provides Hirshfeld surfaces named in a pattern of
+    CrystalExplorer provides Hirshfeld surfaces named in a pattern of
     'example_example.cxs'.  Work is easier if their file name is truncated
-    to 'example.cxs'.  This applies only to copies of .cxs. """
+    to 'example.cxs'.  This is applied only to copies of .cxs. """
     os.chdir("cxs_workshop")
 
     for file in os.listdir("."):
@@ -160,14 +148,14 @@ def rename_cxs():
                 new_filename = str(file.split("_")[1])
                 try:
                     shutil.move(file, new_filename)
-                except:
+                except OSError:
                     print("Renaming {} failed.".format(file))
 
     os.chdir(root)
 
 
 def compile_f90():
-    """ Compile fingerprint.f90 with either gfortran (default), or gcc. """
+    """ Compile fingerprint.f90 with gfortran (default), or gcc. """
     compile_gfo_f90 = str("gfortran fingerprint.f90 -o fingerprint.x")
     compile_gcc_f90 = str("gcc fingerprint.f90 -o fingerprint.x")
     print("Compilation of fingerprint.f90 with either gfortran or gcc.")
@@ -183,7 +171,7 @@ def compile_f90():
         except IOError:
             print("Compilation attempt with gcc equally failed.")
             print("Maybe fingerprint.f90 is not in the project folder.")
-            print("Equally ensure gfortran's or gcc compiler's installation.")
+            print("Equally ensure installation of gfortran or gcc.")
             sys.exit(0)
 
 
@@ -231,7 +219,7 @@ def normalize_cxs():
     print("\nNormalization of .cxs files is completed.")
 
 
-def difference_maps():
+def map_differences():
     """ Round-Robin tournament of the normalized 2D fingerprint maps. """
 
     # identification of the files to work with:
@@ -332,7 +320,7 @@ def difference_maps():
             result_list = result.tolist()
 
             output = str("diff_") + str(ref_file)[:-4] + \
-                        str("_") + str(probe_file)
+                str("_") + str(probe_file)
 
             with open(output, mode="w") as newfile:
                 for result_entry in result_list:
@@ -342,7 +330,7 @@ def difference_maps():
                     y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
                     z_value = round(Decimal(str(to_reformat[2])[0:-1]), 8)
 
-                    # re-insert the blanks met in normalized 2D fingerprints:
+                    # us the blanks as seen in normalized 2D fingerprints:
                     if float(y_value) == float(ref_y_min):
                         newfile.write("\n")
 
@@ -389,8 +377,7 @@ def ruby_number():
 
 
 # Section 1b, Definition of non-trivial color palettes which are not
-# part of gnuplot's built-in defaults.  Their later use follows a pattern
-# like gp.c('color_palette').
+# part of gnuplot's built-in defaults, but eventually used.
 
 # The CrystalExplorer like rainbow about 2D fingerprints.
 #
@@ -412,27 +399,23 @@ rainbow = str("""set palette defined (0  1.0 1.0 1.0, \
 
 # The classical three-level blue-white-red palette
 #
-# As for the CrystalExplorer-like rainbow, this is a legacy from the
-# code basis by Andrew Rohl and Paolo Raiteri.
-three_level_old = str("set palette defined (-1 'blue', 0 'white', 1 'red')")
+# This equally is defined in the code basis by Andrew Rohl and Paolo Raiteri.
+three_level_old = str('set palette defined (-1 "blue", 0 "white", 1 "red")')
 #
 # Because its neuter level "white" is indiscernible from "paper white",
 # the screening mode uses the softer three-level palette (below, transient
-# with neuter gray) instead.  This selection shall facilitate parameter
-# adjustments for the high-quality maps.
+# with neuter gray) instead.
 
 # The softer three-level palette:
 #
-# A heavily constrained implementation of Kenneth Moreland's suggestions
-# for diverging color palettes.  Even if the output does not benefit from
-# the optional background / contrast toggle -g, the tiles indicating a
-# difference close to zero are easier to discern from a white background
-# (of paper), than in a palette considering only blue, white and read.
-#
-# Note to toggle --alt to benefit from Kenneth Moreland's
-# bent-cool-warm palette below.
+# Used by default for the screening .png to faciliate discern of tiles with
+# z close to zero (otherwise print white) from the paper-white background.
+# A heavily constrained implementation of Kenneth Morelands suggestions
+# for diverging color palettes.  If not screening, you may either enhance the
+# contrast to the background (toggle -g) or use the alternative (toggle -a)
+# bent-cool-warm palette by Kenneth Moreland.
 three_level_new = str(
-    "set palette defined (-1 'blue', 0 'light-gray', 1 'red')")
+    'set palette defined (-1 "blue", 0 "light-gray", 1 "red")')
 
 # The better diverging palette for the difference maps.
 #
@@ -440,7 +423,7 @@ three_level_new = str(
 # "bent-cool-warm-table-float-0064.csv" [1] converted by csv2plt.py [2]
 # into a format accessible to gnuplot.  From a perceptual perspective,
 # it improves the detail of representation about the difference map
-# data either the classical three level blue_white_red palette, or the
+# beyond what the classical three level blue_white_red palette, or the
 # already improved blue_light-gray_red palette offer.
 #
 # [1]
@@ -571,7 +554,7 @@ def assemble_cxs():
     os.chdir(root)
 
 
-def search_dat(map_type="delta"):
+def search_dat(map_type="delta", screen="off"):
     """ Search for .dat files, assume difference maps of typical interest.
 
     Two cases: fingerprints (type fingerprint, files ending on *.dat), or
@@ -580,17 +563,25 @@ def search_dat(map_type="delta"):
     dat_register = []
     os.chdir("cxs_workshop")
 
-    for file in os.listdir("."):
-        # branch about fingerprint .dat:
-        if map_type == "fingerprint":
+    # indiscriminate register population (i.e., screening):
+    if screen == "on":
+        for file in os.listdir("."):
             if fnmatch.fnmatch(file, "*.dat"):
-                if fnmatch.fnmatch(file, "diff*.dat") is False:
-                    dat_register.append(file)
-
-        # branch about difference map .dat:
-        if map_type == "delta":
-            if fnmatch.fnmatch(file, "diff*.dat"):
                 dat_register.append(file)
+
+    # discriminate register population (i.e., either map type):
+    if screen == "off":
+        for file in os.listdir("."):
+            # branch about fingerprint .dat:
+            if map_type == "fingerprint":
+                if fnmatch.fnmatch(file, "*.dat"):
+                    if fnmatch.fnmatch(file, "diff*.dat") is False:
+                        dat_register.append(file)
+
+            # branch about difference map .dat:
+            if map_type == "delta":
+                if fnmatch.fnmatch(file, "diff*.dat"):
+                    dat_register.append(file)
 
     dat_register.sort()
     os.chdir(root)
@@ -600,7 +591,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     """ The general pattern for any of the maps if deposit as .png.
 
     As experienced, toggling between gnuplot terminal definitions about
-    pngcairo <-> pdfcairo breaks this script's reliable action.  Instead,
+    pngcairo and pdfcairo breaks this script's reliable action.  Instead,
     it is best to sum up the relevant per gnuplot terminal; e.g. pngcairo.
 
     Contrasting to pdf_map, png_map includes instructions to screen the
@@ -609,20 +600,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
-    # place holder, start:
-    dat_register = []
-    print("echo place holder")
-    print(str(os.getcwd()))
-    
-    for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "*.dat"):
-            dat_register.append(file)
-    dat_register.sort()
-    print("past collection, {} entries.".format(len(dat_register)))
-    # place holder, end.
     for entry in dat_register:
-        # surface the .dat file a level:
-        # shutil.copy(entry, root)
         print(entry)
 
         if entry.startswith("diff"):
@@ -630,41 +608,33 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         else:
             difference_map = False
 
-        # define the deposit file:
+        # define for the deposit file:
         input_file = str(entry)
+        file_stamp = str(entry)[:-4]
         output_file = str(entry)[:-4] + str(".png")
 
-        pl = ['input = "{}"'.format(entry)]
-#        gp.c('len_root = strlen(input) - 4')
-#        gp.c('root = substr(input, 1, len_root)')
-#        gp.c('output_file = root . ".png"')
-        pl += ['set output "{}"'.format(output_file)]
+        pl = str("gnuplot -e '")
+        pl += str('input = "{}"; '.format(input_file))
+        pl += str('set output "{}"; '.format(output_file))
 
-#        # brief statistics per .cxs file read:
-        pl += ['stats input u 3 nooutput']
-        pl += ['z_min = sprintf("%1.6f", STATS_min)']
-        pl += ['z_low = "zmin: " . z_min']
-        pl += ['z_max = sprintf("%1.6f", STATS_max)']
-
-        pl += ['print(z_low)']  # place holder
+        # brief statistics per .cxs file read:
+        pl += str('stats input u 3 nooutput; ')
+        pl += str('z_min = sprintf("%1.6f", STATS_min); ')
+        pl += str('z_low = "zmin: " . z_min; ')
+        pl += str('z_max = sprintf("%1.6f", STATS_max); ')
 
         if difference_map is False:
-            pl += ['z_top = "zmax: " . z_max']
+            pl += str('z_top = "zmax: " . z_max; ')
         if difference_map is True:
             # account for the then used minus sign reporting z_min:
-            pl += ['z_top = "zmax:  " . z_max']
-
-        pl += ['print(z_top)']  # place holder
-
-        pl += ['report = "file: " . input . " " . z_low . " " . z_top']
-        
-        pl += ['print(report)']  # place holder
+            pl += str('z_top = "zmax:  " . z_max; ')
 
         if screen == "on":
             # provision of a a permanent STATS record:
-            pass
-        pl += ['set print "gp_report.txt" append']
-        pl += ['print(report)']
+            pl += str(
+                'report = "file: " . input . " " . z_low . " " . z_top; ')
+            pl += str('set print "gp_report.txt" append; ')
+            pl += str('print(report); ')
 
         # screening format definition
         #
@@ -672,121 +642,111 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         # equally allows adjustment map range de/di and z-scaling in
         # subsequent high resolution .png and .pdf output.
         if screen == "on":
-            pl += ['set term pngcairo size 819,819 crop font "Arial,13" \
-                enha lw 2']
+            pl += str('set term pngcairo size 819,819 crop font "Arial,13" \
+                enha lw 2; ')
         # non-screening format definition:
         if screen == "off":
-            pl += ['set term pngcairo size 4096,4096 crop font "Arial,64" \
-                    enha lw 10']
+            pl += str('set term pngcairo size 4096,4096 crop font "Arial,64" \
+                    enha lw 10; ')
 
-        pl += ['set grid lw 0.5; set size square']
-        pl += ['set xtics 0.4,0.2; set ytics 0.4,0.2']
-        pl += ['set xtics format "%2.1f"; set ytics format "%2.1f"']
+        pl += str('set grid lw 0.5; set size square; ')
+        pl += str('set xtics 0.4,0.2; set ytics 0.4,0.2; ')
+        pl += str('set xtics format "%2.1f"; set ytics format "%2.1f"; ')
         if screen == "off":
-            pl += ['set label "d_e" at graph 0.05,0.90 left front \
-                font "Arial,104"']
-            pl += ['set label "d_i" at graph 0.90,0.05 left front \
-                font "Arial,104"']
-            pl += ['set label input at graph 0.05,0.05 left front \
-                font "Arial,104" noenhanced']
+            pl += str('set label "d_e" at graph 0.05,0.90 left front \
+                font "Arial,104"; ')
+            pl += str('set label "d_i" at graph 0.90,0.05 left front \
+                font "Arial,104"; ')
+            pl += str('set label "{}" at graph 0.05,0.05 left front \
+                font "Arial,104" noenhanced; '.format(file_stamp))
 
-            pl += ['set label z_top at graph 0.70,0.20 left front \
-                font "Courier,70"']
-            pl += ['set label z_low at graph 0.70,0.17 left front \
-                font "Courier,70"']
+            pl += str('set label z_top at graph 0.70,0.20 left front \
+                font "Courier,70"; ')
+            pl += str('set label z_low at graph 0.70,0.17 left front \
+                font "Courier,70"; ')
 
         if screen == "on":
-            pl += ['set label "d_e" at graph 0.05,0.90 left front \
-                font "Arial,21"']
-            pl += ['set label "d_i" at graph 0.90,0.05 left front \
-                font "Arial,21"']
-            pl += ['set label input at graph 0.05,0.05 left front \
-                font "Arial,21" noenhanced']
+            pl += str('set label "d_e" at graph 0.05,0.90 left front \
+                font "Arial,21"; ')
+            pl += str('set label "d_i" at graph 0.90,0.05 left front \
+                font "Arial,21"; ')
+            pl += str('set label "{}" at graph 0.05,0.05 left front \
+                font "Arial,21" noenhanced; '.format(file_stamp))
 
-            pl += ['set label z_top at graph 0.70,0.20 left front \
-                font "Courier,14"']
-            pl += ['set label z_low at graph 0.70,0.17 left front \
-                font "Courier,14"']
+            pl += str('set label z_top at graph 0.70,0.20 left front \
+                font "Courier,14"; ')
+            pl += str('set label z_low at graph 0.70,0.17 left front \
+                font "Courier,14"; ')
 
         if screen == "on":
             # range indicator "standard map" (de and di [0.4,2.6] A)
-            pl += ['set arrow nohead from 0.4,2.6 to 2.6,2.6 dt 2 front']
-            pl += ['set arrow nohead from 2.6,0.4 to 2.6,2.6 dt 2 front']
+            pl += str('set arrow nohead from 0.4,2.6 to 2.6,2.6 dt 2 front; ')
+            pl += str('set arrow nohead from 2.6,0.4 to 2.6,2.6 dt 2 front; ')
             # range indicator "translated map" (de and di [0.8,3.0 A)
-            pl += ['set arrow nohead from 0.8,0.8 to 0.8,3.0 dt 3 front']
-            pl += ['set arrow nohead from 0.8,0.8 to 3.0,0.8 dt 3 front']
+            pl += str('set arrow nohead from 0.8,0.8 to 0.8,3.0 dt 3 front; ')
+            pl += str('set arrow nohead from 0.8,0.8 to 3.0,0.8 dt 3 front; ')
 
-        pl += ['set pm3d map; \
-            set pm3d depthorder; set hidden; set hidden3d']
-        pl += ['unset key']
+        pl += str('set pm3d map; \
+            set pm3d depthorder; set hidden; set hidden3d; ')
+        pl += str('unset key; ')
 
         if bg == 1:  # provide an optional contrast enhancement
-            pl += ['set object 1 rectangle from graph 0,0 to graph 1,1 \
-                fillcolor rgb "gray30" behind']
+            pl += str('set object 1 rectangle from graph 0,0 to graph 1,1 \
+                fillcolor rgb "gray30" behind; ')
 
         # color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
-            pl += [rainbow]
+            pl += str(rainbow) + str('; ')
         if (difference_map is False) and (alt == 1):
-            pl += ['set palette cubehelix start 0 cycles -1. saturation 1']
+            pl += str(
+                'set palette cubehelix start 0 cycles -1. saturation 1; ')
 
         # color scheme for difference map:
         if (difference_map is True) and (screen == "on"):
-            pl += [three_level_new]
+            pl += str(three_level_new) + str('; ')
         if (difference_map is True) and (screen == "off") and (alt == 0):
-            pl += [three_level_old]
+            pl += str(three_level_old) + str('; ')
         if (difference_map is True) and (screen == "off") and (alt == 1):
-            pl += [bent_three_level_0064]
+            pl += str(bent_three_level_0064) + str('; ')
 
-        pl += ['set xrange ["{}":"{}"]'.format(xmin, xmax)]
-        pl += ['set yrange ["{}":"{}"]'.format(xmin, xmax)]  # square shaped plot
+        pl += str('set xrange ["{}":"{}"]; '.format(xmin, xmax))
+        pl += str('set yrange ["{}":"{}"]; '.format(xmin,
+                                                    xmax))  # square matrix
 
         # adjustment of cbrange parameter
         if difference_map is False:
-            pl += ['set cbrange [0:"{}"]'.format(zmax)]
+            pl += str('set cbrange [0:"{}"]; '.format(zmax))
         if (difference_map is False) and (screen == "on"):
             # This default is suggested by P. Raiteri and A. Rohl:
-            pl += ['set cbrange [0:0.08]']
+            pl += str('set cbrange [0:0.08]; ')
 
         if difference_map is True:
-            pl += ['set cbrange [-"{}":"{}"]'.format(zmax, zmax)]
+            pl += str('set cbrange [-"{}":"{}"]; '.format(zmax, zmax))
         if (difference_map is True) and (screen == "on"):
             # This default is suggested by P. Raiteri and A. Rohl:
-            pl += ['set cbrange [-0.025:0.025]']
+            pl += str('set cbrange [-0.025:0.025]; ')
 
         # A conditional plotting / tiling, as suggested by Ethan Merritt.
         #
         # To consider only tiles with z != 0 to populate the plots may
         # save considerably file size.  This is especially experienced
         # while working with the analogue pdf_map function.
+        pl += str('sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
+            ps 0.05 lc palette z; '.format(entry))
 
-
-###        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
-###            ps 0.001 lc palette z'.format(entry)]
-
-        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3 : NaN) w p pt 5 \
-            ps 0.05 lc palette z'.format(entry)]
-
-#        # Re-initiate gnuplot prior to work on a new data set:
-#        pl += ['reset session']
-        pt = '\n'.join(pl)
-
-        sp.run(['gnuplot'], input=pt.encode('utf-8'), check=True)
-
-#    os.chdir(root)
+        # Re-initiate gnuplot's memory prior to work on a new data set:
+        pl += str('reset session ') + str("'")
+        sub.call(pl, shell=True)
 
 
 def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
     """ The general pattern for any of the maps if deposit as .pdf.
 
-    With minor modifications, the design pattern follows the instructions
-    in png_map in the above definitions. """
+    The design pattern follows the instructions in png_map. """
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
     for entry in dat_register:
-        # surface the .dat file a level:
-#        shutil.copy(entry, root)
         print(entry)
 
         if entry.startswith("diff"):
@@ -796,82 +756,75 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
         # define the deposit file:
         input_file = str(entry)
+        file_stamp = str(entry)[:-4]
         output_file = str(entry)[:-4] + str(".pdf")
 
-        pl = ['input = "{}"'.format(entry)]
-#        gp.c('len_root = strlen(input) - 4')
-#        gp.c('root = substr(input, 1, len_root)')
-#        gp.c('output_file = root . ".pdf"')
-        pl += ['set output "{}"'.format(output_file)]
+        pl = str("gnuplot -e '")
+        pl += str('input = "{}" ; '.format(input_file))
+        pl += str('set output "{}"; '.format(output_file))
 
         # brief statistics per .cxs file read:
-        pl += ['stats input u 3 nooutput']
-        pl += ['z_min = sprintf("%1.6f", STATS_min)']
-        pl += ['z_low = "zmin: " . z_min']
-        pl += ['z_max = sprintf("%1.6f", STATS_max)']
+        pl += str('stats input u 3 nooutput; ')
+        pl += str('z_min = sprintf("%1.6f", STATS_min); ')
+        pl += str('z_low = "zmin: " . z_min; ')
+        pl += str('z_max = sprintf("%1.6f", STATS_max); ')
 
         if difference_map is False:
-            pl += ['z_top = "zmax: " . z_max']
+            pl += str('z_top = "zmax: " . z_max; ')
         if difference_map is True:
             # account for the then used minus sign reporting z_min:
-            pl += ['z_top = "zmax:  " . z_max']
+            pl += str('z_top = "zmax:  " . z_max; ')
 
-        pl += ['set term pdfcairo size 6cm,6cm font "Arial,8" enha lw 1']
-        pl += ['set grid lw 0.5; set size square']
-        pl += ['set xtics 0.4,0.2; set ytics 0.4,0.2']
-        pl += ['set xtics format "%2.1f"; set ytics format "%2.1f"']
+        pl += str('set term pdfcairo size 6cm,6cm font "Arial,8" enha lw 1; ')
+        pl += str('set grid lw 0.5; set size square; ')
+        pl += str('set xtics 0.4,0.2; set ytics 0.4,0.2; ')
+        pl += str('set xtics format "%2.1f"; set ytics format "%2.1f"; ')
 
-        pl += ['set label "d_e" at graph 0.05,0.90 left front']
-        pl += ['set label "d_i" at graph 0.90,0.05 left front ']
-        pl += ['set label input at graph 0.05,0.05 left front noenhanced']
-        pl += ['set label z_top at graph 0.65,0.20 left front font "Courier,7"']
-        pl += ['set label z_low at graph 0.65,0.17 left front font "Courier,7"']
+        pl += str('set label "d_e" at graph 0.05,0.90 left front; ')
+        pl += str('set label "d_i" at graph 0.90,0.05 left front;  ')
+        pl += str('set label "{}" at graph 0.05,0.05 left front noenhanced;  '.
+                  format(file_stamp))
+        pl += str(
+            'set label z_top at graph 0.65,0.20 left front font "Courier,7"; ')
+        pl += str(
+            'set label z_low at graph 0.65,0.17 left front font "Courier,7"; ')
 
-        pl += ['set pm3d map']  #; set pm3d depthorder; set hidden; set hidden3d')
-        pl += ['unset key']
+        pl += str('set pm3d map; \
+            set pm3d depthorder; set hidden; set hidden3d; ')
+        pl += str('unset key; ')
 
         if bg == 1:
             # provide an optional contrast enhancement:
-            pl += ['set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
-                fillcolor rgb "gray30" behind']
+            pl += str('set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
+                fillcolor rgb "gray30" behind; ')
 
         # default color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
-            print("rainbow currently not available.")
-            sys.exit()
-            # pl += ['rainbow']
+            pl += str(rainbow) + str('; ')
         if (difference_map is False) and (alt == 1):
-            pl += ['set palette cubehelix start 0 cycles -1. saturation 1']
+            pl += str(
+                'set palette cubehelix start 0 cycles -1. saturation 1; ')
 
         # default color scheme for difference map:
         if (difference_map is True) and (alt == 0):
-            print('three_level_old currentl disabled')
-            sys.exit(0)
-            # pl += ['three_level_old']
+            pl += str(three_level_old) + str('; ')
         if (difference_map is True) and (alt == 1):
-            print('bent_three_level_0064 currently not available')
-            sys.exit(0)
-            # pl += ['bent_three_level_0064']
+            pl += str(bent_three_level_0064) + str('; ')
 
-        pl += ['set xrange ["{}":"{}"]'.format(xmin, xmax)]
-        pl += ['set yrange ["{}":"{}"]'.format(xmin, xmax)]  # square shaped plot
-        if difference_map is False:
-            pl += ['set cbrange [0:"{}"]'.format(zmax)]
+        pl += str('set xrange ["{}":"{}"]; '.format(xmin, xmax))
+        pl += str('set yrange ["{}":"{}"]; '.format(xmin,
+                                                    xmax))  # square matrix
+        pl += str('set cbrange [0:"{}"]; '.format(zmax))
         if difference_map is True:
-            pl += ['set cbrange ["-{}":"{}"]'.format(zmax, zmax)]
+            pl += str('set cbrange ["-{}":"{}"]; '.format(zmax, zmax))
 
         # conditional tiling:  (significant savings for .pdf)
-
-        pl += ['sp "{}" u 1:2:((abs($3) > 0) ? $3:NaN) w p pt 5 ps 0.001\
-            lc palette z'.format(entry)]
+        pl += str('sp "{}" u 1:2:((abs($3) > 0) ? $3:NaN) w p pt 5 ps 0.001\
+            lc palette z; '.format(entry))
 
         # Re-initiate gnuplot prior to work on a new data set:
-        # pl += ['reset session']
-        pt = '\n'.join(pl)
-        
-        sp.run(['gnuplot'], input=pt.encode('utf-8'), check=True)        
-
-    os.chdir(root)
+        pl += str('reset session ') + str("'")
+        sub.call(pl, shell=True)
 
 
 # argparse section:
@@ -913,7 +866,7 @@ if __name__ == "__main__":
         action="store_true",
         help=
         "Preview 2D fingerprint and difference maps as low resolution .png. "
-        "Use it to adjust de/di map range (s, t, e) and z-scaling in the high resolution maps below."
+        "Use it to adjust de/di map range (s, t, e) and z-scaling in the high resolution maps."
     )
 
     # Either .png or .pdf of fingerprint maps (in high resolution):
@@ -975,7 +928,7 @@ if __name__ == "__main__":
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
     if args.compute:
-        difference_maps()  # comparison of the 2D fingerprint maps
+        map_differences()
     if args.ruby_number:
         ruby_number()
     if args.bg:
@@ -985,21 +938,8 @@ if __name__ == "__main__":
 
     # quick overviews with fixed extended range de/di and default z:
     if args.overview:
-        # import Gnuplot as gp
-        search_dat(map_type="fingerprint")
-        xmin = 0.4
-        xmax = 3.0
-        screen = "on"
-        zmax = 0.08
-        png_map(xmin, xmax, zmax, screen)
-
-        search_dat(map_type="delta")
-        xmin = 0.4
-        xmax = 3.0
-        screen = "on"
-        zmax = 0.025
-        png_map(xmin, xmax, zmax, screen)
-
+        search_dat(screen="on")
+        png_map(screen="on")
         print("")
         print("File 'gp_report.txt' provides a permanent record.")
 
