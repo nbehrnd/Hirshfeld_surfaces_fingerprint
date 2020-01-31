@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-01-20 (YYYY-MM-DD)
+# edit:    2020-01-31 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -326,16 +326,19 @@ def map_differences():
                 for result_entry in result_list:
                     to_reformat = str(result_entry).split()
 
-                    x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
-                    y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
-                    z_value = round(Decimal(str(to_reformat[2])[0:-1]), 8)
+                    x_value = str("{:3.2f}".format(
+                        float(str(to_reformat[0])[1:-1])))
+                    y_value = str("{:3.2f}".format(
+                        float(str(to_reformat[1])[0:-1])))
+                    z_value = str("{:10.8f}".format(
+                        round(float(str(to_reformat[2])[0:-1]), 8)))
 
-                    # us the blanks as seen in normalized 2D fingerprints:
+                    # re-insert the blanks met in normalized 2D fingerprints:
                     if float(y_value) == float(ref_y_min):
                         newfile.write("\n")
 
-                    retain = str("{}, {}, {}\n".format(x_value, y_value,
-                                                       z_value))
+                    retain = str("{} {} {}\n".format(x_value, y_value,
+                                                     z_value))
                     newfile.write(retain)
 
             # Remove the very first line in the report file (a blank one):
