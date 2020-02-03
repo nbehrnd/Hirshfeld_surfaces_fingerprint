@@ -260,13 +260,15 @@ def file_crawl(copy=False):
                 counter += 1
                 print("{}\t{}".format(counter, file))
 
-                if copy is True:
-                    try:
-                        shutil.copy(
-                            os.path.join(os.getcwd(), file),
-                            os.path.join(root, "cxs_workshop"))
-                    except OSError:
-                        print("{} wasn't copied to workshop.".format(file))
+    if copy is True:
+        print("\nFor now there is no retrieve of .cxs from sub-folders.")
+#                if copy is True:
+#                    try:
+#                        shutil.copy(
+#                            os.path.join(os.getcwd(), file),
+#                            os.path.join(root, "cxs_workshop"))
+#                    except OSError:
+#                        print("{} wasn't copied to workshop.".format(file))
 
 
 def rename_cxs():
