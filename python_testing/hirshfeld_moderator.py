@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-01-20 (YYYY-MM-DD)
+# edit:    2020-02-03 (YYYY-MM-DD)
 #
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  Intended for the CLI
@@ -280,7 +280,7 @@ def rename_cxs():
     for file in os.listdir("."):
         if fnmatch.fnmatch(file, "*.cxs"):
             if str("_") in file:
-                new_filename = str(file.split("_")[1])
+                new_filename = str(file.split("_")[0]) + str(".cxs")
                 try:
                     shutil.move(file, new_filename)
                 except OSError:
