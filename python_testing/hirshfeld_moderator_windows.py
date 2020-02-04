@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-03 (YYYY-MM-DD)
+# edit:    2020-02-04 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -119,21 +119,27 @@ def listing(extension="*.cxs", copy=False):
 def file_crawl(copy=False):
     """ Retrieve / copy .cxs by means of an os.walk. """
     counter = 0
-    for folder, subfolders, files in os.walk(root):
-        for file in files:
-            if fnmatch.fnmatch(file, "*.cxs"):
-                counter += 1
-                print("{}\t{}".format(counter, file))
+    cxs_to_copy = []
 
-    if copy is True:
-        print("\nFor now there is no retrieve of .cxs from sub-folders.")
-#                if copy is True:
-#                    try:
-#                        shutil.copy(
-#                            os.path.join(os.getcwd(), file),
-#                            os.path.join(root, "cxs_workshop"))
-#                    except OSError:
-#                        print("{} wasn't copied to workshop.".format(file))
+    for folder, subfolders, files in os.walk(root):
+        for subfolder in subfolders:
+            os.chdir(subfolder)
+            for file in os.listdir("."):
+                if file.endswith(".cxs"):
+                    cxs_to_copy.append(os.path.abspath(file))
+                    if copy is False:
+                        counter += 1
+                        print("{}\t{}".format(counter, file))
+            os.chdir(root)
+
+    if copy is True:  # not considered execpt on explicit consent.
+        for entry in cxs_to_copy:
+            try:
+                shutil.copy(entry,
+                            os.path.join(root, "cxs_workshop",
+                                         os.path.basename(entry)))
+            except:
+                print("Not copied to cxs_workshop: {}".format(entry))
 
 
 def rename_cxs():
