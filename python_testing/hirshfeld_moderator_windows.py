@@ -222,7 +222,7 @@ def normalize_cxs():
 
 def numpy_independent_differences():
     """ A computation of the fingerprints without numpy. """
-    # identification of the files to work with:
+    # identify the files to work with:
     os.chdir("cxs_workshop")
     diff_register = []
 
@@ -232,7 +232,7 @@ def numpy_independent_differences():
             diff_register.append(file)
     diff_register.sort()
 
-    # comparing the normalized 2D Hirshfeld surface maps
+    # compare the normalized 2D Hirshfeld surface maps
     while len(diff_register) > 1:
         for entry in diff_register[1:]:
             reference_file = diff_register[0]
@@ -293,7 +293,7 @@ def numpy_independent_differences():
                 for entry in difference_map[:-1]:
                     newfile.write("{}\n".format(entry.strip()))
         del diff_register[0]
-
+    os.chdir(root)
 
 def ruby_number():
     """ Add the absolute values of differences per difference map. """
