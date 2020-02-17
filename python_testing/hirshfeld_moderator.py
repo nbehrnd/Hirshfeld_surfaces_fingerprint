@@ -953,7 +953,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-c",
-        "--compute",
+        "--compare",
         help="Compute the differences between the 2D fingerprints. "
         "Output will be provided in files 'diff*.dat'.",
         action="store_true")
@@ -1033,7 +1033,7 @@ if __name__ == "__main__":
         compile_f90()  # render fingerprint.f90 executable
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
-    if args.compute:
+    if args.compare:
         compile_C()  # render diff_finger.c executable
         shuttle_C()  # shuttle the executable to the data.
         map_differences()
