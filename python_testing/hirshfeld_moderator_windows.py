@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-04 (YYYY-MM-DD)
+# edit:    2020-02-17 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -861,7 +861,7 @@ if __name__ == "__main__":
         action="store_true")
     parser.add_argument(
         "-c",
-        "--compute",
+        "--compare",
         help="Compute the differences between the 2D fingerprints. "
         "Output will be provided in files 'diff*.dat'.",
         action="store_true")
@@ -938,7 +938,7 @@ if __name__ == "__main__":
         compile_f90()  # render fingerprint.f90 executable
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
-    if args.compute:
+    if args.compare:
         map_differences()
     if args.ruby_number:
         ruby_number()
