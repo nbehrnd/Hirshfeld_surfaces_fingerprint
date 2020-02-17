@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-02-04 (YYYY-MM-DD)
+# edit:    2020-02-17 (YYYY-MM-DD)
 #
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  Intended for the CLI
@@ -1084,4 +1084,137 @@ if __name__ == "__main__":
     if args.fpng == "e":
         xmin = 0.4
         xmax = 3.0
-        if args
+        if args.zmax is None:
+            zmax = 0.08
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="fingerprint")
+        png_map(xmin, xmax, zmax, screen, alt, bg)
+
+    # options fingerprints, .pdf:
+    if args.fpdf == "s":
+        xmin = 0.4
+        xmax = 2.6
+        if args.zmax is None:
+            zmax = 0.08
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="fingerprint")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.fpdf == "t":
+        xmin = 0.8
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.08
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="fingerprint")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.fpdf == "e":
+        xmin = 0.4
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.08
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="fingerprint")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+    # options difference maps, .png:
+    if args.dpng == "s":
+        xmin = 0.4
+        xmax = 2.6
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        png_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.dpng == "t":
+        xmin = 0.8
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        png_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.dpng == "e":
+        xmin = 0.4
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        png_map(xmin, xmax, zmax, screen, alt, bg)
+
+    # options difference maps, .pdf:
+    if args.dpdf == "s":
+        xmin = 0.4
+        xmax = 2.6
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.dpdf == "t":
+        xmin = 0.8
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+    if args.dpdf == "e":
+        xmin = 0.4
+        xmax = 3.0
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = "off"
+        alt = args.alternate
+        bg = args.bg
+        search_dat(map_type="delta")
+        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+
+os.chdir(root)
+sys.exit(0)
+
+        
