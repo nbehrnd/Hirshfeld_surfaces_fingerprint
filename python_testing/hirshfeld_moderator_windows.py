@@ -60,13 +60,6 @@ import shutil
 import subprocess as sub
 import sys
 
-# Numpy is not from Python's core library.
-try:
-    import numpy as np
-except IOError:
-    print("\nThis script requires the CPython module numpy.  Exit.")
-    sys.exit(0)
-
 global root
 root = os.getcwd()
 
@@ -227,9 +220,8 @@ def normalize_cxs():
     print("\nNormalization of .cxs files is completed.")
 
 
-def map_differences():
-    """ Round-Robin tournament of the normalized 2D fingerprint maps. """
-
+def numpy_independent_differences():
+    """ A computation of the fingerprints without numpy. """
     # identification of the files to work with:
     os.chdir("cxs_workshop")
     diff_register = []
@@ -237,130 +229,70 @@ def map_differences():
     for file in os.listdir("."):
         if fnmatch.fnmatch(file, "*.dat") and \
                 (fnmatch.fnmatch(file, "diff*.dat") is False):
-
             diff_register.append(file)
     diff_register.sort()
 
     # comparing the normalized 2D Hirshfeld surface maps
     while len(diff_register) > 1:
         for entry in diff_register[1:]:
-            ref_file = diff_register[0]
+            reference_file = diff_register[0]
             probe_file = entry
-            print("Comparing {} with {}.".format(ref_file, probe_file))
+            print("Comparison {} ./. {}.".format(reference_file, probe_file))
+
+            reference_map = []
+            probe_map = []
+
+            f = open(reference_file, mode="r")
+            reference_map = f.readlines()
+            f.close()
+
+            f = open(probe_file, mode="r")
+            probe_map = f.readlines()
+            f.close()
 
             # consistency check for de/di
-            ref_screen = []
-            with open(ref_file, mode="r") as ref_source:
-                for line in ref_source:
-                    ref_screen.append(str(line.strip()))
-            ref_y_min = str(ref_screen[0].split()[1])[:4]
+            start_reference_map = " ".join([
+                reference_map[0].strip().split()[0],
+                reference_map[1].strip().split()[0]
+            ])
+            start_probe_map = " ".join([
+                probe_map[0].strip().split()[0],
+                probe_map[1].strip().split()[0]
+            ])
 
-            probe_screen = []
-            with open(probe_file, mode="r") as probe_source:
-                for line in probe_source:
-                    probe_screen.append(str(line.strip()))
-            probe_y_min = str(probe_screen[0].split()[1])[:4]
+            line_count_reference_map = len(reference_map)
+            line_count_probe_map = len(probe_map)
 
-            if (len(ref_screen) == len(probe_screen)) and \
-                    (ref_y_min == probe_y_min):
-                pass
+            if (start_reference_map == start_probe_map) and \
+                (line_count_reference_map == line_count_probe_map):
+                pass  # i.e., interesting, inspect the current two .dat.
             else:
-                continue
+                continue  # i.e., incompatible, probe the next permutation.
 
-            # branch about the reference file:
-            content_ref_file = []
-            with open(ref_file, mode="r") as source_ref:
-                for line in source_ref:
-                    trimmed_line = str(line).strip()  # remove line feed
+            # .dat suitable for comparison will be analyzed:
+            difference_map = []
+            for reference, probe in zip(reference_map, probe_map):
+                # retain the blank lines:
+                if len(reference) < 5:
+                    difference_map.append("\n")
+                # entries with coordinates and any area element:
+                if len(reference) > 5:
+                    column_a = str("{:3.2f}".format(
+                        float(reference.strip().split()[0])))
+                    column_b = str("{:3.2f}".format(
+                        float(reference.strip().split()[1])))
+                    column_c = str("{:10.8f}".format(
+                        (float(reference.strip().split()[2]) -
+                         float(probe.strip().split()[2]))))
+                    retain = " ".join([column_a, column_b, column_c, "\n"])
+                    difference_map.append(retain)
 
-                    split = trimmed_line.split()
-                    # branch about lines just prior to y-reset:
-                    if len(split) is None:
-                        pass
-                    # branch about lines 'with visible entries':
-                    if len(split) == 3:
-                        retain = split
-                        content_ref_file.append(retain)
-
-            # convert the list into an array, treat entries as floats
-            ref_array = np.array(content_ref_file)
-            ref_array = ref_array.astype(np.float)
-
-            # branch about the probe file
-            content_probe_file = []
-            with open(probe_file, mode="r") as source_probe:
-                for line2 in source_probe:
-                    trimmed_line2 = str(line2).strip()  # remove line feed
-
-                    split2 = trimmed_line2.split()
-                    # branch about lines just prior to y-reset:
-                    if len(split2) is None:
-                        pass
-                    # branch about lines 'with visible entries':
-                    if len(split2) == 3:
-                        retain2 = split2
-                        content_probe_file.append(retain2)
-
-            # convert the list into an array, treat entries as floats
-            probe_array = np.array(content_probe_file)
-            probe_array = probe_array.astype(np.float)
-
-            # work at level of the matrix-like arrays
-            # construct an array of the first two columns of the ref_array
-            coordinates_array = ref_array
-            coordinates_array = np.delete(coordinates_array, 2, axis=1)
-
-            # subtract z-values of probe_file from z-values of ref_file;
-            # prior to this, remove 'x-' and 'y-coordinate column'
-            z_probe_array = np.delete(probe_array, 0, axis=1)
-            z_probe_array = np.delete(z_probe_array, 0, axis=1)
-
-            z_ref_array = np.delete(ref_array, 0, axis=1)
-            z_ref_array = np.delete(z_ref_array, 0, axis=1)
-
-            diff_array = z_ref_array - z_probe_array
-
-            # append diff_array to the coordinates_array:
-            result = np.append(coordinates_array, diff_array, axis=1)
-
-            # deposit a permanent record of results by numpy 'as-such'
-            # return from array to list level, start a moderated formatting
-            result_list = result.tolist()
-
-            output = str("diff_") + str(ref_file)[:-4] + \
-                str("_") + str(probe_file)
-
+            # generate the permanent record:
+            output = "".join(["diff_", reference_file[:-4], "_", probe_file])
             with open(output, mode="w") as newfile:
-                for result_entry in result_list:
-                    to_reformat = str(result_entry).split()
-
-                    x_value = str("{:3.2f}".format(
-                        float(str(to_reformat[0])[1:-1])))
-                    y_value = str("{:3.2f}".format(
-                        float(str(to_reformat[1])[0:-1])))
-                    z_value = str("{:10.8f}".format(
-                        round(float(str(to_reformat[2])[0:-1]), 8)))
-
-                    # re-insert the blanks met in normalized 2D fingerprints:
-                    if float(y_value) == float(ref_y_min):
-                        newfile.write("\n")
-
-                    retain = str("{} {} {}\n".format(x_value, y_value,
-                                                     z_value))
-                    newfile.write(retain)
-
-            # Remove the very first line in the report file (a blank one):
-            interim = []
-            with open(output, mode='r') as source:
-                for line in source:
-                    interim.append(line)
-            with open(output, mode='w') as newfile:
-                for entry in interim[1:]:
-                    newfile.write(str(entry))
-
-        # enter next round Robin tournament:
+                for entry in difference_map[:-1]:
+                    newfile.write("{}\n".format(entry.strip()))
         del diff_register[0]
-    os.chdir(root)
 
 
 def ruby_number():
@@ -939,9 +871,9 @@ if __name__ == "__main__":
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
     if args.compare:
-        map_differences()
+        numpy_independent_differences()  # compute the difference maps
     if args.ruby_number:
-        ruby_number()
+        ruby_number()  # compute the difference number
     if args.bg:
         global bg  # an option: a neutral gray background
     if args.alternate:
