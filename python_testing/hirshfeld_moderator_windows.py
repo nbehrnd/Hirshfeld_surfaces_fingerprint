@@ -109,15 +109,17 @@ def file_crawl(copy=False):
     cxs_to_copy = []
 
     for folder, subfolders, files in os.walk(root):
-        for subfolder in subfolders:
-            os.chdir(subfolder)
-            for file in os.listdir("."):
-                if file.endswith(".cxs"):
-                    cxs_to_copy.append(os.path.abspath(file))
-                    if copy is False:
+        try:
+            for subfolder in subfolders:
+                os.chdir(subfolder)
+                for file in os.listdir("."):
+                    if file.endswith(".cxs"):
+                        cxs_to_copy.append(os.path.abspath(file))
                         counter += 1
                         print("{}\t{}".format(counter, file))
-            os.chdir(root)
+                os.chdir(root)
+        except:
+            continue
 
     if copy is True:  # not considered execpt on explicit consent.
         for entry in cxs_to_copy:
@@ -288,6 +290,7 @@ def numpy_independent_differences():
                     newfile.write("{}\n".format(entry.strip()))
         del diff_register[0]
     os.chdir(root)
+
 
 def ruby_number():
     """ Add the absolute values of differences per difference map. """
@@ -718,9 +721,10 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         pl += str('set xtics format "%2.1f"; set ytics format "%2.1f"; ')
 
         pl += str('set label "d_e" at graph 0.05,0.90 left front; ')
-        pl += str('set label "d_i" at graph 0.90,0.05 left front;  ')
-        pl += str('set label "{}" at graph 0.05,0.05 left front noenhanced;  '.
-                  format(file_stamp))
+        pl += str('set label "d_i" at graph 0.90,0.05 left front; ')
+        pl += str(
+            'set label "{}" at graph 0.05,0.05 left front noenhanced; '.format(
+                file_stamp))
         pl += str(
             'set label z_top at graph 0.65,0.20 left front font "Courier,7"; ')
         pl += str(
