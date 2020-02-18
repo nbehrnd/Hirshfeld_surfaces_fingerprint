@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-17 (YYYY-MM-DD)
+# edit:    2020-02-18 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -22,12 +22,6 @@ This is b) why the task of generation of normalized 2D Hirshfeld surface
 fingerprints still is relayed to the Fortran script fingerprint.f90, which
 is the sole other file beside this script (hirshfeld_moderator_windows.py)
 you need to put into the folder of .cxs to analyze.
-
-With the exception of numpy, considerably supporting the underlying work
-to compute the difference maps, again this script uses Python modules a
-typical Python installation already includes.  (To find more about numpy,
-see for example http://www.numpy.org/.)  Thus, the script should work on
-Windows, Linux, and MacOS.
 
 In the course of running the script, fingerprint.f90 needs to be compiled.
 The script attempts to do this on the fly with either gfortran, or gcc,
