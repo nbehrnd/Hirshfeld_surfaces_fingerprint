@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-17 (YYYY-MM-DD)
+# edit:    2020-02-18 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -22,12 +22,6 @@ This is b) why the task of generation of normalized 2D Hirshfeld surface
 fingerprints still is relayed to the Fortran script fingerprint.f90, which
 is the sole other file beside this script (hirshfeld_moderator_windows.py)
 you need to put into the folder of .cxs to analyze.
-
-With the exception of numpy, considerably supporting the underlying work
-to compute the difference maps, again this script uses Python modules a
-typical Python installation already includes.  (To find more about numpy,
-see for example http://www.numpy.org/.)  Thus, the script should work on
-Windows, Linux, and MacOS.
 
 In the course of running the script, fingerprint.f90 needs to be compiled.
 The script attempts to do this on the fly with either gfortran, or gcc,
@@ -222,7 +216,7 @@ def normalize_cxs():
 
 def numpy_independent_differences():
     """ A computation of the fingerprints without numpy. """
-    # identification of the files to work with:
+    # identify the files to work with:
     os.chdir("cxs_workshop")
     diff_register = []
 
@@ -232,7 +226,7 @@ def numpy_independent_differences():
             diff_register.append(file)
     diff_register.sort()
 
-    # comparing the normalized 2D Hirshfeld surface maps
+    # compare the normalized 2D Hirshfeld surface maps
     while len(diff_register) > 1:
         for entry in diff_register[1:]:
             reference_file = diff_register[0]
@@ -293,7 +287,7 @@ def numpy_independent_differences():
                 for entry in difference_map[:-1]:
                     newfile.write("{}\n".format(entry.strip()))
         del diff_register[0]
-
+    os.chdir(root)
 
 def ruby_number():
     """ Add the absolute values of differences per difference map. """
