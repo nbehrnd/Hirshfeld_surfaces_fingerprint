@@ -1,10 +1,10 @@
-#!/bin/python3
+#!/usr/bin/env python3
 
 # name:    diff_finger.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:    2019-12-19 (YYYY-MM-DD)
+# edit:    2020-01-31 (YYYY-MM-DD)
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -14,15 +14,17 @@
     in CPython, i.e., Hirshfeld_moderator.py, suggesting to continue with
     this language, too.
 
-    So far, this script serves as a proof-of-concept for the comparison
-    of two 2D Hirshfeld surface fingerprint maps (by fingerprint.f90)
-    in a round-Robin tournament.  It assumes the two files to be compared
-    with each other account for matching map ranges de/di.  Setting the
-    minimal y(de) value to 0.40 manually thus limits the use of this
-    script to maps normalized either for the standard, or the extended
-    map range. -- Script hirshfeld_moderator.py causes fingerprint.f90
-    to normalize the 2D fingerprint maps to the extended map range (i.e.,
-    [0.4,3.0] A), matching the requirement of this script.
+    This script serves as a proof-of-concept for the comparison of two 2D
+    Hirshfeld surface fingerprint maps (by fingerprint.f90)
+    in a round-Robin tournament.  It probes the two .dat files subject to
+    comparison match in terms of map ranges de/di: both the number of
+    entries (lines) must be equal, as the lowest y_value.  This allows to
+    probe standard, translated, or extended map range, respectively.
+
+    To work with, place the script in the directory of (then already
+    normalized) .dat files.  It is launched from the CLI by
+
+    python3 diff_finger.py
 
     This script diff_finger.py still is independent to the actions by
     hirshfeld_moderator.py.  It is neither called, nor are its results
@@ -34,7 +36,6 @@ import fnmatch
 import os
 import sys
 
-from decimal import Decimal
 import numpy as np
 
 diff_register = []
@@ -48,7 +49,7 @@ for file in os.listdir("."):
 diff_register.sort()
 
 # comparing the normalized 2D Hirshfeld surface maps
-if len(diff_register) > 1:
+while len(diff_register) > 1:
     for entry in diff_register[1:]:
         ref_file = diff_register[0]
         probe_file = entry
@@ -67,7 +68,8 @@ if len(diff_register) > 1:
                 probe_screen.append(str(line.strip()))
         probe_y_min = str(probe_screen[0].split()[1])[:4]
 
-        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
+        if (len(ref_screen) == len(probe_screen)) and (
+                ref_y_min == probe_y_min):
             pass
         else:
             continue
@@ -123,7 +125,7 @@ if len(diff_register) > 1:
         z_ref_array = np.delete(ref_array, 0, axis=1)
         z_ref_array = np.delete(z_ref_array, 0, axis=1)
 
-        diff_array = z_probe_array - z_ref_array
+        diff_array = z_ref_array - z_probe_array
 
         # append diff_array to the coordinates_array:
         result = np.append(coordinates_array, diff_array, axis=1)
@@ -143,16 +145,30 @@ if len(diff_register) > 1:
             for result_entry in result_list:
                 to_reformat = str(result_entry).split()
 
-                x_value = round(Decimal(str(to_reformat[0])[1:-1]), 2)
-                y_value = round(Decimal(str(to_reformat[1])[0:-1]), 2)
-                z_value = round(Decimal(str(to_reformat[2])[1:-1]), 8)
+                x_value = str("{:3.2f}".format(
+                    float(str(to_reformat[0])[1:-1])))
+                y_value = str("{:3.2f}".format(
+                    float(str(to_reformat[1])[0:-1])))
+                z_value = str("{:10.8f}".format(
+                    round(float(str(to_reformat[2])[0:-1]), 8)))
 
                 # re-insert the blanks met in normalized 2D fingerprints:
-                if str(y_value) == ref_y_min:
+                if float(y_value) == float(ref_y_min):
                     newfile.write("\n")
 
-                retain = str("{}, {}, {}\n".format(x_value, y_value, z_value))
+                retain = str("{} {} {}\n".format(x_value, y_value, z_value))
                 newfile.write(retain)
 
+        # Remove the very first line in the report file (a blank one):
+        interim = []
+        with open(output, mode='r') as source:
+            for line in source:
+                interim.append(line)
+        with open(output, mode='w') as newfile:
+            for entry in interim[1:]:
+                newfile.write(str(entry))
+
+    # enter the next round of the Round robin tournament:
+    del diff_register[0]
 print("done")
-# sys.exit(0)
+sys.exit(0)
