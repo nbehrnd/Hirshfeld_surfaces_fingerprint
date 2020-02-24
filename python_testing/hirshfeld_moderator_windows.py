@@ -632,7 +632,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
         if bg == 1:  # provide an optional contrast enhancement
             pl += str('set object 1 rectangle from graph 0,0 to graph 1,1 \
-                fillcolor rgb "#808080" behind; ')
+                fillcolor "#808080" behind; ')
 
         # color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
@@ -737,7 +737,7 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         if bg == 1:
             # provide an optional contrast enhancement:
             pl += str('set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
-                fillcolor rgb "#808080" behind; ')
+                fillcolor "#808080" behind; ')
 
         # default color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
@@ -768,7 +768,134 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         sub.call(pl, shell=True)
 
 
+def fall_back_display():
+    """ Map visualization without gnuplot with non-default modules. """
+    try:
+        import math
+        import matplotlib.pyplot as plt
+        from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
+        import numpy as np
+    except:
+        print("Additional non-standard modules are not available.")
+        print("Install first numpy and matplotlib.")
+        sys.exit()
+    print(2 * "\n")
+    print("Surveying fingerprint and difference maps by matplotlib and numpy.")
+    print("This is a fall back should gnuplot not be available to you.")
+    print("\n")
+
+    # identify the .dat to work with:
+    dat_register = []
+    os.chdir('cxs_workshop')
+    for file in os.listdir('.'):
+        if file.endswith('.dat'):
+            dat_register.append(file)
+    dat_register.sort()
+
+    # analysis of the .dat file:
+    for input_file in dat_register:
+        print("Work on {}".format(input_file))
+
+        retainer = []  # record all execpt the blank lines
+        z_register = []  # record only the entries about z
+
+        # analysis of the .dat file:
+        with open(input_file, mode='r') as source:
+            for line in source:
+                if len(line.strip().split()) == 3:
+                    retainer.append(line.strip())
+                    z_register.append(float(line.strip().split()[2]))
+
+        # identify start and end of di:
+        di_start = float(str("{:3.2f}".format(float(retainer[0].split()[0]))))
+        di_end = float(str("{:3.2f}".format(float(retainer[-1].split()[0]))))
+
+        # identify zmin and zmax
+        zmin_value = str("{:7.6f}".format(float(min(z_register))))
+        zmin = " ".join(["zmin:", zmin_value.rjust(9)])
+
+        zmax_value = str("{:7.6f}".format(float(max(z_register))))
+        zmax = " ".join(["zmax:", zmax_value.rjust(9)])
+
+        # convert the list of z into an array suitable for display:
+        array_z = np.array(z_register)
+        array_z = array_z.astype(float)
+
+        dimension_matrix_z = int(math.sqrt(len(array_z)))
+        matrix_z = array_z.reshape(dimension_matrix_z, dimension_matrix_z)
+
+        # align orientation of the array to the one used in gnuplot's plots:
+        matrix_z = matrix_z.transpose()
+
+        # Filter out entries not sufficiently away from zero:
+        np.place(array_z, abs(array_z) < 1e-8, 'nan')
+
+        # definition about the canvas:
+        fig, ax = plt.subplots()
+        plt.grid()
+        ax.xaxis.set_major_locator(MultipleLocator(0.20))
+        ax.yaxis.set_major_locator(MultipleLocator(0.20))
+        ax.grid(which='major', color='#CCCCCC', linestyle=':', lw=0.5)
+
+        # Change minor ticks to show every 5. (20/4 = 5)
+        ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+        ax.yaxis.set_minor_locator(AutoMinorLocator(4))
+
+        ax.set_aspect(1.00 / 1.00)
+
+        # yapf: disable
+        # permanent decorum:
+        plt.text(0.50, 2.70, r'$d_e$')
+        plt.text(2.70, 0.50, r'$d_i$')
+
+        bbox_props = dict(boxstyle="square", fc='white', ec='white',
+            lw=1, pad=0.1)
+        plt.text(0.60, 0.60, r'{}'.format(input_file[:-4]), bbox=bbox_props)
+        plt.text(2.25, 0.90, r'{}'.format(zmax),family="monospace",
+            size="7", bbox=bbox_props)
+        plt.text(2.25, 0.81, r'{}'.format(zmin),family="monospace",
+            size="7", bbox=bbox_props)
+
+        # indicator standard map range, dasshed line:
+        plt.plot([0.40, 2.60], [2.60, 2.60], '--', color='black')
+        plt.plot([2.60, 2.60], [0.40, 2.60], '--', color='black')
+
+        # indicator translated map range, dotted line:
+        plt.plot([0.80, 0.80], [0.80, 3.00], ':', color='black')
+        plt.plot([0.80, 3.00], [0.80, 0.80], ':', color='black')
+
+        # the optional change of background to gray:
+        ax.set_facecolor("#808080")
+
+        # the permanent record:
+        if input_file.startswith("diff_"):
+            plt.imshow(matrix_z,extent=[di_start, di_end, di_start, di_end],
+                origin='lower', cmap='RdBu_r', aspect='equal',
+                interpolation='nearest', filternorm='False',
+                vmin=-0.025, vmax=0.025, zorder=15, resample=True)
+
+        else:
+            plt.imshow(matrix_z,extent=[di_start, di_end, di_start, di_end],
+                origin='lower', cmap='cubehelix', aspect='equal',
+                interpolation='nearest', filternorm='False',
+                vmin=0.0, vmax=0.08, zorder=15, resample=True)
+        # yapf: enable
+
+        # the optional color bar:
+        plt.colorbar()
+
+        # creation of the permanent record, screening conditions:
+        output_file = ''.join([input_file[:-4], '.png'])
+        plt.savefig(output_file, dpi=150, bbox_inches='tight')
+        plt.close(fig)
+
+        with open("screening_log.txt", mode="a") as newfile:
+            retain = '\t'.join([input_file, zmin, zmax, '\n'])
+            newfile.write(retain)
+
+
 # argparse section:
+# yapf: disable
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -850,14 +977,21 @@ if __name__ == "__main__":
         "-g",
         "--bg",
         action="store_true",
-        help="Use 'gray30' as background in high resolution maps.")
+        help="Use a gray background in high resolution maps.")
 
     parser.add_argument(
         "-a",
         "--alternate",
         action="store_true",
         help="Use the alternate palette definitions.")
+
+    parser.add_argument(
+        "-fd",
+        "--fall_back_display",
+        action="store_true",
+        help="Preview generation with numpy and matplotlib.")
     args = parser.parse_args()
+# yapf: enable
 
     if args.list:
         file_listing()  # list accessible .cxs files
@@ -870,6 +1004,8 @@ if __name__ == "__main__":
         normalize_cxs()  # generate 2D fingerprint .dat files
     if args.compare:
         numpy_independent_differences()  # compute the difference maps
+    if args.fall_back_display:
+        fall_back_display()
     if args.ruby_number:
         ruby_number()  # compute the difference number
     if args.bg:
