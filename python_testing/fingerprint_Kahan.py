@@ -44,6 +44,7 @@ def file_search():
     """ Identification of the files to work with. """
     global cxs_register
     cxs_register = []
+    os.chdir("cxs_workshop")
     for file in os.listdir("."):
         if file.endswith(".cxs"):
             cxs_register.append(file)
