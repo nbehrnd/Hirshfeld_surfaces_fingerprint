@@ -1,7 +1,7 @@
 # name:   fingerprint_RR.py
 # author: nbehrnd@yahoo.com
 # date:   2020-02-11 (YYYY-MM-DD)
-# edit:   2020-02-18 (YYYY-MM-DD)
+# edit:   2020-02-24 (YYYY-MM-DD)
 #
 """ Translation of fingerprint.f90 to Python, approach like Rohl & Raiteri.
 
@@ -28,6 +28,7 @@ def file_search():
     """ Identification of the files to work with. """
     global cxs_register
     cxs_register = []
+    os.chdir("cxs_workshop")
     for file in os.listdir("."):
         if file.endswith(".cxs"):
             cxs_register.append(file)
@@ -353,7 +354,7 @@ def dat_file_generation(cxs_file=""):
     del dat_register[0]  # delete the heading zero entry:
 
     # permanent record as .dat file:
-    output_file = str(cxs_file)[:-4] + str("_t.dat")
+    output_file = str(cxs_file)[:-4] + str(".dat")
     with open(output_file, mode="w") as newfile:
         for entry in dat_register:
             if str("3.00") in entry.split()[1]:
