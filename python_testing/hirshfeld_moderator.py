@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-02-17 (YYYY-MM-DD)
+# edit:    2020-02-24 (YYYY-MM-DD)
 #
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  Intended for the CLI
@@ -257,15 +257,17 @@ def file_crawl(copy=False):
     cxs_to_copy = []
 
     for folder, subfolders, files in os.walk(root):
-        for subfolder in subfolders:
-            os.chdir(subfolder)
-            for file in os.listdir("."):
-                if file.endswith(".cxs"):
-                    cxs_to_copy.append(os.path.abspath(file))
-                    if copy is False:
+        try:
+            for subfolder in subfolders:
+                os.chdir(subfolder)
+                for file in os.listdir("."):
+                    if file.endswith(".cxs"):
+                        cxs_to_copy.append(os.path.abspath(file))
                         counter += 1
                         print("{}\t{}".format(counter, file))
-            os.chdir(root)
+                os.chdir(root)
+        except:
+            continue
 
     if copy is True:  # not considered execpt on explicit consent.
         for entry in cxs_to_copy:
@@ -792,7 +794,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
         if bg == 1:  # provide an optional contrast enhancement
             pl += str('set object 1 rectangle from graph 0,0 to graph 1,1 \
-                fillcolor rgb "gray30" behind; ')
+                fillcolor "#808080" behind; ')
 
         # color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
@@ -881,8 +883,8 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         pl += str('set xtics format "%2.1f"; set ytics format "%2.1f"; ')
 
         pl += str('set label "d_e" at graph 0.05,0.90 left front; ')
-        pl += str('set label "d_i" at graph 0.90,0.05 left front;  ')
-        pl += str('set label "{}" at graph 0.05,0.05 left front noenhanced;  '.
+        pl += str('set label "d_i" at graph 0.90,0.05 left front; ')
+        pl += str('set label "{}" at graph 0.05,0.05 left front noenhanced; '.
                   format(file_stamp))
         pl += str(
             'set label z_top at graph 0.65,0.20 left front font "Courier,7"; ')
@@ -896,7 +898,7 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         if bg == 1:
             # provide an optional contrast enhancement:
             pl += str('set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
-                fillcolor rgb "gray30" behind; ')
+                fillcolor "#808080" behind; ')
 
         # default color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
@@ -1015,7 +1017,7 @@ if __name__ == "__main__":
         "-g",
         "--bg",
         action="store_true",
-        help="Use 'gray30' as background in high resolution maps.")
+        help="Use a gray background in high resolution maps.")
 
     parser.add_argument(
         "-a",
@@ -1216,5 +1218,3 @@ if __name__ == "__main__":
 
 os.chdir(root)
 sys.exit(0)
-
-        
