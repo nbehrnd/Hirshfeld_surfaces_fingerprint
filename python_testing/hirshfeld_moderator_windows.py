@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-18 (YYYY-MM-DD)
+# edit:    2020-02-24 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -632,7 +632,7 @@ def png_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 
         if bg == 1:  # provide an optional contrast enhancement
             pl += str('set object 1 rectangle from graph 0,0 to graph 1,1 \
-                fillcolor rgb "gray30" behind; ')
+                fillcolor rgb "#808080" behind; ')
 
         # color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
@@ -737,7 +737,7 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         if bg == 1:
             # provide an optional contrast enhancement:
             pl += str('set object 1 rectangle from graph 0.0,0.0 to graph 1,1 \
-                fillcolor rgb "gray30" behind; ')
+                fillcolor rgb "#808080" behind; ')
 
         # default color scheme for fingerprint map:
         if (difference_map is False) and (alt == 0):
