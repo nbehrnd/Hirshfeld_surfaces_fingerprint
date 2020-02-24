@@ -48,6 +48,7 @@ source gnuplot: http://www.gnuplot.info
 import argparse
 from decimal import Decimal
 import fnmatch
+import math
 import os
 import platform
 import shutil
@@ -75,7 +76,7 @@ def create_workshop():
     # Creation of a workshop.
     try:
         os.mkdir("cxs_workshop")
-    except IOError:
+    except:
         print("\nProblem to create sub-folder 'cxs_workshop'.")
         print("Without alteration of data, the script closes now.\n")
         sys.exit(0)
@@ -260,7 +261,7 @@ def numpy_independent_differences():
             line_count_probe_map = len(probe_map)
 
             if (start_reference_map == start_probe_map) and \
-                (line_count_reference_map == line_count_probe_map):
+                    (line_count_reference_map == line_count_probe_map):
                 pass  # i.e., interesting, inspect the current two .dat.
             else:
                 continue  # i.e., incompatible, probe the next permutation.
@@ -771,7 +772,6 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
 def fall_back_display():
     """ Map visualization without gnuplot with non-default modules. """
     try:
-        import math
         import matplotlib.pyplot as plt
         from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
         import numpy as np
@@ -851,9 +851,9 @@ def fall_back_display():
         bbox_props = dict(boxstyle="square", fc='white', ec='white',
             lw=1, pad=0.1)
         plt.text(0.60, 0.60, r'{}'.format(input_file[:-4]), bbox=bbox_props)
-        plt.text(2.25, 0.90, r'{}'.format(zmax),family="monospace",
+        plt.text(2.25, 0.90, r'{}'.format(zmax), family="monospace",
             size="7", bbox=bbox_props)
-        plt.text(2.25, 0.81, r'{}'.format(zmin),family="monospace",
+        plt.text(2.25, 0.81, r'{}'.format(zmin), family="monospace",
             size="7", bbox=bbox_props)
 
         # indicator standard map range, dasshed line:
@@ -869,13 +869,13 @@ def fall_back_display():
 
         # the permanent record:
         if input_file.startswith("diff_"):
-            plt.imshow(matrix_z,extent=[di_start, di_end, di_start, di_end],
+            plt.imshow(matrix_z, extent=[di_start, di_end, di_start, di_end],
                 origin='lower', cmap='RdBu_r', aspect='equal',
                 interpolation='nearest', filternorm='False',
                 vmin=-0.025, vmax=0.025, zorder=15, resample=True)
 
         else:
-            plt.imshow(matrix_z,extent=[di_start, di_end, di_start, di_end],
+            plt.imshow(matrix_z, extent=[di_start, di_end, di_start, di_end],
                 origin='lower', cmap='cubehelix', aspect='equal',
                 interpolation='nearest', filternorm='False',
                 vmin=0.0, vmax=0.08, zorder=15, resample=True)
@@ -892,6 +892,15 @@ def fall_back_display():
         with open("screening_log.txt", mode="a") as newfile:
             retain = '\t'.join([input_file, zmin, zmax, '\n'])
             newfile.write(retain)
+
+
+def fall_back_normalization():
+    """ Compute normalized 2D fingerprints (Kahan approach) as backup.
+
+    This is a fall back if there is no Fortran compiler to work with.  Put
+    file fingerprint_Kahan.py into the same folder as this moderator which
+    will reach out for the secondary script. """
+    import fingerprint_Kahan
 
 
 # argparse section:
@@ -990,8 +999,14 @@ if __name__ == "__main__":
         "--fall_back_display",
         action="store_true",
         help="Preview generation with numpy and matplotlib.")
+
+    parser.add_argument(
+        "-fc",
+        "--fall_back_normalization",
+        action ="store_true",
+        help="Slow, Fortran independent, fingerprint computation.")
     args = parser.parse_args()
-# yapf: enable
+    # yapf: enable
 
     if args.list:
         file_listing()  # list accessible .cxs files
@@ -1002,6 +1017,8 @@ if __name__ == "__main__":
         compile_f90()  # render fingerprint.f90 executable
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
+    if args.fall_back_normalization:
+        fall_back_normalization()
     if args.compare:
         numpy_independent_differences()  # compute the difference maps
     if args.fall_back_display:
