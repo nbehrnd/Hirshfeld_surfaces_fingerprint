@@ -1043,14 +1043,14 @@ def fall_back_display(maprange="extended", zmax=0.08, screen=False,
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='RdBu_r', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=-0.025, vmax=0.025, zorder=15, resample=True)
 
             if difference_map is False:
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='cubehelix', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=0.0, vmax=0.08, zorder=15, resample=True)
 
             ax.set_facecolor("#808080")  # gray background
@@ -1069,19 +1069,19 @@ def fall_back_display(maprange="extended", zmax=0.08, screen=False,
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='RdBu_r', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=-zmax, vmax=zmax, zorder=15, resample=True)
 
             if difference_map is False:
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='cubehelix', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=0.0, vmax=zmax, zorder=15, resample=True)
             if color_bar is True:
                 plt.colorbar()
             output_file = ''.join([entry[:-4], '.png'])
-            plt.savefig(output_file, dpi=150, bbox_inches='tight')
+            plt.savefig(output_file, dpi=300, bbox_inches='tight')
             plt.close(fig)
 
 # test section pdf export by mp, start:
@@ -1093,14 +1093,14 @@ def fall_back_display(maprange="extended", zmax=0.08, screen=False,
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='RdBu_r', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=-zmax, vmax=zmax, zorder=15, resample=True)
 
             if difference_map is False:
                 plt.imshow(matrix_z, extent=[
                     di_start, di_end, di_start, di_end],
                            origin='lower', cmap='cubehelix', aspect='equal',
-                           interpolation='nearest', filternorm='False',
+                           interpolation='None', filternorm='False',
                            vmin=0.0, vmax=zmax, zorder=15, resample=True)
             if color_bar is True:
                 plt.colorbar()
