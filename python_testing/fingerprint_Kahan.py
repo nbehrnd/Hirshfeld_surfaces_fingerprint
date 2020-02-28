@@ -1,9 +1,9 @@
 # name:   fingerprint_Kahan.py
 # author: nbehrnd@yahoo.com
 # date:   2020-01-30 (YYYY-MM-DD)
-# edit:   2020-02-24 (YYYY-MM-DD)
+# edit:   2020-02-26 (YYYY-MM-DD)
 #
-""" Attempt a translation of fingerprint.f90 to Python, a concept study.
+""" Compute normalized 2D Hirshfeld surface fingerprints, Kahan formula
 
 This is forked from fingerprint_Heron.py.  It is based on W. Kahan's
 approach to compute triangles which -- contrasting to the one by Heron --
@@ -26,14 +26,17 @@ algorithm consists of the following steps:
   C = (c + (a - b)), and
   D = (a + (b - c)).
 
-Again, the script is written for the CLI of CPython_3.6.9 as in Linux
-Xubuntu 18.04.3 LTS.  Deposit the script into the folder with the .cxs of
-interest, launch the work from the CLI by
+If used to assists hirshfeld_surface.py, deposit this file in the same
+folder as the moderator; then, the moderator script will call its action.
+
+If to be used independently, deposit the script into the folder with the
+.cxs files of interest.  Launch from the CLI
 
 python fingerprint_Kahan.py
 
-to write for each example.cxs a fingerprint example_c.dat.  Only modules
+to write for each example.cxs a fingerprint example.dat.  Only modules
 of the standard library are called, offering use in pypy, too. """
+
 import itertools
 import math
 import os
@@ -44,7 +47,7 @@ def file_search():
     """ Identification of the files to work with. """
     global cxs_register
     cxs_register = []
-    os.chdir("cxs_workshop")
+
     for file in os.listdir("."):
         if file.endswith(".cxs"):
             cxs_register.append(file)
@@ -273,6 +276,7 @@ def numpy_free_area_binning(cxs_file=""):
     recommendation by by Rohl et al. to perform this analysis.  Thus,
     the binning applied here equally imposes a grid of this granularity,
     reflected by the interval about (di, de) = 0.40(0.01)3.00 A.
+
     The subsequent, bin-wise addition of individual triangle surfaces
     equally was tested both with a three-column np.array, as well as with
     a square-matrix like array approach, too.  So far, the approach here
@@ -295,7 +299,6 @@ def numpy_free_area_binning(cxs_file=""):
     recorder_register = []
     local_area = 0.0  # collect surface specific to (de,di) bin
     integral_area = 0.0  # to sum up all triangles' surfaces
-
     old_key = ""
     pre_binned.append("0 0 0")  # the STOP word to process the data
 
@@ -415,4 +418,5 @@ def worker():
 # action calls:
 file_search()
 worker()
+print("\nThe computation of normalized fingerprints is complete.\n")
 sys.exit(0)

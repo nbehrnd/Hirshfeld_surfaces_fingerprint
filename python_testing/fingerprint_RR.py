@@ -1,21 +1,37 @@
 # name:   fingerprint_RR.py
 # author: nbehrnd@yahoo.com
 # date:   2020-02-11 (YYYY-MM-DD)
-# edit:   2020-02-24 (YYYY-MM-DD)
+# edit:   2020-02-26 (YYYY-MM-DD)
 #
-""" Translation of fingerprint.f90 to Python, approach like Rohl & Raiteri.
+""" Compute normalized 2D Hirshfeld surface fingerprints, 'RR formula' .
 
-    This script was forked from fingerprint_Heron.py.  After its deposit
-    into the folder with the .cxs of interest, the call from the CLI
+This script probes the computation of the normalized 2D Hirshfeld surface
+fingerprints, where the surface of the areas of individual triangles
+constituting the integral Hirshfeld surface are computed by the
+trigonometric used by Andrew Rohl and Paolo Raiteri.
 
-    python fingerprint_RR.py
+Note that for comparison of the results, there is both an implementation
+of the Heron formula (fingerprint_Heron.py), as well as of the by Kahan
+(fingerprint_Kahan.py).
 
-    provides each example.cxs a normalized example_t.dat fingerprint.  The
-    section 'triangle_surfaces' is based on the sketch by Paolo Raiteri
-    about the definitions used in the original fingerprint.f90.  As for
-    sibling scripts fingerprint_Heron.py and fingerprint_Kahan.py, it is
-    to probe Python to provide normalized fingerprints; to be compared
-    with the results by the other approaches (pre-alpha status). """
+If used to assist script hirshfeld_surface.py, deposit this file in the
+same folder as the moderator and alter the import statement of
+
+import fingerprint_Kahan
+
+into the statemet of
+
+import fingerprint_RR
+
+The moderator script will call its action.
+
+If to be used independently, deposit the script into the folder with the
+.cxs files of interest.  Launch from the CLI
+
+python fingerprint_RR.py
+
+to write for each example.cxs a fingerprint example.dat.  Only modules
+of the standard library are called, offering use in pypy, too. """
 
 import array
 import itertools
@@ -28,7 +44,7 @@ def file_search():
     """ Identification of the files to work with. """
     global cxs_register
     cxs_register = []
-    os.chdir("cxs_workshop")
+
     for file in os.listdir("."):
         if file.endswith(".cxs"):
             cxs_register.append(file)
@@ -228,7 +244,6 @@ def triangle_surfaces(cxs_files=""):
             # concatenate the results about the individual triangle:
             retain = str("{} {} {}".format(average_de, average_di, area))
             computed_triangles.append(retain)
-
     computed_triangles.sort()
 
 
@@ -260,7 +275,7 @@ def numpy_free_area_binning(cxs_file=""):
     # binning the surfaces of individual triangles:
     global recorder_register
     recorder_register = []
-    local_area = 0.0  # collect surface specific to (de, di) bin
+    local_area = 0.0  # collect surface specific to (de,di) bin
     integral_area = 0.0  # to sum up all triangles' surfaces
     old_key = ""
     pre_binned.append("0 0 0")  # the STOP word to process the data
@@ -381,4 +396,5 @@ def worker():
 # action calls:
 file_search()
 worker()
+print("\nThe computation of normalized fingerprints is complete.\n")
 sys.exit(0)
