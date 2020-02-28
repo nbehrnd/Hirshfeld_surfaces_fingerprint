@@ -1,58 +1,41 @@
 # name:   fingerprint_Heron.py
 # author: nbehrnd@yahoo.com
 # date:   2020-01-21 (YYYY-MM-DD)
-# edit:   2020-02-24 (YYYY-MM-DD)
+# edit:   2020-02-26 (YYYY-MM-DD)
 #
-""" Attempt a translation of fingerprint.f90 to Python, a concept study.
+""" Compute normalized 2D Hirshfeld surface fingerprints, Heron formula 
 
-This script is a concept study how Python may provide normalized Hirshfeld
-surface 2D fingerprints.  It is written for the CLI of Python 3.6.9 as in
-Linux Xubuntu 18.04.3 LTS, to work in the same folder as the .cxs file(s)
-of interest.  Launch by
-
-python fingerprint_Heron.py
-
-to convert any example.cxs into example_b.dat as a Hirshfeld fingerprint
-map.  Because only modules from the standard library are used, the script
-works well with legacy Python2 (e.g., CPython 2.7.17) and the default
-installation of pypy (e.g., release 7.3.0, related to CPython 2.7.13, both
-published in November 2019) to improve performance, too.
+This script probes the computation of the normalized 2D Hirshfeld surface
+fingerprints, where the surface of the areas of individual triangles
+constituting the integral Hirshfeld surface are computed by the Heron
+formula.
 
 The individual triangle surfaces are determined by computing the semi-
 perimeter s with the side lengths a, b, and c as s = (a + b + c) / 2.
 The area then equates to area = sqrt[s * (s - a) * (s - b) * (s - c)].
 
-This approach differs from the by Andrew Rohl and Paolo Raiteri in their
-reference code fingerprint.f90.  For the purpose of comparison, their
-approach is probed with fingerprint_RR.py.  Script fingerprint_Kahan.py
-equally serves as comparison, since a) Heron's formula does not work well
-with needle like-shaped triangles, b) Kahan's approach offers inclusion of
-needle like-shaped triangles, c) it does not exclude a priori needle like-
-shaped triangles in Hirshfeld surfaces computed by CrystalExplorer.
+Note that for comparison of the results, there is both an implementation
+of the Kahan formula (fingerprint_Kahan.py), as well as of the algorithm
+used by Andrew Rohl and Paolo Raiteri.
 
-Contrasting to the approach by Andrew Rohl and Paolo Raiteri, the complete
--- i.e. extended -- map range of de and di is accessed, 0.40(0.01)3.00 A.
-This is because selection among the three map ranges is offered by the
-display routines yielding .png and .pdf files with gnuplot.
+If used to assist script hirshfeld_surface.py, deposit this file in the
+same folder as the moderator and alter the import statement of
 
-Known issues with this concept study include:
-+ The analysis with the compiled executable of fingerprint.f90 is faster,
-  than by the interpreted fingerprint_Heron.py.  To accelerate processing,
-  either legacy Python 2, and even more so, pypy, may be an alternative to
-  default Python 3.
-  Both moderator scripts (which anyway relay the fingerprint generation to
-  Fortran) offer the best performance for this task, however require the
-  presence of a Fortran compiler (either gfortran, gcc).
+import fingerprint_Kahan
 
-+ The binning of individual triangle surfaces in increments of 0.01 A for
-  both di and de with this script may yield higher values per bin, than
-  by fingerprint.f90 implemented by Rohl and Raiteri.  The approach here
-  seems to offer additional detail in the maps compared to the original
-  Fortran code.  The accumulated intensity per bin then may be up to 50%
-  above the one attributed by fingerprint.f90.
+into the statemet of
 
-For these (and some other reasons), this script still is in the process of
-being tested, kept to work independently from the moderator scripts. """
+import fingerprint_Heron
+
+The moderator script will call its action.
+
+If to be used independently, deposit the script into the folder with the
+.cxs files of interest.  Launch from the CLI
+
+python fingerprint_Heron.py
+
+to write for each example.cxs a fingerprint example.dat.  Only modules
+of the standard library are called, offering use in pypy, too. """
 
 import itertools
 import math
@@ -64,7 +47,7 @@ def file_search():
     """ Identification of the files to work with. """
     global cxs_register
     cxs_register = []
-    os.chdir("cxs_workshop")
+
     for file in os.listdir("."):
         if file.endswith(".cxs"):
             cxs_register.append(file)
@@ -294,7 +277,7 @@ def numpy_free_area_binning(cxs_file=""):
     # binning the surfaces of individual triangles:
     global recorder_register
     recorder_register = []
-    local_area = 0.0  # collect surface specific to (de, di) bin
+    local_area = 0.0  # collect surface specific to (de,di) bin
     integral_area = 0.0  # to sum up all triangles' surfaces
     old_key = ""
     pre_binned.append("0 0 0")  # the STOP word to process the data
@@ -415,4 +398,5 @@ def worker():
 # action calls:
 file_search()
 worker()
+print("\nThe computation of normalized fingerprints is complete.\n")
 sys.exit(0)
