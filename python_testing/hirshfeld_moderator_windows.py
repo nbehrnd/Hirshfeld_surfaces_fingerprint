@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-02-24 (YYYY-MM-DD)
+# edit:    2020-02-28 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -69,14 +69,14 @@ def create_workshop():
             if fnmatch.fnmatch(element, "cxs_workshop"):
                 try:
                     shutil.rmtree(element)
-                except IOError:
+                except OSError:
                     print("Please remove 'csx_workshop' manually.")
                     sys.exit(0)
 
     # Creation of a workshop.
     try:
         os.mkdir("cxs_workshop")
-    except:
+    except OSError:
         print("\nProblem to create sub-folder 'cxs_workshop'.")
         print("Without alteration of data, the script closes now.\n")
         sys.exit(0)
@@ -119,7 +119,7 @@ def file_crawl(copy=False):
                         counter += 1
                         print("{}\t{}".format(counter, file))
                 os.chdir(root)
-        except:
+        except OSError:
             continue
 
     if copy is True:  # not considered execpt on explicit consent.
@@ -128,7 +128,7 @@ def file_crawl(copy=False):
                 shutil.copy(entry,
                             os.path.join(root, "cxs_workshop",
                                          os.path.basename(entry)))
-            except:
+            except OSError:
                 print("Not copied to cxs_workshop: {}".format(entry))
 
 
@@ -160,13 +160,13 @@ def compile_f90():
     try:
         sub.call(compile_gfo_f90, shell=True)
         print("fingerprint.f90 was compiled successfully (gfortran).")
-    except IOError:
+    except OSError:
         print("Compilation attempt with gfortran failed.")
         print("Independent compilation attempt with gcc.")
         try:
             sub.call(compile_gcc_f90, shell=True)
             print("fingerprint.f90 was compiled successfully (gcc).")
-        except IOError:
+        except OSError:
             print("Compilation attempt with gcc equally failed.")
             print("Maybe fingerprint.f90 is not in the project folder.")
             print("Equally ensure installation of gfortran or gcc.")
@@ -177,14 +177,14 @@ def shuttle_f90():
     """ Shuttle the executable of fingerprint.f90 into the workshop. """
     try:
         shutil.copy("fingerprint.x", "cxs_workshop")
-    except IOError:
+    except OSError:
         print("Error to copy Fortran .f90 executable to 'cxs_workshop'.")
         sys.exit(0)
 
     # space cleaning, root folder of the project:
     try:
         os.remove("fingerprint.x")
-    except IOError:
+    except OSError:
         pass
 
 
@@ -297,15 +297,15 @@ def ruby_number():
     """ Add the absolute values of differences per difference map. """
     # identification of the files to work with:
     os.chdir("cxs_workshop")
-    file_register = []
+    register = []
 
     for file in os.listdir("."):
         if fnmatch.fnmatch(file, "diff*.dat"):
-            file_register.append(file)
-    file_register.sort()
+            register.append(file)
+    register.sort()
 
     # computation of the difference number:
-    for entry in file_register:
+    for entry in register:
         diff_number = 0
 
         with open(entry, mode="r") as source:
@@ -329,6 +329,7 @@ def ruby_number():
 # Kenneth Moreland's recommendations about this topic.)   Which is why
 # gnuplot's built-in palette 'cubehelix' (accessible in this script's -a /
 # --alt toggle) is recommended to be used instead of 'rainbow'.
+
 rainbow = str("""set palette defined (0  1.0 1.0 1.0, \
                0.00001  0.0 0.0 1.0, \
                1  0.0 0.5 1.0, \
@@ -351,7 +352,7 @@ three_level_old = str('set palette defined (-1 "blue", 0 "white", 1 "red")')
 #
 # Used by default for the screening .png to faciliate discern of tiles with
 # z close to zero (otherwise print white) from the paper-white background.
-# A heavily constrained implementation of Kenneth Morelands suggestions
+# A heavily constrained implementation of Kenneth Moreland's suggestions
 # for diverging color palettes.  If not screening, you may either enhance the
 # contrast to the background (toggle -g) or use the alternative (toggle -a)
 # bent-cool-warm palette by Kenneth Moreland.
@@ -451,7 +452,7 @@ def file_listing():
 
     try:
         listing_choice = int(input())
-    except IOError:
+    except OSError:
         sys.exit(0)
     if listing_choice == 0:
         print("\n Script's execution was ended.\n")
@@ -468,7 +469,7 @@ def assemble_cxs():
     """ Bring the .cxs all into one dedicated sub-folder / workshop. """
     print("\nCopies of .cxs files will be brought into 'cxs_workshop'.")
     print("Any 'cxs_workshop' folder of previous runs will be erased.")
-    print("File names of .cxs copies are truncated at the underscore.")
+    print("File names of .cxs copies are truncated at first underscore.")
     print("")
     print("[0]  to leave the script.")
     print("[1]  .cxs files reside in the same folder as this script.")
@@ -476,13 +477,13 @@ def assemble_cxs():
 
     try:
         assemble_choice = int(input())
-    except IOError:
+    except OSError:
         sys.exit(0)
     if assemble_choice == 0:
         print("\n Script's execution is ended.\n")
     try:
         create_workshop()
-    except IOError:
+    except OSError:
         pass
     if assemble_choice == 1:
         print("")
@@ -727,9 +728,9 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
             'set label "{}" at graph 0.05,0.05 left front noenhanced; '.format(
                 file_stamp))
         pl += str(
-            'set label z_top at graph 0.65,0.20 left front font "Courier,7"; ')
+            'set label z_top at graph 0.65,0.20 left front font "Courier,6"; ')
         pl += str(
-            'set label z_low at graph 0.65,0.17 left front font "Courier,7"; ')
+            'set label z_low at graph 0.65,0.17 left front font "Courier,6"; ')
 
         pl += str('set pm3d map; \
             set pm3d depthorder; set hidden; set hidden3d; ')
@@ -769,53 +770,39 @@ def pdf_map(xmin=0.4, xmax=3.0, zmax=0.08, screen="off", alt=0, bg=0):
         sub.call(pl, shell=True)
 
 
-def fall_back_display():
+# yapf: disable
+def fall_back_display(maprange="extended", zmax=0.08, screen=False,
+                      bg=False, color_bar=False, filetype="png"):
     """ Map visualization without gnuplot with non-default modules. """
+    # yapf: enable
     try:
         import matplotlib.pyplot as plt
         from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
         import numpy as np
-    except:
+    except OSError:
         print("Additional non-standard modules are not available.")
         print("Install first numpy and matplotlib.")
         sys.exit()
-    print(2 * "\n")
-    print("Surveying fingerprint and difference maps by matplotlib and numpy.")
-    print("This is a fall back should gnuplot not be available to you.")
-    print("\n")
 
-    # identify the .dat to work with:
-    dat_register = []
-    os.chdir('cxs_workshop')
-    for file in os.listdir('.'):
-        if file.endswith('.dat'):
-            dat_register.append(file)
-    dat_register.sort()
+    os.chdir("cxs_workshop")
+    print("\nMap data processed:")
+    for entry in dat_register:
+        print(entry)
 
-    # analysis of the .dat file:
-    for input_file in dat_register:
-        print("Work on {}".format(input_file))
+        if entry.startswith("diff"):
+            difference_map = True
+        else:
+            difference_map = False
 
+#    # analysis of the .dat file:
         retainer = []  # record all execpt the blank lines
         z_register = []  # record only the entries about z
 
-        # analysis of the .dat file:
-        with open(input_file, mode='r') as source:
+        with open(entry, mode='r') as source:
             for line in source:
                 if len(line.strip().split()) == 3:
                     retainer.append(line.strip())
                     z_register.append(float(line.strip().split()[2]))
-
-        # identify start and end of di:
-        di_start = float(str("{:3.2f}".format(float(retainer[0].split()[0]))))
-        di_end = float(str("{:3.2f}".format(float(retainer[-1].split()[0]))))
-
-        # identify zmin and zmax
-        zmin_value = str("{:7.6f}".format(float(min(z_register))))
-        zmin = " ".join(["zmin:", zmin_value.rjust(9)])
-
-        zmax_value = str("{:7.6f}".format(float(max(z_register))))
-        zmax = " ".join(["zmax:", zmax_value.rjust(9)])
 
         # convert the list of z into an array suitable for display:
         array_z = np.array(z_register)
@@ -824,8 +811,26 @@ def fall_back_display():
         dimension_matrix_z = int(math.sqrt(len(array_z)))
         matrix_z = array_z.reshape(dimension_matrix_z, dimension_matrix_z)
 
-        # align orientation of the array to the one used in gnuplot's plots:
+        # align orientation of the array to the one in gnuplot's plots:
         matrix_z = matrix_z.transpose()
+
+        # adjust working to the map range selection:
+        if maprange == "standard":  # i.e., 0.40(0.01)2.60 A.
+            di_start, di_end = 0.40, 2.60
+            matrix_z = matrix_z[:221, :221]
+        if maprange == "translated":  # i.e., 0.80(0.01)3.00 A
+            di_start, di_end = 0.80, 3.00
+            matrix_z = matrix_z[40:, 40:]
+        if maprange == "extended":  # i.e., 0.40(0.01)3.00 A
+            di_start, di_end = 0.40, 3.00
+            matrix_z = matrix_z[:, :]
+
+        # identify zmin and zmax
+        zmin_value = str("{:7.6f}".format(float(min(z_register))))
+        zmin_report = " ".join(["zmin:", zmin_value.rjust(9)])
+
+        zmax_value = str("{:7.6f}".format(float(max(z_register))))
+        zmax_report = " ".join(["zmax:", zmax_value.rjust(9)])
 
         # Filter out entries not sufficiently away from zero:
         np.place(array_z, abs(array_z) < 1e-8, 'nan')
@@ -837,7 +842,7 @@ def fall_back_display():
         ax.yaxis.set_major_locator(MultipleLocator(0.20))
         ax.grid(which='major', color='#CCCCCC', linestyle=':', lw=0.5)
 
-        # Change minor ticks to show every 5. (20/4 = 5)
+        # Change minor ticks to show every 0.05 A. (0.20 A / 4 = 0.05 A):
         ax.xaxis.set_minor_locator(AutoMinorLocator(4))
         ax.yaxis.set_minor_locator(AutoMinorLocator(4))
 
@@ -845,62 +850,119 @@ def fall_back_display():
 
         # yapf: disable
         # permanent decorum:
-        plt.text(0.50, 2.70, r'$d_e$')
-        plt.text(2.70, 0.50, r'$d_i$')
+        plt.text(0.05, 0.90, r'$d_e$', transform=ax.transAxes)
+        plt.text(0.90, 0.05, r'$d_i$', transform=ax.transAxes)
 
         bbox_props = dict(boxstyle="square", fc='white', ec='white',
-            lw=1, pad=0.1)
-        plt.text(0.60, 0.60, r'{}'.format(input_file[:-4]), bbox=bbox_props)
-        plt.text(2.25, 0.90, r'{}'.format(zmax), family="monospace",
-            size="7", bbox=bbox_props)
-        plt.text(2.25, 0.81, r'{}'.format(zmin), family="monospace",
-            size="7", bbox=bbox_props)
+                          lw=1, pad=0.1)
+        plt.text(0.05, 0.05, r'{}'.format(entry[:-4]), bbox=bbox_props,
+                 transform=ax.transAxes)
+        plt.text(0.70, 0.20, r'{}'.format(zmax_report), family="monospace",
+                 size="7", bbox=bbox_props, transform=ax.transAxes)
+        plt.text(0.70, 0.17, r'{}'.format(zmin_report), family="monospace",
+                 size="7", bbox=bbox_props, transform=ax.transAxes)
 
-        # indicator standard map range, dasshed line:
-        plt.plot([0.40, 2.60], [2.60, 2.60], '--', color='black')
-        plt.plot([2.60, 2.60], [0.40, 2.60], '--', color='black')
+        if screen is True:
+            # indicator standard map range, dashed line:
+            plt.plot([0.40, 2.60], [2.60, 2.60], '--', color='black')
+            plt.plot([2.60, 2.60], [0.40, 2.60], '--', color='black')
 
-        # indicator translated map range, dotted line:
-        plt.plot([0.80, 0.80], [0.80, 3.00], ':', color='black')
-        plt.plot([0.80, 3.00], [0.80, 0.80], ':', color='black')
+            # indicator translated map range, dotted line:
+            plt.plot([0.80, 0.80], [0.80, 3.00], ':', color='black')
+            plt.plot([0.80, 3.00], [0.80, 0.80], ':', color='black')
 
-        # the optional change of background to gray:
-        ax.set_facecolor("#808080")
+        # the permanent records:
+        # fixed z-ranges with values stipulated in fingerprint.f90.
+        if screen is True:
+            if bg is True:
+                ax.set_facecolor("#808080")  # gray background
 
-        # the permanent record:
-        if input_file.startswith("diff_"):
-            plt.imshow(matrix_z, extent=[di_start, di_end, di_start, di_end],
-                origin='lower', cmap='RdBu_r', aspect='equal',
-                interpolation='nearest', filternorm='False',
-                vmin=-0.025, vmax=0.025, zorder=15, resample=True)
+            if difference_map is True:
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='RdBu_r', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=-0.025, vmax=0.025, zorder=15, resample=True)
 
-        else:
-            plt.imshow(matrix_z, extent=[di_start, di_end, di_start, di_end],
-                origin='lower', cmap='cubehelix', aspect='equal',
-                interpolation='nearest', filternorm='False',
-                vmin=0.0, vmax=0.08, zorder=15, resample=True)
-        # yapf: enable
+            if difference_map is False:
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='cubehelix', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=0.0, vmax=0.08, zorder=15, resample=True)
 
-        # the optional color bar:
-        plt.colorbar()
+            ax.set_facecolor("#808080")  # gray background
+            plt.colorbar()
+            output_file = ''.join([entry[:-4], '.png'])
+            plt.savefig(output_file, dpi=150, bbox_inches='tight')
+            plt.close(fig)
 
-        # creation of the permanent record, screening conditions:
-        output_file = ''.join([input_file[:-4], '.png'])
-        plt.savefig(output_file, dpi=150, bbox_inches='tight')
-        plt.close(fig)
+        # adjustable z-scaling, high quality visualizations>
+        if (screen is False) and (filetype == "png"):
+            if bg is True:
+                ax.set_facecolor("#808080")  # gray background
 
-        with open("screening_log.txt", mode="a") as newfile:
-            retain = '\t'.join([input_file, zmin, zmax, '\n'])
-            newfile.write(retain)
+            if difference_map is True:
+                print("zmax: {}".format(zmax))
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='RdBu_r', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=-zmax, vmax=zmax, zorder=15, resample=True)
+
+            if difference_map is False:
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='cubehelix', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=0.0, vmax=zmax, zorder=15, resample=True)
+            if color_bar is True:
+                plt.colorbar()
+            output_file = ''.join([entry[:-4], '.png'])
+            plt.savefig(output_file, dpi=300, bbox_inches='tight')
+            plt.close(fig)
+
+# test section pdf export by mp, start:
+        if (screen is False) and (filetype == "pdf"):
+            if bg is True:
+                ax.set_facecolor("#808080")  # gray background
+
+            if difference_map is True:
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='RdBu_r', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=-zmax, vmax=zmax, zorder=15, resample=True)
+
+            if difference_map is False:
+                plt.imshow(matrix_z, extent=[
+                    di_start, di_end, di_start, di_end],
+                           origin='lower', cmap='cubehelix', aspect='equal',
+                           interpolation='None', filternorm='False',
+                           vmin=0.0, vmax=zmax, zorder=15, resample=True)
+            if color_bar is True:
+                plt.colorbar()
+            output_file = ''.join([entry[:-4], '.pdf'])
+            plt.savefig(output_file, bbox_inches='tight')
+            plt.close(fig)
+# test section pdf export by mp, end.
+# yapf: enable
 
 
-def fall_back_normalization():
-    """ Compute normalized 2D fingerprints (Kahan approach) as backup.
+def fall_back_normalize():
+    """ Python based normalization of 2D Hirshfeld surface fingerprints.
 
-    This is a fall back if there is no Fortran compiler to work with.  Put
-    file fingerprint_Kahan.py into the same folder as this moderator which
-    will reach out for the secondary script. """
-    import fingerprint_Kahan
+    To compute the fingerprints /only/ with Python, moderator and script
+    'fingerprint_Kahan.py' must both reside in the same folder. """
+
+    print("\nAlternate computation of normalized 2D Hirshfeld fingerprints.")
+    try:
+        os.chdir("cxs_workshop")
+        import fingerprint_Kahan
+    except OSError:
+        print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
+        as the moderator script, the computation could not be performed. """)
+        sys.exit()
 
 
 # argparse section:
@@ -913,18 +975,29 @@ if __name__ == "__main__":
         "--list",
         help="List accessible .cxs files.  No further file processing.",
         action="store_true")
+
     parser.add_argument(
         "-j",
         "--join",
         help="Copy .cxs into a dedicated sub-folder. "
-        "File names will be truncated at underscore character.",
+        "File names will be truncated at first underscore character.",
         action="store_true")
+
     parser.add_argument(
         "-n",
         "--normalize",
-        help="Normalize the .cxs files with fingerprint.f90. "
-        "Files in pattern of 'example.cxs' yield 'example.dat'.",
+        help="""Normalize the .cxs with Fortran and fingerprint.f90.
+        Files in pattern of 'example.cxs' yield 'example.dat'.""",
         action="store_true")
+
+    parser.add_argument(
+        "-N",
+        "--normalize_py",
+        action="store_true",
+        help="""Normalize the .cxs with Python only.  Based on Kahan's
+        triangle equation, ensure script fingerprint_Kahan.py is in the
+        same folder as this moderator script.""")
+
     parser.add_argument(
         "-c",
         "--compare",
@@ -935,16 +1008,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--ruby_number",
-        help="Compute the difference number (ruby script).",
+        help="Compute the difference number (cf. the ruby script).",
         action="store_true")
+
     parser.add_argument(
         "-o",
         "--overview",
         action="store_true",
-        help=
-        "Preview 2D fingerprint and difference maps as low resolution .png. "
-        "Use it to adjust de/di map range (s, t, e) and z-scaling in the high resolution maps."
-    )
+        help="""Preview 2D fingerprint and difference maps as low resolution
+        .png. Use it to adjust de/di map range (s, t, e) and z-scaling in
+        the high quality maps.""")
+
+    parser.add_argument(
+        "-O",
+        "--overview_mpl",
+        action="store_true",
+        help="Survey .png generation with matplotlib.")
 
     # Either .png or .pdf of fingerprint maps (in high resolution):
     group_fp = parser.add_mutually_exclusive_group()
@@ -952,9 +1031,9 @@ if __name__ == "__main__":
         "--fpng",
         type=str,
         choices=["s", "t", "e"],
-        help=
-        "2D fingerprint maps in either map range [s]tandard, [t]ranslated, or [e]xtended as high resolution .png."
-    )
+        help="""2D fingerprint maps in either map range [s]tandard,
+        [t]ranslated, or [e]xtended as high quality .png.""")
+
     group_fp.add_argument(
         "--fpdf",
         type=str,
@@ -967,26 +1046,58 @@ if __name__ == "__main__":
         "--dpng",
         type=str,
         choices=["s", "t", "e"],
-        help="Difference maps in either map range as high resolution .png.")
+        help="Difference maps of either map range as high res. .png.")
+
     group_delta.add_argument(
         "--dpdf",
         type=str,
         choices=["s", "t", "e"],
-        help="Difference maps in either map range as .pdf.")
+        help="Difference maps of either map range as .pdf.")
+
+    # Either .png fingerprints by matplotlib
+    group_fp = parser.add_mutually_exclusive_group()
+    group_fp.add_argument(
+        "--Fpng",
+        type=str,
+        choices=["s", "t", "e"],
+        help="2D fingerprint .png of either map range by matplotlib.")
+
+    # Either .pdf fingerprints by matplotlib
+    group_fp = parser.add_mutually_exclusive_group()
+    group_fp.add_argument(
+        "--Fpdf",
+        type=str,
+        choices=["s", "t", "e"],
+        help="2D fingerprint .png of either map range by matplotlib.")
+
+    # Either .png difference maps by matplotlib
+    group_fp = parser.add_mutually_exclusive_group()
+    group_fp.add_argument(
+        "--Dpng",
+        type=str,
+        choices=["s", "t", "e"],
+        help="2D difference map .png by matplotlib.")
+
+    # Either .pdf difference maps by matplotlib
+    group_fp = parser.add_mutually_exclusive_group()
+    group_fp.add_argument(
+        "--Dpdf",
+        type=str,
+        choices=["s", "t", "e"],
+        help="2D difference map .png by matplotlib.")
 
     # adjustment of zmax scaling in high resolution maps:
     parser.add_argument(
         "--zmax",
         type=float,
-        help=
-        "Use an other scaling than zmax = 0.08 (fingerprints) or |zmax| = 0.025 (difference maps) in high resolution maps."
-    )
+        help="""Use an other scaling than zmax = 0.08 (fingerprints) or
+        |zmax| = 0.025 (difference maps) in high quality maps.""")
 
     parser.add_argument(
         "-g",
         "--bg",
         action="store_true",
-        help="Use a gray background in high resolution maps.")
+        help="Add a gray background to the high quality maps.")
 
     parser.add_argument(
         "-a",
@@ -995,16 +1106,12 @@ if __name__ == "__main__":
         help="Use the alternate palette definitions.")
 
     parser.add_argument(
-        "-fd",
-        "--fall_back_display",
+        "-B",
+        "--color_bar",
         action="store_true",
-        help="Preview generation with numpy and matplotlib.")
+        help="""Add display of the color bar (default: off).  This Boolean
+        is available only for plots by matplotlib.""")
 
-    parser.add_argument(
-        "-fc",
-        "--fall_back_normalization",
-        action ="store_true",
-        help="Slow, Fortran independent, fingerprint computation.")
     args = parser.parse_args()
     # yapf: enable
 
@@ -1017,58 +1124,37 @@ if __name__ == "__main__":
         compile_f90()  # render fingerprint.f90 executable
         shuttle_f90()  # bring the .f90 executable to the data
         normalize_cxs()  # generate 2D fingerprint .dat files
-    if args.fall_back_normalization:
-        fall_back_normalization()
     if args.compare:
         numpy_independent_differences()  # compute the difference maps
-    if args.fall_back_display:
-        fall_back_display()
-    if args.ruby_number:
-        ruby_number()  # compute the difference number
-    if args.bg:
-        global bg  # an option: a neutral gray background
-    if args.alternate:
-        global alternate  # toggle to alternative color palettes
-
-    # quick overviews with fixed extended range de/di and default z:
-    if args.overview:
+    if args.overview:     # quick survey with gnuplot
         search_dat(screen="on")
         png_map(screen="on")
         print("")
         print("File 'gp_report.txt' provides a permanent record.")
+    if args.overview_mpl:  # quick survey by matplotlib
+        search_dat(screen="on")
+        fall_back_display(screen=True)
+    if args.ruby_number:
+        ruby_number()  # compute the difference number
+    if args.normalize_py:
+        fall_back_normalize()
+    if args.bg:
+        global bg  # an option: a neutral gray background
+    if args.color_bar:
+        global color_bar  # add a color bar (matplotlib only)
+    if args.alternate:
+        global alternate  # toggle to alternative color palettes
 
     # options fingerprints, .png; adjustable map range [s]tandard,
     # [t]ranslated, [e]extended -- mandatory; adjustable zmax, alternate
     # color palette, and background contrast enhancement -- optional.
-    if args.fpng == "s":
-        xmin = 0.4
-        xmax = 2.6
-        if args.zmax is None:
-            zmax = 0.08
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="fingerprint")
-        png_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.fpng == "t":
-        xmin = 0.8
-        xmax = 3.0
-        if args.zmax is None:
-            zmax = 0.08
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="fingerprint")
-        png_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.fpng == "e":
-        xmin = 0.4
-        xmax = 3.0
+    if args.fpng in ["s", "t", "e"]:
+        if args.fpng == "s":
+            xmin, xmax = 0.4, 2.6
+        if args.fpng == "t":
+            xmin, xmax = 0.8, 3.0
+        if args.fpng == "e":
+            xmin, xmax = 0.4, 3.0
         if args.zmax is None:
             zmax = 0.08
         else:
@@ -1080,35 +1166,13 @@ if __name__ == "__main__":
         png_map(xmin, xmax, zmax, screen, alt, bg)
 
     # options fingerprints, .pdf:
-    if args.fpdf == "s":
-        xmin = 0.4
-        xmax = 2.6
-        if args.zmax is None:
-            zmax = 0.08
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="fingerprint")
-        pdf_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.fpdf == "t":
-        xmin = 0.8
-        xmax = 3.0
-        if args.zmax is None:
-            zmax = 0.08
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="fingerprint")
-        pdf_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.fpdf == "e":
-        xmin = 0.4
-        xmax = 3.0
+    if args.fpdf in ["s", "t", "e"]:
+        if args.fpdf == "s":
+            xmin, xmax = 0.4, 2.6
+        if args.fpdf == "t":
+            xmin, xmax = 0.8, 3.0
+        if args.fpdf == "e":
+            xmin, xmax = 0.4, 3.0
         if args.zmax is None:
             zmax = 0.08
         else:
@@ -1120,35 +1184,13 @@ if __name__ == "__main__":
         pdf_map(xmin, xmax, zmax, screen, alt, bg)
 
     # options difference maps, .png:
-    if args.dpng == "s":
-        xmin = 0.4
-        xmax = 2.6
-        if args.zmax is None:
-            zmax = 0.025
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="delta")
-        png_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.dpng == "t":
-        xmin = 0.8
-        xmax = 3.0
-        if args.zmax is None:
-            zmax = 0.025
-        else:
-            zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
-        bg = args.bg
-        search_dat(map_type="delta")
-        png_map(xmin, xmax, zmax, screen, alt, bg)
-
-    if args.dpng == "e":
-        xmin = 0.4
-        xmax = 3.0
+    if args.dpng in ["s", "t", "e"]:
+        if args.dpng == "s":
+            xmin, xmax = 0.4, 2.6
+        if args.dpng == "t":
+            xmin, xmax = 0.8, 3.0
+        if args.dpng == "e":
+            xmin, xmax = 0.4, 3.0
         if args.zmax is None:
             zmax = 0.025
         else:
@@ -1160,9 +1202,13 @@ if __name__ == "__main__":
         png_map(xmin, xmax, zmax, screen, alt, bg)
 
     # options difference maps, .pdf:
-    if args.dpdf == "s":
-        xmin = 0.4
-        xmax = 2.6
+    if args.dpdf in ["s", "t", "e"]:
+        if args.dpdf == "s":
+            xmin, xamx = 0.4, 2.6
+        if args.dpdf == "t":
+            xmin, xmax = 0.8, 3.0
+        if args.dpdf == "e":
+            xmin, xmax = 0.4, 3.0
         if args.zmax is None:
             zmax = 0.025
         else:
@@ -1173,31 +1219,81 @@ if __name__ == "__main__":
         search_dat(map_type="delta")
         pdf_map(xmin, xmax, zmax, screen, alt, bg)
 
-    if args.dpdf == "t":
-        xmin = 0.8
-        xmax = 3.0
+# test insert for --Fpng, start:
+    if args.Fpng in ["s", "t", "e"]:
+        search_dat(map_type="fingerprint")
+        if args.Fpng == "s":
+            maprange = "standard"
+        if args.Fpng == "t":
+            maprange = "translated"
+        if args.Fpng == "e":
+            maprange = "extended"
         if args.zmax is None:
             zmax = 0.025
         else:
             zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
+        screen = False
         bg = args.bg
-        search_dat(map_type="delta")
-        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+        color_bar = args.color_bar
+        filetype = "png"
+        fall_back_display(maprange, zmax, screen, bg, color_bar, filetype)
 
-    if args.dpdf == "e":
-        xmin = 0.4
-        xmax = 3.0
+# test insert for --Dpng, start:
+    if args.Dpng in ["s", "t", "e"]:
+        search_dat(map_type="delta")
+        if args.Dpng == "s":
+            maprange = "standard"
+        if args.Dpng == "t":
+            maprange = "translated"
+        if args.Dpng == "e":
+            maprange = "extended"
         if args.zmax is None:
             zmax = 0.025
         else:
             zmax = args.zmax
-        screen = "off"
-        alt = args.alternate
+        screen = False
         bg = args.bg
+        color_bar = args.color_bar
+        filetype = "png"
+        fall_back_display(maprange, zmax, screen, bg, color_bar, filetype)
+
+# test insert for --Fpdf, start:
+    if args.Fpdf in ["s", "t", "e"]:
+        search_dat(map_type="fingerprint")
+        if args.Fpdf == "s":
+            maprange = "standard"
+        if args.Fpdf == "t":
+            maprange = "translated"
+        if args.Fpdf == "e":
+            maprange = "extended"
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = False
+        bg = args.bg
+        color_bar = args.color_bar
+        filetype = "pdf"
+        fall_back_display(maprange, zmax, screen, bg, color_bar, filetype)
+
+# test insert for --Dpdf, start:
+    if args.Dpdf in ["s", "t", "e"]:
         search_dat(map_type="delta")
-        pdf_map(xmin, xmax, zmax, screen, alt, bg)
+        if args.Dpdf == "s":
+            maprange = "standard"
+        if args.Dpdf == "t":
+            maprange = "translated"
+        if args.Dpdf == "e":
+            maprange = "extended"
+        if args.zmax is None:
+            zmax = 0.025
+        else:
+            zmax = args.zmax
+        screen = False
+        bg = args.bg
+        color_bar = args.color_bar
+        filetype = "pdf"
+        fall_back_display(maprange, zmax, screen, bg, color_bar, filetype)
 
 os.chdir(root)
 sys.exit(0)
