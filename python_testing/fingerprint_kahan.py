@@ -1,16 +1,16 @@
-# name:   fingerprint_Kahan.py
+# name:   fingerprint_kahan.py
 # author: nbehrnd@yahoo.com
 # date:   2020-01-30 (YYYY-MM-DD)
-# edit:   2020-02-26 (YYYY-MM-DD)
+# edit:   2020-03-02 (YYYY-MM-DD)
 #
 """ Compute normalized 2D Hirshfeld surface fingerprints, Kahan formula
 
-This is forked from fingerprint_Heron.py.  It is based on W. Kahan's
-approach to compute triangles which -- contrasting to the one by Heron --
-equally works well on needle-shaped triangles; namely equation #2 (page 3
-of 23) in his document "Miscalculating Area and Angles of a Needle-like
-Triangle (from Lecture Notes for Introductory Numerical Analysis Classes)"
-accessed 2020-01-30 at http://http.cs.berkeley.edu/~wkahan/Triangle.pdf.
+Forked from fingerprint_heron.py, this script is based on W. Kahan's equation
+to compute triangles which -- contrasting to the one by Heron -- equally works
+on needle-shaped triangles.  See equation #2 (page 3 / 23) in his document
+"Miscalculating Area and Angles of a Needle-like Triangle (from Lecture Notes
+for Introductory Numerical Analysis Classes)", accessed 2020-01-30 at
+http://http.cs.berkeley.edu/~wkahan/Triangle.pdf.
 
 On table 1 on page 5 in above mentioned .pdf, examples provide comparison
 between computations with Heron's formula, and Kahan's alternative.  His
@@ -32,7 +32,7 @@ folder as the moderator; then, the moderator script will call its action.
 If to be used independently, deposit the script into the folder with the
 .cxs files of interest.  Launch from the CLI
 
-python fingerprint_Kahan.py
+python fingerprint_kahan.py
 
 to write for each example.cxs a fingerprint example.dat.  Only modules
 of the standard library are called, offering use in pypy, too. """
@@ -40,44 +40,44 @@ of the standard library are called, offering use in pypy, too. """
 import itertools
 import math
 import os
-import sys
 
 
-def file_search():
-    """ Identification of the files to work with. """
-    global cxs_register
-    cxs_register = []
+def cxs_search():
+    """ Identification of the .cxs files to work with. """
+    global CXS_REGISTER
+    CXS_REGISTER = []
 
     for file in os.listdir("."):
         if file.endswith(".cxs"):
-            cxs_register.append(file)
-    cxs_register.sort()
+            CXS_REGISTER.append(file)
+    CXS_REGISTER.sort()
+    return CXS_REGISTER
 
 
 def file_reader(cxs_file=""):
     """ Read the .cxs once as a list accessible throughout the script. """
-    global per_file_register
-    per_file_register = []
+    global PER_FILE_REGISTER
+    PER_FILE_REGISTER = []
     print("\nAnalysis of file {}:".format(cxs_file))
 
-    # The computation uses only about a third of the lines of the .cxs
-    # file.  Thus, the manual file file management here and selective
-    # remove of line feeds later is more efficient, than to call for
+    # Only a third of the .cxs file lines contain relevant information.  Thus,
+    # the manual file file management with selective remove of line feeds later
+    # is more efficient, than to call for
     # "with open(file, mode='r') as source" and subsequent iterative
     # global line feed removal.
     file = open(cxs_file, mode="r")
-    per_file_register = file.readlines()
+    PER_FILE_REGISTER = file.readlines()
     file.close()
 
 
 def readout_vertices_count():
     """ Report .cxs' number of vertices and vertices' coordinates. """
     vertices_count = ""
-    global vertices_coordinates
-    vertices_coordinates = []
+    global VERTICES_COORDINATES
+    VERTICES_COORDINATES = []
     tester = False  # assume, the line is not of interest
 
-    for line in per_file_register:
+    for line in PER_FILE_REGISTER:
         if line.startswith("begin vertices "):
             vertices_count = int(line.split()[2])
             report_start = str("{:<21}".format("Number of vertices:"))
@@ -88,19 +88,19 @@ def readout_vertices_count():
             tester = False
             break
 
-        if tester is True:
-            vertices_coordinates.append(str(line.strip()))
-    del vertices_coordinates[0]  # remove the start line's entry.
+        if tester:
+            VERTICES_COORDINATES.append(str(line.strip()))
+    del VERTICES_COORDINATES[0]  # remove the start line's entry.
 
 
 def readout_indices_count():
     """ State .cxs' indices number, list triangles by their indices.  """
     indices_count = ""
-    global indices_list
-    indices_list = []
+    global INDICES_LIST
+    INDICES_LIST = []
     tester = False  # assume the line is not of interest
 
-    for line in per_file_register:
+    for line in PER_FILE_REGISTER:
         if line.startswith("begin indices "):
             indices_count = int(line.split()[2])
             report_start = str("{:<21}".format("Number of indices:"))
@@ -111,19 +111,19 @@ def readout_indices_count():
             tester = False
             break
 
-        if tester is True:
-            indices_list.append(str(line.strip()))
-    del indices_list[0]  # remove the start line's entry.
+        if tester:
+            INDICES_LIST.append(str(line.strip()))
+    del INDICES_LIST[0]  # remove the start line's entry.
 
 
 def readout_di_count():
     """ Report .cxs' number of d_i points, collect the entries. """
     di_count = ""
-    global di_list
-    di_list = []
+    global DI_LIST
+    DI_LIST = []
     tester = False  # assume the line is not of interest
 
-    for _, line in enumerate(per_file_register):
+    for _, line in enumerate(PER_FILE_REGISTER):
         if line.startswith("begin d_i "):
             di_count = int(line.split()[2])
             report_start = str("{:<21}".format("Number of di:"))
@@ -135,18 +135,18 @@ def readout_di_count():
             break
 
         if tester is True:
-            di_list.append(str(line.strip()))
-    del di_list[0]  # remove the start line's entry.
+            DI_LIST.append(str(line.strip()))
+    del DI_LIST[0]  # remove the start line's entry.
 
 
 def readout_de_count():
     """ Report .cxs' number of d_e points, collect the entries. """
     de_count = ""
-    global de_list
-    de_list = []
+    global DE_LIST
+    DE_LIST = []
     tester = False  # assume the line is not of interest
 
-    for line in per_file_register:
+    for line in PER_FILE_REGISTER:
         if line.startswith("begin d_e "):
             de_count = int(line.split()[2])
             report_start = str("{:<21}".format("Number of de:"))
@@ -158,11 +158,11 @@ def readout_de_count():
             break
 
         if tester is True:
-            de_list.append(str(line.strip()))
-    del de_list[0]  # remove the start line's entry.
+            DE_LIST.append(str(line.strip()))
+    del DE_LIST[0]  # remove the start line's entry.
 
 
-def triangle_surfaces(cxs_files=""):
+def triangle_surfaces():
     """ Computation of the surface of the surface triangles.
 
     The distance d between points A(x_1, y_1, z_1) and B(x_2, y_2, z_2)
@@ -188,28 +188,28 @@ def triangle_surfaces(cxs_files=""):
 
     The side length constraint present in the Fortran code fingerprint.f90
     -- all sides at least 10E-5 A -- thus was dropped in this script. """
-    global computed_triangles
-    computed_triangles = []
+    global COMPUTED_TRIANGLES
+    COMPUTED_TRIANGLES = []
 
-    # Each line in 'indices_list' is one triangle to consider here.
-    for triangle in indices_list:
+    # Each line in 'INDICES_LIST' is one triangle to consider here.
+    for triangle in INDICES_LIST:
         # define a triangle by indices of points A, B, and C:
         index_A = int(triangle.split()[0])
         index_B = int(triangle.split()[1])
         index_C = int(triangle.split()[2])
 
         # define a triangle by coordinates of point A, B, and C:
-        point_A = (float(vertices_coordinates[index_A].split()[0]),
-                   float(vertices_coordinates[index_A].split()[1]),
-                   float(vertices_coordinates[index_A].split()[2]))
+        point_A = (float(VERTICES_COORDINATES[index_A].split()[0]),
+                   float(VERTICES_COORDINATES[index_A].split()[1]),
+                   float(VERTICES_COORDINATES[index_A].split()[2]))
 
-        point_B = (float(vertices_coordinates[index_B].split()[0]),
-                   float(vertices_coordinates[index_B].split()[1]),
-                   float(vertices_coordinates[index_B].split()[2]))
+        point_B = (float(VERTICES_COORDINATES[index_B].split()[0]),
+                   float(VERTICES_COORDINATES[index_B].split()[1]),
+                   float(VERTICES_COORDINATES[index_B].split()[2]))
 
-        point_C = (float(vertices_coordinates[index_C].split()[0]),
-                   float(vertices_coordinates[index_C].split()[1]),
-                   float(vertices_coordinates[index_C].split()[2]))
+        point_C = (float(VERTICES_COORDINATES[index_C].split()[0]),
+                   float(VERTICES_COORDINATES[index_C].split()[1]),
+                   float(VERTICES_COORDINATES[index_C].split()[2]))
 
         # compute the distance BC, i.e. dist_a
         delta_x_a_squared = (point_B[0] - point_C[0])**2
@@ -252,24 +252,24 @@ def triangle_surfaces(cxs_files=""):
             area = 0.25 * math.sqrt(Kahan_A * Kahan_B * Kahan_C * Kahan_D)
 
             # collect d_e of A, B, C for triangle's average:
-            de_A = float(de_list[index_A])
-            de_B = float(de_list[index_B])
-            de_C = float(de_list[index_C])
+            de_A = float(DE_LIST[index_A])
+            de_B = float(DE_LIST[index_B])
+            de_C = float(DE_LIST[index_C])
             average_de = (de_A + de_B + de_C) / float(3)
 
             # collect d_i of A, B, C for triangle's average:
-            di_A = float(di_list[index_A])
-            di_B = float(di_list[index_B])
-            di_C = float(di_list[index_C])
+            di_A = float(DI_LIST[index_A])
+            di_B = float(DI_LIST[index_B])
+            di_C = float(DI_LIST[index_C])
             average_di = (di_A + di_B + di_C) / float(3)
 
             # concatenate the results about the individual triangle:
             retain = str("{} {} {}".format(average_de, average_di, area))
-            computed_triangles.append(retain)
-    computed_triangles.sort()
+            COMPUTED_TRIANGLES.append(retain)
+    COMPUTED_TRIANGLES.sort()
 
 
-def numpy_free_area_binning(cxs_file=""):
+def numpy_free_area_binning():
     """ A two-step binning without numpy; 1) de, di, 2) surfaces.
 
     A grid increment of 0.01 A during work with CrystalExplorer is the
@@ -285,7 +285,7 @@ def numpy_free_area_binning(cxs_file=""):
 
     # binning along de and di:
     pre_binned = []
-    for ready_triangle in computed_triangles:
+    for ready_triangle in COMPUTED_TRIANGLES:
         new_di = float(ready_triangle.split()[1])
         new_de = float(ready_triangle.split()[0])
         area = str(ready_triangle.split()[2])
@@ -295,8 +295,8 @@ def numpy_free_area_binning(cxs_file=""):
     pre_binned.sort()
 
     # binning the surfaces of individual triangles:
-    global recorder_register
-    recorder_register = []
+    global RECORDER_REGISTER
+    RECORDER_REGISTER = []
     local_area = 0.0  # collect surface specific to (de,di) bin
     integral_area = 0.0  # to sum up all triangles' surfaces
     old_key = ""
@@ -310,19 +310,19 @@ def numpy_free_area_binning(cxs_file=""):
             # save the information collected so far:
             retain = str("{} {:9.8f}".format(old_key, local_area))
             integral_area += local_area
-            recorder_register.append(retain)
+            RECORDER_REGISTER.append(retain)
             # initiate the collection of new information:
             local_area = 0.0
             local_area += float(entry.split()[2])
             old_key = key
 
-    del recorder_register[0]  # delete the heading zero entry
+    del RECORDER_REGISTER[0]  # delete the heading zero entry
     #     # test deposit as permanent file, only non-zero (de,di) bins:
     #     with open("sparse_export.txt", mode="w") as newfile:
-    #         for entry in recorder_register:
+    #         for entry in RECORDER_REGISTER:
     #             newfile.write("{}\n".format(entry))
     report_start = str("{:<21}".format("non-zero (de,di)-bins:"))
-    report_end = str("{:>9}".format(len(recorder_register)))
+    report_end = str("{:>9}".format(len(RECORDER_REGISTER)))
     print("\n{}{}".format(report_start, report_end))
 
     # report integral_area:
@@ -331,15 +331,15 @@ def numpy_free_area_binning(cxs_file=""):
     print("{}{}".format(report_start, report_end))
 
     # normalization of the results
-    global normalized_register
-    normalized_register = []
-    for entry in recorder_register:
+    global NORMALIZED_REGISTER
+    NORMALIZED_REGISTER = []
+    for entry in RECORDER_REGISTER:
         normalized_entry = (float(entry.split()[2]) / integral_area) * 100.00
         retain = ' '.join([
             entry.split()[0],
             entry.split()[1], "{:9.8f}".format(normalized_entry)
         ])
-        normalized_register.append(retain)
+        NORMALIZED_REGISTER.append(retain)
 
 
 def dat_file_generation(cxs_file=""):
@@ -362,7 +362,7 @@ def dat_file_generation(cxs_file=""):
         blank_list.append(retain)
 
     # join blank_list and recorded list about normalized (di,de)-bins:
-    raw_sum_list = normalized_register + blank_list
+    raw_sum_list = NORMALIZED_REGISTER + blank_list
     raw_sum_list.sort()
 
     # If known to both lists now merged, bins with non-zero entries
@@ -403,7 +403,7 @@ def dat_file_generation(cxs_file=""):
 
 def worker():
     """ Bundle the individual actions per .cxs file. """
-    for cxs_file in cxs_register:
+    for cxs_file in CXS_REGISTER:
         file_reader(cxs_file)
         readout_vertices_count()
         readout_indices_count()
@@ -416,7 +416,6 @@ def worker():
 
 
 # action calls:
-file_search()
-worker()
-print("\nThe computation of normalized fingerprints is complete.\n")
-sys.exit(0)
+if __name__ == '__main__':
+    cxs_search()
+    worker()
