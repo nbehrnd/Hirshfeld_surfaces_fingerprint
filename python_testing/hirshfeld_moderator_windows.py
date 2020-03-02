@@ -239,13 +239,13 @@ def numpy_independent_differences():
             reference_map = []
             probe_map = []
 
-            f = open(reference_file, mode="r")
-            reference_map = f.readlines()
-            f.close()
+            reference = open(reference_file, mode="r")
+            reference_map = reference.readlines()
+            reference.close()
 
-            f = open(probe_file, mode="r")
-            probe_map = f.readlines()
-            f.close()
+            probe = open(probe_file, mode="r")
+            probe_map = probe.readlines()
+            probe.close()
 
             # consistency check for de/di
             start_reference_map = " ".join([
@@ -967,7 +967,9 @@ def fall_back_normalize():
     print("\nAlternate computation of normalized 2D Hirshfeld fingerprints.")
     try:
         os.chdir("cxs_workshop")
-        import fingerprint_Kahan
+        import fingerprint_kahan
+        fingerprint_kahan.cxs_search()
+        fingerprint_kahan.worker()
     except OSError:
         print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
         as the moderator script, the computation could not be performed. """)

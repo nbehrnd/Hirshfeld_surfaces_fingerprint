@@ -1129,7 +1129,9 @@ def fall_back_normalize():
     print("\nAlternate computation of normalized 2D Hirshfeld fingerprints.")
     try:
         os.chdir("cxs_workshop")
-        import fingerprint_Kahan
+        import fingerprint_kahan
+        fingerprint_kahan.cxs_search()
+        fingerprint_kahan.worker()
     except OSError:
         print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
         as the moderator script, the computation could not be performed. """)
