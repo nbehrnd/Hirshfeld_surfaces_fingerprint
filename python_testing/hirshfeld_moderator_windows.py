@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2020-01-06 (YYYY-MM-DD)
-# edit:    2020-03-02 (YYYY-MM-DD)
+# edit:    2020-03-04 (YYYY-MM-DD)
 #
 """ Simplified moderator script for the DeltaHirshfeld analysis.
 
@@ -968,8 +968,7 @@ def fall_back_normalize():
     try:
         os.chdir("cxs_workshop")
         import fingerprint_kahan
-        fingerprint_kahan.cxs_search()
-        fingerprint_kahan.worker()
+        fingerprint_kahan.main()
     except OSError:
         print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
         as the moderator script, the computation could not be performed. """)
