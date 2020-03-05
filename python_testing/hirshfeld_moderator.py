@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-03-04 (YYYY-MM-DD)
+# edit:    2020-03-05 (YYYY-MM-DD)
 #
 """ This wrapper assists the analysis of 2D fingerprints of Hirshfeld
 surface files (.cxs) computed with CrystalExplorer.  Intended for the CLI
@@ -217,14 +217,14 @@ def create_workshop():
             if fnmatch.fnmatch(element, "cxs_workshop"):
                 try:
                     shutil.rmtree(element)
-                except OSError:
+                except IOError:
                     print("Please remove 'csx_workshop' manually.")
                     sys.exit(0)
 
     # Creation of a workshop.
     try:
         os.mkdir("cxs_workshop")
-    except OSError:
+    except IOError:
         print("\nProblem to create sub-folder 'cxs_workshop'.")
         print("Without alteration of data, the script closes now.\n")
         sys.exit(0)
@@ -246,7 +246,7 @@ def listing(extension="*.cxs", copy=False):
             if copy:
                 try:
                     shutil.copy(file, "cxs_workshop")
-                except OSError:
+                except IOError:
                     print("{} wasn't copied to 'cxs_workshop'.".format(file))
     print("\n{} files of type {} were identified.\n".format(
         len(file_register), extension))
@@ -267,7 +267,7 @@ def file_crawl(copy=False):
                         counter += 1
                         print("{}\t{}".format(counter, file))
                 os.chdir(ROOT)
-        except OSError:
+        except IOError:
             continue
 
     if copy:  # not considered execpt on explicit consent.
@@ -276,7 +276,7 @@ def file_crawl(copy=False):
                 shutil.copy(entry,
                             os.path.join(ROOT, "cxs_workshop",
                                          os.path.basename(entry)))
-            except OSError:
+            except IOError:
                 print("Not copied to cxs_workshop: {}".format(entry))
 
 
@@ -294,7 +294,7 @@ def rename_cxs():
                 new_filename = str(file.split("_")[0]) + str(".cxs")
                 try:
                     shutil.move(file, new_filename)
-                except OSError:
+                except IOError:
                     print("Renaming {} failed.".format(file))
 
     os.chdir(ROOT)
@@ -308,13 +308,13 @@ def compile_f90():
     try:
         sub.call(compile_gfo_f90, shell=True)
         print("fingerprint.f90 was compiled successfully (gfortran).")
-    except OSError:
+    except IOError:
         print("Compilation attempt with gfortran failed.")
         print("Independent compilation attempt with gcc.")
         try:
             sub.call(compile_gcc_f90, shell=True)
             print("fingerprint.f90 was compiled successfully (gcc).")
-        except OSError:
+        except IOError:
             print("Compilation attempt with gcc equally failed.")
             print("Maybe fingerprint.f90 is not in the project folder.")
             print("Equally ensure installation of gfortran or gcc.")
@@ -325,14 +325,14 @@ def shuttle_f90():
     """ Shuttle the executable of fingerprint.f90 into the workshop. """
     try:
         shutil.copy("fingerprint.x", "cxs_workshop")
-    except OSError:
+    except IOError:
         print("Error to copy Fortran .f90 executable to 'cxs_workshop'.")
         sys.exit(0)
 
     # space cleaning, root folder of the project:
     try:
         os.remove("fingerprint.x")
-    except OSError:
+    except IOError:
         pass
 
 
@@ -372,7 +372,7 @@ def compile_C():
         compile_diff = str("gcc diff_finger.c -o diff_finger")
         sub.call(compile_diff, shell=True)
         print("Successful compilation of 'diff_finger.c' with gcc.\n")
-    except OSError:
+    except IOError:
         print("Compilation of diff_finger.c failed.")
         print(
             "Check for the presence of diff_finger.c in project's root folder."
@@ -385,7 +385,7 @@ def shuttle_C():
     """ Shuttle the executable of diff_finger.c to the data. """
     try:
         shutil.copy("diff_finger", "cxs_workshop")
-    except OSError:
+    except IOError:
         print("Error while copying C executable to the data.")
         print("Check the presence of folder 'cxs_workshop'.")
         sys.exit(0)
@@ -393,7 +393,7 @@ def shuttle_C():
     # space cleaning of the project's root folder:
     try:
         os.remove("diff_finger")
-    except OSError:
+    except IOError:
         pass
 
 
@@ -423,7 +423,7 @@ def map_differences():
                 reference_map, test_map, difference_map))
             try:
                 sub.call(difference_test, shell=True)
-            except OSError:
+            except IOError:
                 print("Problem to compute {}.".format(difference_map))
 
         del fingerprint_register[0]
@@ -446,7 +446,7 @@ def shuttle_ruby_script():
     if script_missing is False:
         try:
             shutil.copy("sum_abs_diffs.rb", "cxs_workshop")
-        except OSError:
+        except IOError:
             print("Problem copying 'sum_abs_diffs.rb' to 'cxs_workshop'.")
             print("Maybe the Ruby script is missing.  Exit.")
             sys.exit(0)
@@ -467,14 +467,14 @@ def ruby_difference_number():
         test = str("ruby sum_abs_diffs.rb {}".format(entry))
         try:
             sub.call(test, shell=True)
-        except OSError:
+        except IOError:
             print("Problem to determine the difference number.")
             print("Ensure a callable installation of Ruby in first place.")
             sys.exit(0)
 
     try:
         os.remove('sum_abs_diffs.rb')
-    except OSError:
+    except IOError:
         pass
     os.chdir(ROOT)
 
@@ -614,7 +614,7 @@ def file_listing():
 
     try:
         listing_choice = int(input())
-    except OSError:
+    except IOError:
         sys.exit(0)
     if listing_choice == 0:
         print("\n Script's execution was ended.\n")
@@ -639,13 +639,13 @@ def assemble_cxs():
 
     try:
         assemble_choice = int(input())
-    except OSError:
+    except IOError:
         sys.exit(0)
     if assemble_choice == 0:
         print("\n Script's execution is ended.\n")
     try:
         create_workshop()
-    except OSError:
+    except IOError:
         pass
     if assemble_choice == 1:
         print("")
@@ -952,7 +952,7 @@ def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
         import matplotlib.pyplot as plt
         from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
         import numpy as np
-    except OSError:
+    except IOError:
         print("""Additional non-standard modules are not available.
               Install first numpy and matplotlib.""")
         sys.exit()
@@ -1131,7 +1131,7 @@ def fall_back_normalize():
         os.chdir("cxs_workshop")
         import fingerprint_kahan
         fingerprint_kahan.main()
-    except OSError:
+    except IOError:
         print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
         as the moderator script, the computation could not be performed. """)
         sys.exit()
