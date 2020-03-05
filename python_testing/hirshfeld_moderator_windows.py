@@ -46,7 +46,6 @@ source gnuplot: http://www.gnuplot.info
 """
 
 import argparse
-from decimal import Decimal
 import fnmatch
 import math
 import os
@@ -306,13 +305,13 @@ def ruby_number():
 
     # computation of the difference number:
     for entry in register:
-        diff_number = 0
+        diff_number = 0.0
 
         with open(entry, mode="r") as source:
             for line in source:
                 if len(line) > 2:
-                    diff_number += abs(Decimal(str(line.strip()).split()[2]))
-        print("{}:  {}".format(entry, diff_number))
+                    diff_number += abs(float(str(line.strip()).split()[2]))
+        print("{}:  {:6.4f}".format(entry, diff_number))
 
     os.chdir(ROOT)
 
