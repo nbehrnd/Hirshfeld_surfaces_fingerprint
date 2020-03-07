@@ -4,195 +4,56 @@
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-03-05 (YYYY-MM-DD)
+# edit:    2020-03-07 (YYYY-MM-DD)
 #
-""" This wrapper assists the analysis of 2D fingerprints of Hirshfeld
-surface files (.cxs) computed with CrystalExplorer.  Intended for the CLI
-of CPython 3, known to work for either Linux, or Windows.  It equally may
-work with legacy Python 2.7.17.
+""" This is a moderator script for Python to either moderate a Difference
+Hirshfeld surface analysis introduced with
 
-This script running in Python moderates the action of the scripts provided
-by Andrew Rohl and Paolo Raiteri.  For this reason, in addition to Python,
-you need
+"Difference Hirshfeld fingerprint plots: a tool for studying polymorphs."
+Carter, D. J.; Raiteri, P.; Barnard, K. R.; Gielink, R.; Mocerino, M.;
+Skelton, B. W.; Vaughan, J. G.; Ogden, M. I.; Rohl, A. L. in CrystEngComm,
+2017, 19, 2207--2215; doi: 10.1039/c6ce02535h
 
-+ a Fortran compiler (either gfortran, or gcc) for fingerprint.f90, to
-  read CrystalExplorer's .cxs files and normalize 2D Hirshfeld surface
-  maps as .dat files
+This script provides a unified interface to the three individual scripts
+shared by Andrew Rohl and Paolo Raiteri:
++ fingerprint.f90 (Fortran)
++ diff_finger.c (C), and
++ sum_abs_diff.rb (Ruby)
+The first two require a compiler prior to their use -- gcc / gfortran for
+fingerprint.f90, gcc for diff_finger.c -- and an installation of Ruby for
+sum_abs_diff.rb.
 
-+ a C compiler (gcc) for diff_finger.c, for the computation of Hirshfeld
-  difference maps
+Together with script fingerprint_heron.py, this script equally allows to
+perform all of the necessary computations with Python, too.  Note that
+some of the computations may advance substantially faster, if the default
+CPython compiler is replaced by pypy.
 
-+ ruby for sum_abs_diffs.rb to compute the 'ruby difference number' about
-  the Hirshfeld difference maps.
+The script may relay the visualization of the results to gnuplot, or -- as
+a fall-back alternative -- to Python's matplotlib library to yield bitmap
+.png and vector .pdf images.  Note that only for the second option, the
+script relies on matplotlib and numpy; which both are not in the Python's
+standard library.
 
-+ a gnuplot installation if you want to visualize either normalized 2D
-  Hirshfeld surface maps or / and difference maps -- which is optional
+Written for the CLI in Linux, the script equally works in Windows with
+Python 3.6.9, Python 2.7.17, and pypy 7.3.0.  The script's help menu may
+be accessed by
 
-Note the presence of a sibling script, hirshfeld_moderator_windows.py,
-requiring only Python and Fortran for the computation, and -- if you want
-to visualize the maps -- gnuplot.  (See hirshfeld_moderator_windows.py for
-further details.)  This moderator script was written to retain the
-computational performance the original scripts provide, the other to lower
-the number of languages to be used to access the same results.
+python hirshfeld_moderator.py -h
 
-The help menu is accessed from the command prompt of Python 3.5 with
+The script consists of four sections:
++ definitions of functions to manage CrystalExplorer's .cxs files (start
+  by line # 68).
++ definition of functions to work on the .cxs files eventually yielding
+  fingerprint .dat files, the difference maps, and the ruby number (start
+  by line # 218).
++ definition of functions to relay the optional display of results with
+  either gnuplot, or matplotlib (start by line # 499).
++ a section bundling the necessary toggles as arguments when calling the
+  script e.g., by python moderator_hirshfeld.py --dpng e -a -g --zmax 0.08
+  (start by line # 1064).
 
-python hirshfeld_moderator -h
-
-to provide an overview about the functions available.  To work with this
-script, put this its dependencies into the folder containing the .cxs to
-be scrutinized.  Typically, you
-
-1) want to inform yourself about the .cxs files present.  Then, call
-
-   python hirshfeld_moderator.py -l
-
-   to generate a non-permanent listing about them.
-
-2) want to put copies of the .cxs files into a dedicated folder.  This
-   one, cxs_workshop, is created by
-
-   python hirshfeld_moderator.py -j
-
-   At present, CrystalExplorer (version 17.5, built 2017-05-01) provides
-   the output in files named in a pattern of 'example_example.cxs'.  To
-   facilitate the work ahead, this script truncates the file names of these
-   copies at their first underscore, to yield file names as 'example.cxs'.
-
-3) to generate normalized 2D Hirshfeld surface fingerprints.  The script
-   attempts compilation of fingerprint.f90 with either gfortran (default),
-   or gcc (backup); shuttles the executable to the copied data and works
-   with them by call of
-
-   python hirshfeld_moderator.py -n
-
-   to write .dat files (e.g., 'example.dat') about the extended map range,
-   i.e. de and di of 0.4 to 3.0 A.
-
-4) to compare the normalized fingerprints.  Difference maps then will be
-   computed by
-
-   python hirshfeld_moderator.py -c
-
-   This triggers the compilation of diff_finger.c by gcc, transfer of the
-   executable to the data, and computation and eventual report of results
-   in diff*.dat files (e.g., 'diff_example1_example2.dat').
-
-5) to assign a characteristic figure of difference about the difference
-   map.  The greater this 'ruby difference number', the greater the
-   difference of the two Hirshfeld surfaces yielding the corresponding
-   diff*.dat scrutinized by
-
-   python hirshfeld_moderator.py -r
-
-   Note your terminal may allow to redirect the output to a permanent
-   record.  On Linux' bash shell, you could do so by
-
-   python hirshfeld_moderator.py -r > record.txt
-
-   to retain these results.
-
-The results of normalization of 2D Hirshfeld surface fingerprints (*.dat
-files) and the subsequently computed difference maps (diff*.dat files) may
-be visualized.  In both ASCII-based map types, the outer loop about d_i
-is recorded as the first column entry -- the abscissa in the diagrams if
-plot by gnuplot --, followed by the inner loop about d_e (second column /
-ordinate in plots by gnuplot), and the third column entries about the
-z-value (the intensity projection in plots by gnuplot).  Each increment of
-the outer loop about d_e is separated by the former by a blank line.
-
-6) Running a
-
-   python hirshfeld_moderator.py -o
-
-   triggers the provision of an overview about these results, intended as
-   a screen.  These diagnostic plots (as .png) of small dimension include
-   an indication about the standard map range (0.4 to 2.6 A; by dashed
-   lines) and translated map range (0.8 to 3.0 A, by dotted lines) in the
-   display of the extended map range (0.4 to 3.0 A) you subsequently
-   choose from (vide infra).
-
-   To identify rapidly pixels representing a z equal or close to zero, the
-   zero-level of the three level map was redefined as light-gray, rather
-   than to white.
-
-   For each file, gnuplot states the range of z values (rounded to six
-   decimals) to the plotted map.  A survey equally creates the permanent
-   record gp_report.txt which may be used to adjust the subsequent
-   intensity scaling (vide infra).
-
-7) The visualization of fingerprints or difference maps in higher quality
-   is mutually exclusive, yet may be performed one after the other.  At
-   first, determine if the target file format is either a bitmap .png, or
-   a resolution independent .pdf.  Second, based on the previous survey,
-   determine which map range will cover all the information in the de/di
-   plane as either one of [s]tandard, [t]ranslated, or [e]xtended is used
-   as mandatory parameter of to plot the maps with gnuplot.  As an example
-
-   python hirshfeld_moderator.py --dpng e
-
-   will trigger gnuplot to iterate on all difference maps diff*.dat to
-   be plot with the extended map range as .png (3674 x 3229 px), while
-
-   python hirshfeld_moderator.py --fpdf s
-
-   works only on fingerprint *.dat (but not diff*.dat) files to generate
-   .pdf (6 x 6 cm) in standard map range, which easier may be processed
-   further (e.g., inkscape).  Empirically, the generation of .pdf tends to
-   advance faster than the one of .png; equally, the .pdf benefit more
-   than the .png from conditional plotting to yield smaller file sizes.
-
-   As long as you kept the .dat or diff*.dat files in folder cxs_workshop,
-   you may alter the map representation (e.g., map range, or use of any of
-   the optional parameters [vide infra]) just by call of the corresponding
-   visualization command (from section #7 or #8 of this guide) again.
-
-8) Additional optional parameters for fingerprint and difference mapping
-
-   Any of the following parameters may be used for either fingerprint, or
-   difference map in high resolution; their consecution is insignificant:
-
-   + Background substitution
-
-     A call in line of
-
-     python hirshfeld_moderator.py --dpng e -g
-
-     provides a neuter gray background.  This is especially helpful for
-     the diverging three level map if the discern of "white" (reporting
-     about data close to z = 0) vs. "white" (to report absence of data) is
-     important.
-
-   + Palette substitution
-
-     A call in line of
-
-     python hirshfeld_moderator.py --dpng e -a
-
-     substitutes the color palettes.  There are alternatives safer to
-     perception than the classical rainbow / jet, for example if the
-     output is constrained to gray scale (e.g., a black-and-white printer)
-     or in case of color blindness.  Thus, -a toggles the CrystalExplorer
-     like rainbow color map to gnuplot's implemented continuous cubehelix,
-     and substitutes the classical three level blue_white_red diverging\
-     map by one of Kenneth Moreland's definitions of a bent_cool_map
-     accentuating the transient around 'neuter z = 0'.
-
-   + Adjustable intensity scaling
-
-     The default projection of the intensity scale ("z") is limited to
-     0 < z < 0.08 (fingerprint maps), or |z| < 0.025 (difference maps).
-     These ranges are a suggestion found in the code basis by Andrew Rohl
-     and Paolo Raiteri.  These may be overwritten in line of
-
-     python hirshfeld_moderator.py --dpng e -zmax 0.03
-
-     which in case of difference maps would then constrain the projection
-     symmetrically to -0.03 < z < 0.03.  By the same token
-
-     python hirshfeld_moderator.py --fpng e -zmax 0.03
-
-     constrains the display of fingerprints to 0 < z < 0.03. """
+For additional details about using the program, please read the separate
+documentation. """
 
 import argparse
 import fnmatch
@@ -203,11 +64,8 @@ import shutil
 import subprocess as sub
 import sys
 
-global ROOT
-ROOT = os.getcwd()
 
-
-# Section 1, tool generation
+# Section A:  .cxs file management:
 def create_workshop():
     """ Create a dedicated sub-folder for copies of .cxs to work on """
     # An already existing 'cxs_workshop' folder will be deleted.
@@ -221,7 +79,6 @@ def create_workshop():
                     print("Please remove 'csx_workshop' manually.")
                     sys.exit(0)
 
-    # Creation of a workshop.
     try:
         os.mkdir("cxs_workshop")
     except IOError:
@@ -230,15 +87,13 @@ def create_workshop():
         sys.exit(0)
 
 
-def listing(extension="*.cxs", copy=False):
-    """ List or copy .cxs files residing in the same project folder.
-
-    File listing is the default.  For file renaming, see rename_cxs(). """
+def list_cxs(copy=False):
+    """ List / copy .cxs files in the same project folder (cf. rename_cxs). """
     file_register = []
     counter = 0
 
     for file in os.listdir("."):
-        if fnmatch.fnmatch(file, extension):
+        if file.endswith(".cxs"):
             counter += 1
             print("{}\t{}".format(counter, file))
             file_register.append(file)
@@ -248,16 +103,18 @@ def listing(extension="*.cxs", copy=False):
                     shutil.copy(file, "cxs_workshop")
                 except IOError:
                     print("{} wasn't copied to 'cxs_workshop'.".format(file))
+                    continue
     print("\n{} files of type {} were identified.\n".format(
-        len(file_register), extension))
+        len(file_register), "*.cxs"))
 
 
-def file_crawl(copy=False):
-    """ Retrieve / copy .cxs by means of an os.walk. """
+def crawl_cxs(copy=False):
+    """ Retrieve / copy .cxs files by means of an os.walk. """
+    root = os.getcwd()
     counter = 0
     cxs_to_copy = []
 
-    for folder, subfolders, files in os.walk(ROOT):
+    for folder, subfolders, files in os.walk(root):
         try:
             for subfolder in subfolders:
                 os.chdir(subfolder)
@@ -266,15 +123,15 @@ def file_crawl(copy=False):
                         cxs_to_copy.append(os.path.abspath(file))
                         counter += 1
                         print("{}\t{}".format(counter, file))
-                os.chdir(ROOT)
+                os.chdir(root)
         except IOError:
             continue
 
-    if copy:  # not considered execpt on explicit consent.
+    if copy:  # not considered except on explicit consent.
         for entry in cxs_to_copy:
             try:
                 shutil.copy(entry,
-                            os.path.join(ROOT, "cxs_workshop",
+                            os.path.join(root, "cxs_workshop",
                                          os.path.basename(entry)))
             except IOError:
                 print("Not copied to cxs_workshop: {}".format(entry))
@@ -286,20 +143,79 @@ def rename_cxs():
     CrystalExplorer provides Hirshfeld surfaces named in a pattern of
     'example_example.cxs'.  Work is easier if their file name is truncated
     to 'example.cxs'.  This is applied only to copies of .cxs. """
+    root = os.getcwd()
     os.chdir("cxs_workshop")
 
     for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "*.cxs"):
+        if file.endswith(".cxs"):
             if str("_") in file:
                 new_filename = str(file.split("_")[0]) + str(".cxs")
                 try:
                     shutil.move(file, new_filename)
                 except IOError:
                     print("Renaming {} failed.".format(file))
+                    continue
+    os.chdir(root)
 
-    os.chdir(ROOT)
+
+def file_listing():
+    """ Survey of the .cxs files eventually to work with. """
+    print("\nListing of the .cxs files accessible.  Press either")
+    print("[0]  to leave the script.")
+    print("[1]  .cxs files reside in the same folder as this script.")
+    print("[2]  .cxs files reside in sub-folders to the current folder.\n")
+
+    try:
+        listing_choice = int(input())
+    except IOError:
+        sys.exit(0)
+    if listing_choice == 0:
+        print("\n Script's execution was ended.\n")
+        sys.exit(0)
+    if listing_choice == 1:
+        print("")
+        list_cxs()
+    if listing_choice == 2:
+        print("")
+        crawl_cxs()
 
 
+def assemble_cxs():
+    """ Join copies of .cxs into one dedicated sub-folder / workshop. """
+    print("\nCopies of .cxs files will be brought into 'cxs_workshop'.")
+    print("Any 'cxs_workshop' folder of previous runs will be erased.")
+    print("File names of .cxs copies are truncated at first underscore.")
+    print("")
+    print("[0]  to leave the script.")
+    print("[1]  .cxs files reside in the same folder as this script.")
+    print("[2]  .cxs files reside in sub-folders to the current folder.")
+    root = os.getcwd()
+
+    try:
+        assemble_choice = int(input())
+    except IOError:
+        sys.exit(0)
+    if assemble_choice == 0:
+        print("\n Script's execution is ended.\n")
+    try:
+        create_workshop()
+    except IOError:
+        pass
+    if assemble_choice == 1:
+        print("")
+        create_workshop()
+        list_cxs(copy=True)
+    if assemble_choice == 2:
+        print("")
+        create_workshop()
+        crawl_cxs(copy=True)
+    os.chdir(root)
+
+
+# formal end of section # Section A:  .cxs file management.
+
+
+# Section B:  Computation with .cxs and .dat files:
 def compile_f90():
     """ Compile fingerprint.f90 with gfortran (default), or gcc. """
     compile_gfo_f90 = str("gfortran fingerprint.f90 -o fingerprint.x")
@@ -307,18 +223,18 @@ def compile_f90():
     print("Compilation of fingerprint.f90 with either gfortran or gcc.")
     try:
         sub.call(compile_gfo_f90, shell=True)
-        print("fingerprint.f90 was compiled successfully (gfortran).")
     except IOError:
         print("Compilation attempt with gfortran failed.")
         print("Independent compilation attempt with gcc.")
         try:
             sub.call(compile_gcc_f90, shell=True)
-            print("fingerprint.f90 was compiled successfully (gcc).")
         except IOError:
             print("Compilation attempt with gcc equally failed.")
             print("Maybe fingerprint.f90 is not in the project folder.")
             print("Equally ensure installation of gfortran or gcc.")
             sys.exit(0)
+        print("fingerprint.f90 was compiled successfully (gcc).")
+    print("fingerprint.f90 was compiled successfully (gfortran).")
 
 
 def shuttle_f90():
@@ -329,21 +245,21 @@ def shuttle_f90():
         print("Error to copy Fortran .f90 executable to 'cxs_workshop'.")
         sys.exit(0)
 
-    # space cleaning, root folder of the project:
     try:
-        os.remove("fingerprint.x")
+        os.remove("fingerprint.x")  # space cleaning, root folder.
     except IOError:
         pass
 
 
-def normalize_cxs():
+def fingerprint_fortran():
     """ Generate extended normalized 2D fingerprint .dat of all .cxs """
     print("\nNormalization of .cxs files yielding 2D fingerprint .dat:")
+    root = os.getcwd()
     os.chdir("cxs_workshop")
 
     register = []
     for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "*.cxs"):
+        if file.endswith(".cxs"):
             register.append(file)
     register.sort()
 
@@ -361,11 +277,27 @@ def normalize_cxs():
         sub.call(normalize, shell=True)
 
     os.remove("fingerprint.x")
-    os.chdir(ROOT)
+    os.chdir(root)
     print("\nNormalization of .cxs files is completed.")
 
 
-def compile_C():
+def fingerprint_python():
+    """ Normalized 2D Hirshfeld surface fingerprints, computed by Python.
+
+    Requires presence of both moderator and 'fingerprint_kahan.py'. """
+
+    print("Python-based computation of normalized 2D Hirshfeld fingerprints.")
+    try:
+        os.chdir("cxs_workshop")
+        import fingerprint_kahan
+        fingerprint_kahan.main()
+    except IOError:
+        print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
+        as the moderator script, the computation could not be performed. """)
+        sys.exit()
+
+
+def compile_c():
     """ Compile diff_finger.c with gcc. """
     print("\nCompilation of 'diff_finger.c' was started.")
     try:
@@ -381,7 +313,7 @@ def compile_C():
         sys.exit(0)
 
 
-def shuttle_C():
+def shuttle_c():
     """ Shuttle the executable of diff_finger.c to the data. """
     try:
         shutil.copy("diff_finger", "cxs_workshop")
@@ -390,24 +322,21 @@ def shuttle_C():
         print("Check the presence of folder 'cxs_workshop'.")
         sys.exit(0)
 
-    # space cleaning of the project's root folder:
     try:
-        os.remove("diff_finger")
+        os.remove("diff_finger")  # space cleaning, root folder.
     except IOError:
         pass
 
 
-def map_differences():
-    """ Compare each of the 2D fingerprints with each other. """
-    print("\nComputation of difference maps starts:")
-
+def difference_maps_c():
+    """ Compare the 2D fingerprints with each other, C script. """
+    print("\nComputation of difference maps (C script) starts:")
     os.chdir("cxs_workshop")
     fingerprint_register = []
 
     for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "*.dat"):
-            if fnmatch.fnmatch(file, "diff*.dat") is False:
-                fingerprint_register.append(file)
+        if file.endswith(".dat") and (file.startswith("diff") is False):
+            fingerprint_register.append(file)
     fingerprint_register.sort()
 
     while len(fingerprint_register) > 1:
@@ -430,29 +359,94 @@ def map_differences():
     print("\nComputation of difference maps is completed.")
 
     os.remove("diff_finger")
-    os.chdir(ROOT)
+
+
+def difference_maps_python():
+    """ Compute difference maps by Python without numpy. """
+    # identify the files to work with:
+    os.chdir("cxs_workshop")
+    diff_register = []
+
+    for file in os.listdir("."):
+        if file.endswith(".dat") and (file.startswith("diff") is False):
+            diff_register.append(file)
+    diff_register.sort()
+
+    # compare the normalized 2D Hirshfeld surface maps
+    print("Fingerprint computation with Python:\n")
+    while len(diff_register) > 1:
+        for entry in diff_register[1:]:
+            reference_file = diff_register[0]
+            probe_file = entry
+            print("Comparison {} ./. {}.".format(reference_file, probe_file))
+
+            reference_map = []
+            probe_map = []
+
+            reference = open(reference_file, mode="r")
+            reference_map = reference.readlines()
+            reference.close()
+
+            probe = open(probe_file, mode="r")
+            probe_map = probe.readlines()
+            probe.close()
+
+            # consistency check for de/di
+            start_reference_map = " ".join([
+                reference_map[0].strip().split()[0],
+                reference_map[1].strip().split()[0]
+            ])
+            start_probe_map = " ".join([
+                probe_map[0].strip().split()[0],
+                probe_map[1].strip().split()[0]
+            ])
+
+            line_count_reference_map = len(reference_map)
+            line_count_probe_map = len(probe_map)
+
+            if (start_reference_map == start_probe_map) and \
+                    (line_count_reference_map == line_count_probe_map):
+                pass  # i.e., interesting, inspect the current two .dat.
+            else:
+                continue  # i.e., incompatible, probe the next permutation.
+
+            # .dat suitable for comparison will be analyzed:
+            difference_map = []
+            for reference, probe in zip(reference_map, probe_map):
+                # retain the blank lines:
+                if len(reference) < 5:
+                    difference_map.append("\n")
+                # entries with coordinates and any area element:
+                if len(reference) > 5:
+                    column_a = str("{:3.2f}".format(
+                        float(reference.strip().split()[0])))
+                    column_b = str("{:3.2f}".format(
+                        float(reference.strip().split()[1])))
+                    column_c = str("{:10.8f}".format(
+                        (float(reference.strip().split()[2]) -
+                         float(probe.strip().split()[2]))))
+                    retain = " ".join([column_a, column_b, column_c, "\n"])
+                    difference_map.append(retain)
+
+            # generate the permanent record:
+            output = "".join(["diff_", reference_file[:-4], "_", probe_file])
+            with open(output, mode="w") as newfile:
+                for entry in difference_map[:-1]:
+                    newfile.write("{}\n".format(entry.strip()))
+        del diff_register[0]
 
 
 def shuttle_ruby_script():
-    """ If possible, shuttle sum_abs_diffs.rb to the data. """
-    script_missing = True
-    for file in os.listdir("."):
-        if fnmatch.fnmatch(file, "sum_abs_diffs.rb"):
-            script_missing = False
-            break
-    if script_missing:
-        print("Script 'sum_abs_diffs.rb' is missing, script stops. ")
+    """ Bring sum_abs_diffs.rb to the difference map data. """
+    try:
+        shutil.copy("sum_abs_diffs.rb", "cxs_workshop")
+    except IOError:
+        print("Problem copying 'sum_abs_diffs.rb' to 'cxs_workshop'.")
+        print("Maybe the Ruby script is missing.  Exit.")
         sys.exit(0)
-    if script_missing is False:
-        try:
-            shutil.copy("sum_abs_diffs.rb", "cxs_workshop")
-        except IOError:
-            print("Problem copying 'sum_abs_diffs.rb' to 'cxs_workshop'.")
-            print("Maybe the Ruby script is missing.  Exit.")
-            sys.exit(0)
 
 
-def ruby_difference_number():
+def difference_number_ruby():
     """ Report the Ruby difference numbers from the diff*.dat data. """
     os.chdir("cxs_workshop")
     register = []
@@ -462,7 +456,7 @@ def ruby_difference_number():
             register.append(file)
     register.sort()
 
-    # computation of the difference number:
+    print("Compute difference number with the Ruby script:\n")
     for entry in register:
         test = str("ruby sum_abs_diffs.rb {}".format(entry))
         try:
@@ -476,22 +470,38 @@ def ruby_difference_number():
         os.remove('sum_abs_diffs.rb')
     except IOError:
         pass
-    os.chdir(ROOT)
 
 
-# Section 1b, Definition of non-trivial color palettes which are not
-# part of gnuplot's built-in defaults, but eventually used.
+def difference_number_python():
+    """ Absolute values of differences per difference map, Python path. """
+    # identification of the files to work with:
+    os.chdir("cxs_workshop")
+    register = []
+
+    for file in os.listdir("."):
+        if fnmatch.fnmatch(file, "diff*.dat"):
+            register.append(file)
+    register.sort()
+
+    print("Compute difference number with Python:\n")
+    for entry in register:
+        diff_number = 0.0
+
+        with open(entry, mode="r") as source:
+            for line in source:
+                if len(line) > 2:
+                    diff_number += abs(float(str(line.strip()).split()[2]))
+        print("{}:  {:6.4f}".format(entry, diff_number))
+
+
+# formal end of Section B:  Computation with .cxs and .dat files.
+
+# Section C:  Display, start:
+# Section Ca, Definition of non-trivial color palettes eventually used.
 
 # The CrystalExplorer like rainbow about 2D fingerprints.
 #
-# This is a verbatim copy from fingerprint.f90, set up and shared by Paolo
-# Raiteri and Andrew Rohl.  Like many other rainbow / jet-like palettes,
-# there are possible perceptual problems with this, e.g. for an output on
-# gray-scale, and for some types of color blindness.  (See, for example,
-# Kenneth Moreland's recommendations about this topic.)   Which is why
-# gnuplot's built-in palette 'cubehelix' (accessible in this script's -a /
-# --alt toggle) is recommended to be used instead of 'rainbow'.
-
+# This is a verbatim copy from fingerprint.f90.
 RAINBOW = str("""set palette defined (0  1.0 1.0 1.0, \
                0.00001  0.0 0.0 1.0, \
                1  0.0 0.5 1.0, \
@@ -505,19 +515,11 @@ RAINBOW = str("""set palette defined (0  1.0 1.0 1.0, \
 #
 # This equally is defined in the code basis by Andrew Rohl and Paolo Raiteri.
 THREE_LEVEL_OLD = str('set palette defined (-1 "blue", 0 "white", 1 "red")')
-#
-# Because its neuter level "white" is indiscernible from "paper white",
-# the screening mode uses the softer three-level palette (below, transient
-# with neuter gray) instead.
 
 # The softer three-level palette:
 #
-# Used by default for the screening .png to faciliate discern of tiles with
+# Used by default for the screening .png to facilitate discern of tiles with
 # z close to zero (otherwise print white) from the paper-white background.
-# A heavily constrained implementation of Kenneth Moreland's suggestions
-# for diverging color palettes.  If not screening, you may either enhance the
-# contrast to the background (toggle -g) or use the alternative (toggle -a)
-# bent-cool-warm palette by Kenneth Moreland.
 THREE_LEVEL_NEW = str(
     'set palette defined (-1 "blue", 0 "light-gray", 1 "red")')
 
@@ -525,10 +527,7 @@ THREE_LEVEL_NEW = str(
 #
 # This is based on Kenneth Moreland's suggested color palette
 # "bent-cool-warm-table-float-0064.csv" [1] converted by csv2plt.py [2]
-# into a format accessible to gnuplot.  From a perceptual perspective,
-# it improves the detail of representation about the difference map
-# beyond what the classical three level blue_white_red palette, or the
-# already improved blue_light-gray_red palette offer.
+# into a format accessible to gnuplot.
 #
 # [1]
 # https://github.com/kennethmoreland-com/kennethmoreland-com.github.io/blob/master/color-advice/bent-cool-warm/bent-cool-warm-table-float-0064.csv,
@@ -603,92 +602,35 @@ BENT_THREE_LEVEL_0064 = str("""set palette defined (\
   1.0 0.694625624821 0.00296461045768 0.154581828278) """)
 
 
-# section 2, joining unit operations:
-def file_listing():
-    """ Survey of the .cxs files eventually to work with. """
-    print("\nListing of the .cxs files accessible.  Press either")
-    print("[0]  to leave the script.")
-    print("[1]  .cxs files reside in the same folder as this script.")
-    print("[2]  .cxs files reside in sub-folders to the current folder.")
-    print("")
-
-    try:
-        listing_choice = int(input())
-    except IOError:
-        sys.exit(0)
-    if listing_choice == 0:
-        print("\n Script's execution was ended.\n")
-        sys.exit(0)
-    if listing_choice == 1:
-        print("")
-        listing()
-    if listing_choice == 2:
-        print("")
-        file_crawl()
-
-
-def assemble_cxs():
-    """ Bring the .cxs all into one dedicated sub-folder / workshop. """
-    print("\nCopies of .cxs files will be brought into 'cxs_workshop'.")
-    print("Any 'cxs_workshop' folder of previous runs will be erased.")
-    print("File names of .cxs copies are truncated at first underscore.")
-    print("")
-    print("[0]  to leave the script.")
-    print("[1]  .cxs files reside in the same folder as this script.")
-    print("[2]  .cxs files reside in sub-folders to the current folder.")
-
-    try:
-        assemble_choice = int(input())
-    except IOError:
-        sys.exit(0)
-    if assemble_choice == 0:
-        print("\n Script's execution is ended.\n")
-    try:
-        create_workshop()
-    except IOError:
-        pass
-    if assemble_choice == 1:
-        print("")
-        create_workshop()
-        listing(copy=True)
-    if assemble_choice == 2:
-        print("")
-        create_workshop()
-        file_crawl(copy=True)
-    os.chdir(ROOT)
-
-
 def search_dat(map_type="delta", SCREEN=False):
     """ Search for .dat files, assume difference maps of typical interest.
 
     Two cases: fingerprints (type fingerprint, files ending on *.dat), or
     difference maps (map type delta, files in pattern of diff*.dat). """
-    global dat_register
-    dat_register = []
+    root = os.getcwd()
+    global DAT_REGISTER
+    DAT_REGISTER = []
     os.chdir("cxs_workshop")
 
-    # indiscriminate register population (i.e., screening):
-    if SCREEN:
+    if SCREEN:  # indiscriminate register population.
         for file in os.listdir("."):
             if fnmatch.fnmatch(file, "*.dat"):
-                dat_register.append(file)
+                DAT_REGISTER.append(file)
 
-    # discriminate register population (i.e., either map type):
-    if SCREEN is False:
+    if SCREEN is False:  # discriminate register population (map type).
         for file in os.listdir("."):
-            # branch about fingerprint .dat:
+
             if map_type == "fingerprint":
                 if fnmatch.fnmatch(file, "*.dat"):
                     if fnmatch.fnmatch(file, "diff*.dat") is False:
-                        dat_register.append(file)
+                        DAT_REGISTER.append(file)
 
-            # branch about difference map .dat:
             if map_type == "delta":
                 if fnmatch.fnmatch(file, "diff*.dat"):
-                    dat_register.append(file)
+                    DAT_REGISTER.append(file)
 
-    dat_register.sort()
-    os.chdir(ROOT)
+    DAT_REGISTER.sort()
+    os.chdir(root)
 
 
 # yapf: disable
@@ -701,13 +643,13 @@ def png_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, SCREEN=False, ALT_MAP=False,
     pngcairo and pdfcairo breaks this script's reliable action.  Instead,
     it is best to sum up the relevant per gnuplot terminal; e.g. pngcairo.
 
-    Contrasting to pdf_map, png_map includes instructions to screen the
-    two map types.  Use this to adjust map range (de/di) and cbrange
+    Contrasting to pdf_map, png_map includes screen instructions.  Their
+    readouts (gp_log.txt) allow to adjust map range (de/di) and cbrange
     (z_max) in the high resolution plots. """
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
-    for entry in dat_register:
+    for entry in DAT_REGISTER:
         print(entry)
 
         if entry.startswith("diff"):
@@ -721,8 +663,8 @@ def png_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, SCREEN=False, ALT_MAP=False,
         output_file = str(entry)[:-4] + str(".png")
 
         plot = str("gnuplot -e '")
-        plot += str('input = "{}"; '.format(input_file))
-        plot += str('set output "{}"; '.format(output_file))
+        plot += str('input = "{}"; set output "{}"; '.format(
+            input_file, output_file))
 
         # brief statistics per .cxs file read:
         plot += str('stats input u 3 nooutput; ')
@@ -737,7 +679,7 @@ def png_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, SCREEN=False, ALT_MAP=False,
             plot += str('z_top = "zmax:  " . z_max; ')
 
         if SCREEN:
-            # provision of a a permanent STATS record:
+            # provision of a permanent STATS record:
             plot += str(
                 'report = "file: " . input . " " . z_low . " " . z_top; ')
             plot += str('set print "gp_report.txt" append; ')
@@ -850,16 +792,16 @@ def png_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, SCREEN=False, ALT_MAP=False,
         # Re-initiate gnuplot's memory prior to work on a new data set:
         plot += str('reset session ') + str("'")
         sub.call(plot, shell=True)
+    if SCREEN:
+        print("\nNote: z_ranges data written into file 'gp_log.txt'.")
 
 
 def pdf_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, ALT_MAP=False, BACKGROUND=False):
-    """ The general pattern for any of the maps if deposit as .pdf.
-
-    The design pattern follows the instructions in png_map. """
+    """ The pattern for any of the maps if deposit as .pdf. """
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
-    for entry in dat_register:
+    for entry in DAT_REGISTER:
         print(entry)
 
         if entry.startswith("diff"):
@@ -873,8 +815,8 @@ def pdf_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, ALT_MAP=False, BACKGROUND=False):
         output_file = str(entry)[:-4] + str(".pdf")
 
         plot = str("gnuplot -e '")
-        plot += str('input = "{}"; '.format(input_file))
-        plot += str('set output "{}"; '.format(output_file))
+        plot += str('input = "{}"; set output "{}"; '.format(
+            input_file, output_file))
 
         # brief statistics per .cxs file read:
         plot += str('stats input u 3 nooutput; ')
@@ -944,9 +886,9 @@ def pdf_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, ALT_MAP=False, BACKGROUND=False):
 
 
 # yapf: disable
-def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
-                      BACKGROUND=False, COLOR_BAR=False, FILE_TYPE="png"):
-    """ Map visualization without gnuplot with non-default modules. """
+def plot_matplotlib(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
+                    BACKGROUND=False, COLOR_BAR=False, FILE_TYPE="png"):
+    """ Backup: matplotlib-based visualization of the computed results. """
     # yapf: enable
     try:
         import matplotlib.pyplot as plt
@@ -959,7 +901,7 @@ def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
-    for entry in dat_register:
+    for entry in DAT_REGISTER:
         print(entry)
 
         if entry.startswith("diff"):
@@ -967,7 +909,7 @@ def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
         else:
             difference_map = False
 
-#    # analysis of the .dat file:
+        # analysis of the .dat file:
         retainer = []  # record all execpt the blank lines
         z_register = []  # record only the entries about z
 
@@ -978,8 +920,7 @@ def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
                     z_register.append(float(line.strip().split()[2]))
 
         # convert the list of z into an array suitable for display:
-        array_z = np.array(z_register)
-        array_z = array_z.astype(float)
+        array_z = np.array(z_register).astype(float)
 
         dimension_matrix_z = int(math.sqrt(len(array_z)))
         matrix_z = array_z.reshape(dimension_matrix_z, dimension_matrix_z)
@@ -1117,28 +1058,11 @@ def fall_back_display(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
             output_file = ''.join([entry[:-4], '.pdf'])
             plt.savefig(output_file, bbox_inches='tight')
             plt.close(fig)
-# yapf: enable
+# End of section C, Display.
 
 
-def fall_back_normalize():
-    """ Python based normalization of 2D Hirshfeld surface fingerprints.
-
-    To compute the fingerprints /only/ with Python, moderator and script
-    'fingerprint_Kahan.py' must both reside in the same folder. """
-
-    print("\nAlternate computation of normalized 2D Hirshfeld fingerprints.")
-    try:
-        os.chdir("cxs_workshop")
-        import fingerprint_kahan
-        fingerprint_kahan.main()
-    except IOError:
-        print("""\nLacking script 'fingerprint_Kahan.py' in the same folder
-        as the moderator script, the computation could not be performed. """)
-        sys.exit()
-
-
+# Start of section D, Arguments:
 # argparse section:
-# yapf: disable
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -1157,45 +1081,49 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "-n",
-        "--normalize",
-        help="""Normalize the .cxs with Fortran and fingerprint.f90.
+        "--normalize_py",
+        help="""Normalized fingerprints with Python and fingerprint_Kahan.py.
         Files in pattern of 'example.cxs' yield 'example.dat'.""",
         action="store_true")
 
     parser.add_argument(
         "-N",
-        "--normalize_py",
-        action="store_true",
-        help="""Normalize the .cxs with Python only.  Based on Kahan's
-        triangle equation, ensure script fingerprint_Kahan.py is in the
-        same folder as this moderator script.""")
+        "--normalize_f",
+        help="""Normalized fingerprints by Fortran and fingerprint.f90.""",
+        action="store_true")
 
     parser.add_argument(
         "-c",
-        "--compare",
-        help="Compute the differences between the 2D fingerprints. "
-        "Output will be provided in files 'diff*.dat'.",
+        "--compare_py",
+        help="""Difference maps, computed by Python.  Output will be written
+        into diff*.dat files.""",
+        action="store_true")
+
+    parser.add_argument(
+        "-C",
+        "--compare_c",
+        help="Compute the differences maps with diff_finger.c. ",
         action="store_true")
 
     parser.add_argument(
         "-r",
-        "--ruby_number",
-        help="Compute the difference number (cf. the ruby script).",
+        "--ruby_number_py",
+        help="Compute the difference number per diff*.dat by Python.",
+        action="store_true")
+
+    parser.add_argument(
+        "-R",
+        "--ruby_number_r",
+        help="Compute the difference number with the ruby script.",
         action="store_true")
 
     parser.add_argument(
         "-o",
         "--overview",
         action="store_true",
-        help="""Preview 2D fingerprint and difference maps as low resolution
-        .png. Use it to adjust de/di map range (s, t, e) and z-scaling in
-        the high quality maps.""")
-
-    parser.add_argument(
-        "-O",
-        "--overview_mpl",
-        action="store_true",
-        help="Survey .png generation with matplotlib.")
+        help="""Preview fingerprint and difference maps as low resolution
+        .png to adjust de/di map range (s, t, e) and z-scaling in the high
+        quality maps (gnuplot).""")
 
     # Either .png or .pdf of fingerprint maps (in high resolution):
     group_fp = parser.add_mutually_exclusive_group()
@@ -1226,13 +1154,19 @@ if __name__ == "__main__":
         choices=["s", "t", "e"],
         help="Difference maps of either map range as .pdf.")
 
+    parser.add_argument(
+        "-O",
+        "--overview_py",
+        action="store_true",
+        help="Survey .png generation with Python matplotlib.")
+
     # Either .png fingerprints by matplotlib
     group_fp = parser.add_mutually_exclusive_group()
     group_fp.add_argument(
         "--Fpng",
         type=str,
         choices=["s", "t", "e"],
-        help="2D fingerprint .png of either map range by matplotlib.")
+        help="2D fingerprint .png of either map range, matplotlib.")
 
     # Either .pdf fingerprints by matplotlib
     group_fp = parser.add_mutually_exclusive_group()
@@ -1240,7 +1174,7 @@ if __name__ == "__main__":
         "--Fpdf",
         type=str,
         choices=["s", "t", "e"],
-        help="2D fingerprint .png of either map range by matplotlib.")
+        help="2D fingerprint .pdf of either map range, matplotlib.")
 
     # Either .png difference maps by matplotlib
     group_fp = parser.add_mutually_exclusive_group()
@@ -1248,7 +1182,7 @@ if __name__ == "__main__":
         "--Dpng",
         type=str,
         choices=["s", "t", "e"],
-        help="2D difference map .png by matplotlib.")
+        help="2D difference map .png, matplotlib.")
 
     # Either .pdf difference maps by matplotlib
     group_fp = parser.add_mutually_exclusive_group()
@@ -1256,7 +1190,7 @@ if __name__ == "__main__":
         "--Dpdf",
         type=str,
         choices=["s", "t", "e"],
-        help="2D difference map .png by matplotlib.")
+        help="2D difference map .pdf, matplotlib.")
 
     # adjustment of zmax scaling in high resolution maps:
     parser.add_argument(
@@ -1278,7 +1212,7 @@ if __name__ == "__main__":
         help="Use the alternate palette definitions.")
 
     parser.add_argument(
-        "-B",
+        "-b",
         "--color_bar",
         action="store_true",
         help="""Add display of the color bar (default: off).  This Boolean
@@ -1292,38 +1226,40 @@ if __name__ == "__main__":
     if args.join:
         assemble_cxs()  # copy .cxs into one place
         rename_cxs()  # truncate file names at underscore sign
-    if args.normalize:
-        compile_f90()  # render fingerprint.f90 executable
-        shuttle_f90()  # bring the .f90 executable to the data
-        normalize_cxs()  # generate 2D fingerprint .dat files
-    if args.compare:
-        compile_C()  # render diff_finger.c executable
-        shuttle_C()  # shuttle the executable to the data.
-        map_differences()  # compute the difference maps
+    if args.normalize_py:  # fingerprint generation, Python
+        fingerprint_python()
+    if args.normalize_f:  # fingerprint generation, Fortran
+        compile_f90()
+        shuttle_f90()
+        fingerprint_fortran()
+    if args.compare_py:  # difference map generation, Python
+        difference_maps_python()
+    if args.compare_c:  # difference map generation, C
+        compile_c()
+        shuttle_c()
+        difference_maps_c()
+    if args.ruby_number_py:  # difference number by Python
+        difference_number_python()
+    if args.ruby_number_r:  # difference number by the ruby script
+        shuttle_ruby_script()
+        difference_number_ruby()
     if args.overview:  # quick survey with gnuplot
         search_dat(SCREEN=True)
         png_map(SCREEN=True)
-        print("")
-        print("File 'gp_report.txt' provides a permanent record.")
-    if args.overview_mpl:  # quick survey by matplotlib
+    if args.overview_py:  # quick survey by matplotlib
         search_dat(SCREEN=True)
-        fall_back_display(SCREEN=True)
-    if args.ruby_number:
-        shuttle_ruby_script()
-        ruby_difference_number()
-    if args.normalize_py:
-        fall_back_normalize()
+        plot_matplotlib(SCREEN=True)
     if args.bg:
-        global BACKGROUND  # an option: a neutral gray background
+        BACKGROUND = True  # an option: a neutral gray background
     if args.color_bar:
-        global COLOR_BAR  # add a color bar (matplotlib only)
+        COLOR_BAR = True  # add a color bar (matplotlib only)
     if args.alternate:
-        global ALT_MAP  # toggle to alternative color palettes
+        ALT_MAP = True  # toggle to alternative color palettes
 
     # options fingerprints, .png; adjustable map range [s]tandard,
     # [t]ranslated, [e]extended -- mandatory; adjustable zmax, alternate
     # color palette, and background contrast enhancement -- optional.
-    if args.fpng in ["s", "t", "e"]:
+    if args.fpng in ["s", "t", "e"]:  # fingerprints (gnuplot), png.
         if args.fpng == "s":
             X_MIN, X_MAX = 0.4, 2.6
         if args.fpng == "t":
@@ -1340,8 +1276,7 @@ if __name__ == "__main__":
         search_dat(map_type="fingerprint")
         png_map(X_MIN, X_MAX, Z_MAX, SCREEN, ALT_MAP, BACKGROUND)
 
-    # options fingerprints, .pdf:
-    if args.fpdf in ["s", "t", "e"]:
+    if args.fpdf in ["s", "t", "e"]:  # fingerprints, gnuplot, .pdf.
         if args.fpdf == "s":
             X_MIN, X_MAX = 0.4, 2.6
         if args.fpdf == "t":
@@ -1357,8 +1292,7 @@ if __name__ == "__main__":
         search_dat(map_type="fingerprint")
         pdf_map(X_MIN, X_MAX, Z_MAX, ALT_MAP, BACKGROUND)
 
-    # options difference maps, .png:
-    if args.dpng in ["s", "t", "e"]:
+    if args.dpng in ["s", "t", "e"]:  # difference maps, gnuplot, .png.
         if args.dpng == "s":
             X_MIN, X_MAX = 0.4, 2.6
         if args.dpng == "t":
@@ -1375,8 +1309,7 @@ if __name__ == "__main__":
         search_dat(map_type="delta")
         png_map(X_MIN, X_MAX, Z_MAX, SCREEN, ALT_MAP, BACKGROUND)
 
-    # options difference maps, .pdf:
-    if args.dpdf in ["s", "t", "e"]:
+    if args.dpdf in ["s", "t", "e"]:  # difference maps, gnuplot, .pdf.
         if args.dpdf == "s":
             X_MIN, X_MAX = 0.4, 2.6
         if args.dpdf == "t":
@@ -1392,8 +1325,7 @@ if __name__ == "__main__":
         search_dat(map_type="delta")
         pdf_map(X_MIN, X_MAX, Z_MAX, ALT_MAP, BACKGROUND)
 
-# insert for --Fpng, start:
-    if args.Fpng in ["s", "t", "e"]:
+    if args.Fpng in ["s", "t", "e"]:  # fingerprint, Python, .png.
         search_dat(map_type="fingerprint")
         if args.Fpng == "s":
             MAP_RANGE = "standard"
@@ -1409,11 +1341,10 @@ if __name__ == "__main__":
         BACKGROUND = args.bg
         COLOR_BAR = args.color_bar
         FILE_TYPE = "png"
-        fall_back_display(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
-                          FILE_TYPE)
+        plot_matplotlib(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
+                        FILE_TYPE)
 
-# insert for --Dpng, start:
-    if args.Dpng in ["s", "t", "e"]:
+    if args.Dpng in ["s", "t", "e"]:  # difference maps, Python, .png.
         search_dat(map_type="delta")
         if args.Dpng == "s":
             MAP_RANGE = "standard"
@@ -1429,11 +1360,10 @@ if __name__ == "__main__":
         BACKGROUND = args.bg
         COLOR_BAR = args.color_bar
         FILE_TYPE = "png"
-        fall_back_display(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
-                          FILE_TYPE)
+        plot_matplotlib(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
+                        FILE_TYPE)
 
-# insert for --Fpdf, start:
-    if args.Fpdf in ["s", "t", "e"]:
+    if args.Fpdf in ["s", "t", "e"]:  # fingerprints, Python, pdf.
         search_dat(map_type="fingerprint")
         if args.Fpdf == "s":
             MAP_RANGE = "standard"
@@ -1445,13 +1375,14 @@ if __name__ == "__main__":
             Z_MAX = 0.025
         else:
             Z_MAX = args.zmax
+        SCREEN = False
         BACKGROUND = args.bg
         COLOR_BAR = args.color_bar
         FILE_TYPE = "pdf"
-        fall_back_display(MAP_RANGE, Z_MAX, BACKGROUND, COLOR_BAR, FILE_TYPE)
+        plot_matplotlib(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
+                        FILE_TYPE)
 
-# insert for --Dpdf, start:
-    if args.Dpdf in ["s", "t", "e"]:
+    if args.Dpdf in ["s", "t", "e"]:  # difference maps, Python, pdf.
         search_dat(map_type="delta")
         if args.Dpdf == "s":
             MAP_RANGE = "standard"
@@ -1463,10 +1394,9 @@ if __name__ == "__main__":
             Z_MAX = 0.025
         else:
             Z_MAX = args.zmax
+        SCREEN = False
         BACKGROUND = args.bg
         COLOR_BAR = args.color_bar
         FILE_TYPE = "pdf"
-        fall_back_display(MAP_RANGE, Z_MAX, BACKGROUND, COLOR_BAR, FILE_TYPE)
-
-os.chdir(ROOT)
-sys.exit(0)
+        plot_matplotlib(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
+                        FILE_TYPE)
