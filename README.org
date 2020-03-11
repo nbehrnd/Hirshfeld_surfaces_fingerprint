@@ -20,10 +20,10 @@
 * Background
 
   Reading crystallographic models as =*.cif= file,
-  CrystalExplorer[fn:1] is capable to assess the electronic
-  interactions of a molecule with its surrounding crystal.  These are
-  then visualized as Hirshfeld surfaces,[fn:2] and may be projected as
-  a 2D fingerprint map.[fn:3]
+  CrystalExplorer[fn:1] assess the electronic interactions of a
+  molecule with its surrounding crystal.  These are then visualized as
+  Hirshfeld surfaces,[fn:2] and may be projected as a 2D fingerprint
+  map.[fn:3]
 
   Carter /et al./ suggest the inspection of /the differences/ of these
   2D fingerprint maps[fn:4] to ease discern of similarities and
@@ -379,15 +379,15 @@
    the keywords =begin d_i= and =begin d_e=, respectively.  The
    previous vertices-based definition of individual triangles allows
    to compute for each triangle the arithmetical mean value of its
-   apexes' $d_i$ to yield the triangle's $d_i$ value.  Similar to this,
-   the $d_e$ value representative for the triangle is the average of the
-   three apex $d_e$.
+   apexes' $d_i$ to yield the triangle's $d_i$ value.  Similar to
+   this, the $d_e$ value representative for the triangle is the
+   average of the three apex $d_e$.
 
    To yield a fingerprint map, the individual triangle areas are
-   binned along both d_i and d_e with an increment of 0.01 \AA.  The
-   bin-wise sums of individual triangle areas are then normalized
+   binned along both $d_i$ and $d_e$ with an increment of 0.01 \AA.
+   The bin-wise sums of individual triangle areas are then normalized
    against the integral Hirshfeld surface area, stored with their
-   corresponding (d_i, d_e) as =*.dat= file.
+   corresponding $(d_i, d_e)$ as =*.dat= file.
 
 ** Determination of the triangle area
 
