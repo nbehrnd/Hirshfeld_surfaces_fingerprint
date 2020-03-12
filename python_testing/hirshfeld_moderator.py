@@ -669,7 +669,16 @@ def png_map(X_MIN=0.4, X_MAX=3.0, Z_MAX=0.08, SCREEN=False, ALT_MAP=False,
 
     Contrasting to pdf_map, png_map includes screen instructions.  Their
     readouts (gp_log.txt) allow to adjust map range (de/di) and cbrange
-    (z_max) in the high resolution plots. """
+    (z_max) in the high resolution plots.  In contrast to Linux accepting
+    a string relayed to gnuplot in line of
+
+    plot = str("gnuplot -e 'set terminal pngcairo; [other instructions]'")
+
+    the subsequent relay to the CLI in Windows works reliably only with
+
+    plot = str('gnuplot -e "set terminal pngcairo; [other instructions]"')
+
+    which may require escape-backslashes. """
 
     os.chdir("cxs_workshop")
     print("\nMap data processed:")
