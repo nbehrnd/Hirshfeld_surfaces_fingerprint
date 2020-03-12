@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
-
 # name:    hirshfeld_moderator.py
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-03-07 (YYYY-MM-DD)
+# edit:    2020-03-12 (YYYY-MM-DD)
 #
 """ This is a moderator script for Python to either moderate a Difference
 Hirshfeld surface analysis introduced with
@@ -42,15 +40,15 @@ python hirshfeld_moderator.py -h
 
 The script consists of four sections:
 + definitions of functions to manage CrystalExplorer's .cxs files (start
-  by line # 68).
+  by line # 66).
 + definition of functions to work on the .cxs files eventually yielding
   fingerprint .dat files, the difference maps, and the ruby number (start
-  by line # 218).
+  by line # 216).
 + definition of functions to relay the optional display of results with
-  either gnuplot, or matplotlib (start by line # 499).
+  either gnuplot, or matplotlib (start by line # 523).
 + a section bundling the necessary toggles as arguments when calling the
   script e.g., by python moderator_hirshfeld.py --dpng e -a -g --zmax 0.08
-  (start by line # 1064).
+  (start by line # 1088).
 
 For additional details about using the program, please read the separate
 documentation. """
@@ -275,8 +273,11 @@ def fingerprint_fortran():
                 entry, dat_file))
 
         sub.call(normalize, shell=True)
-
-    os.remove("fingerprint.x")
+    if platform.system().startswith("Linux"):
+        try:
+            os.remove("fingerprint.x")
+        except:
+            pass
     os.chdir(root)
     print("\nNormalization of .cxs files is completed.")
 
@@ -315,17 +316,28 @@ def compile_c():
 
 def shuttle_c():
     """ Shuttle the executable of diff_finger.c to the data. """
-    try:
-        shutil.copy("diff_finger", "cxs_workshop")
-    except IOError:
-        print("Error while copying C executable to the data.")
-        print("Check the presence of folder 'cxs_workshop'.")
-        sys.exit(0)
+    # clause for Linux-based computers:
+    if platform.system().startswith("Linux"):
+        try:
+            shutil.copy("diff_finger", "cxs_workshop")
+        except IOError:
+            print("Error while copying C executable to the data.")
+            print("Check the presence of folder 'cxs_workshop'.")
+            sys.exit(0)
 
-    try:
-        os.remove("diff_finger")  # space cleaning, root folder.
-    except IOError:
-        pass
+        try:
+            os.remove("diff_finger")  # space cleaning, root folder.
+        except IOError:
+            pass
+
+    if platform.system().startswith("Windows"):
+        try:
+            shutil.copy("diff_finger.exe", "cxs_workshop")
+        except IOError:
+            print("Error while copying C executable to the data.")
+            print("Check the presence of folder 'cxs_workshop'.")
+            sys.exit(0)
+
 
 
 def difference_maps_c():
@@ -348,8 +360,12 @@ def difference_maps_c():
 
             print("{} vs. {} to yield {}".format(reference_map, test_map,
                                                  difference_map))
-            difference_test = str("./diff_finger {} {} > {}".format(
-                reference_map, test_map, difference_map))
+            if platform.system().startswith("Linux"):
+                difference_test = str("./diff_finger {} {} > {}".format(
+                    reference_map, test_map, difference_map))
+            if platform.system().startswith("Windows"):
+                difference_test = str("diff_finger.exe {} {} > {}".format(
+                    reference_map, test_map, difference_map))
             try:
                 sub.call(difference_test, shell=True)
             except IOError:
@@ -357,8 +373,16 @@ def difference_maps_c():
 
         del fingerprint_register[0]
     print("\nComputation of difference maps is completed.")
-
-    os.remove("diff_finger")
+    if platform.system().startswith("Linux"):
+        try:
+            os.remove("diff_finger")
+        except:
+            pass
+    if platform.system().startswith("Windows"):
+        try:
+            os.remove("diff_finger.exe")
+        except:
+            pass
 
 
 def difference_maps_python():
@@ -373,7 +397,7 @@ def difference_maps_python():
     diff_register.sort()
 
     # compare the normalized 2D Hirshfeld surface maps
-    print("Fingerprint computation with Python:\n")
+    print("\nComputation of difference maps (Python) starts:")
     while len(diff_register) > 1:
         for entry in diff_register[1:]:
             reference_file = diff_register[0]
@@ -1061,7 +1085,7 @@ def plot_matplotlib(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
 # End of section C, Display.
 
 
-# Start of section D, Arguments:
+# Section D, Arguments:
 # argparse section:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
