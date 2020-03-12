@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # name:    hirshfeld_moderator.py
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
