@@ -945,9 +945,9 @@ def plot_matplotlib(MAP_RANGE="extended", Z_MAX=0.08, SCREEN=False,
             difference_map = False
 
         # analysis of the .dat file:
-        retainer = []  # record all execpt the blank lines
+        retainer = []  # record all except the blank lines
         z_register = []  # record only the entries about z
-
+   
         with open(entry, mode='r') as source:
             for line in source:
                 if len(line.strip().split()) == 3:
@@ -1434,3 +1434,4 @@ if __name__ == "__main__":
         FILE_TYPE = "pdf"
         plot_matplotlib(MAP_RANGE, Z_MAX, SCREEN, BACKGROUND, COLOR_BAR,
                         FILE_TYPE)
+ 
