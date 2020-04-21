@@ -2,7 +2,7 @@
 # name:    README.org
 # author:  Norwid Behrnd
 # license: GPLv2
-# edit:    2020-03-11 (YYYY-MM-DD)
+# edit:    2020-04-20 (YYYY-MM-DD)
 
 #+OPTIONS: toc:nil
 
@@ -16,528 +16,263 @@
 #+LATEX_HEADER:   \setkomafont{captionlabel}{\sffamily\bfseries}
 #+LATEX_HEADER:   \setcapindent{0em}  \setkomafont{caption}{\small}
 
-
 * Background
 
-  Reading crystallographic models as =*.cif= file,
-  CrystalExplorer[fn:1] assess the electronic interactions of a
-  molecule with its surrounding crystal.  These are then visualized as
-  Hirshfeld surfaces,[fn:2] and may be projected as a 2D fingerprint
-  map.[fn:3]
+  The electronic interaction of a molecule with its neighbors in the
+  crystalline state may be described by the Hirshfeld
+  surface,[fn:Hirshfeld_surface] accessible by
+  CrystalExplorer.[fn:CrystalExplorer] This 3D surface may be
+  projected as a normalized 2D fingerprint map.[fn:2Dfingerprint]
 
-  Carter /et al./ suggest the inspection of /the differences/ of these
-  2D fingerprint maps[fn:4] to ease discern of similarities and
-  differences when comparing these fingerprints: Contrasting to a
-  qualitative discern of the maps (e.g. =compare= by
-  ImageMagick),[fn:5] this approach allows both a visual as well as
-  numeric quantification of the differences.  This is illustrated
-  below with the example of two crystallographic model data describing
-  two polymorphs of benzamide (fig. [[alignment]]).  The scope of this
-  analysis may be extended to iso-structural materials, too.
+  To identify similarities and differences among crystallographic
+  models with greater ease, Carter /et al./[fn:Carter_2017] suggest
+  the inspection of /difference maps/ of these normalized 2D
+  fingerprint maps.  This extends the qualitative, visual comparison
+  of the maps /as images/, e.g. with ImageMagick's =compare=
+  instruction,[fn:compare_command] by a computed comparison of
+  normalized fingerprint map data where differences are quantified
+  locally.  Summing up any information in each difference map
+  eventually may condense the analysis to a /difference number/.  The
+  figure below illustrates the comparison of two polymorphs of
+  benzamide.
+
   #+NAME:    alignment
-  #+CAPTION: 2D fingerprint maps of Hirshfeld surfaces for CCDC model BZAMID01 and BZAMID11 (left and left center), derived from the analysis by CrystalExplorer at /very high/ resolution (d_e and d_i in the range of 0.40--3.00 \AA, with a 0.01 \AA increment in the plane).  Qualitative difference assignment by superposition as provided by ImageMagick (right center), red pixels indicate difference between the two images inspected.  Simultaneous qualitative and quantitative spatial information are provided by the /difference map/ generated with the scripts of this repository (right).
+  #+CAPTION: Normalized 2D fingerprint maps of Hirshfeld surfaces for CCDC model BZAMID01 and BZAMID11 (left and left center) about benzamide.  Both fingerprints are derived from the analysis by CrystalExplorer at /very high/ resolution ($d_i$ and $d_e$ in the extended map range of 0.40--3.00 \AA, with a 0.01 \AA increment each).  Qualitative difference assignment by superposition  provided by ImageMagick (right center); each red pixel indicates /any/ difference between the two images inspected.  Quantitative spatial information provided by the /computed difference map/ with the scripts of this repository (right).
   #+ATTR_LATEX: :width 15cm
   #+ATTR_HTML:  :width 75%
-  [[./doc_support/alignment_normal.png]]
+  [[./documentation/doc_support/alignment_normal.png]]
 
+  To popularize this type of analysis, this fork aims to ease access
+  to the underlying methods.  Python is used to provide the interested
+  eventually a portable, unified interface to work from the command
+  line.
 
-* Basic use
+* Preparation
 
-  This type of analysis requires the =.cxs= computed by
-  CrystalExplorer.[fn:1]  For CrystalExplorer, these are intermediate
-  files only; thus, to retain these, CrystalExplorer's default is to
-  be changed under File -> Preferences -> Expert.  This adjustment
-  remains active until you either intentionally set again the check
-  mark next to "remove working files", or press "Restore Expert
-  Settings".  After loading the =.cif= file in CrystalExplorer, chose
-  the "very high" resolution for the surface generation -- which is
-  one level above the default.
+  /Prior/ to this analysis, the Hirshfeld surface needs to be computed
+  by CrystalExplorer.[fn:CrystalExplorer] By default, the information
+  required here is stored in intermediate =.cxs= files.  To retain
+  these data, open CrystalExplorer and access the "expert tab" in the
+  menu accessible /via/ =File= \rightarrow =Preferences=.  Disable the
+  check mark next to "remove working files".  (This change will remain
+  active -- even if CrystalExplorer is relaunched -- until you
+  intentionally revert the options by clicking on "Restore Expert
+  Settings".)
 
-  To continue the analysis, the =.cxs= files by CrystalExplorer are
-  normalized as 2D fingerprints (=.dat= files) with scripts of this
-  repository.  Their pairwise comparison yields difference maps, saved
-  as =diff*.dat= files.  Either map type may be visualized; here, the
-  interaction with either =gnuplot=, and Python's =matplotlib= serve
-  as examples.  As all data are stored in plain ASCII, you may use
-  other programs to visualize the results, too.  The information a
-  difference map contains may be condensed further to a single figure
-  of merit.
+  Equally note, computations in CrystalExplorer preparing the
+  difference fingerprint analysis require the /very high/ level of
+  resolution.  This is one level above the one CrystalExplorer
+  suggests you by default, just prior to its computation.
 
-  In the following, two approaches are outlined, which represent
-  either the
-  + direct interaction with the original scripts and data, or
-  + the moderated interaction with the data by Python script
-    =hirshfeld_moderator.py=.
+  For the /moderated difference fingerprint analysis/ scripts
+  =hirshfeld_moderator.py= and assisting =fingerprint_kahan.py= need
+  to be both in the folder with =.cxs= files to work with.
+  Alternatively, the =.cxs= files of interest should be stored in
+  sub-folders just one level below these two scripts.  Prioritizing
+  the portability of the computational part of the analysis over the
+  speed of execution, both scripts are written to perform the analysis
+  exclusively with either standard Python 3,[fn:python] legacy
+  Python 2.7.17, or the recommended faster processing pypy[fn:pypy]
+  alone.  If you may not install Python on the computer you are
+  working, consider alternatives like WinPython[fn:WinPython] (which
+  may run from a USB-thumbrive) or an installation-free session on
+  [[https://repl.it]].[fn:replit]
 
-** Direct interaction
-   
-   The direct interaction with the =.cxs= data relies on the scripts
-   provided by Andrew Rohl and Paolo Raiteri, namely
-   =fingerprint.f90=, =diff_finger.c=, and =sum_abs_diffs.rb=.
+  The moderator script equally offers an unified interface to perform
+  some or all computations with the code published by Andrew Rohl and
+  Paolo Raiteri.  To relay the tasks successfully, copy the additional
+  files (=fingerprint.f90=, =diff_finger.c=, and =sum_abs_diff.rb=)
+  into the same folder as the moderator script.  Note that this
+  approach equally requires a callable installation of a compiler for
+  Fortran and C (=gcc=)[fn:gcc] and Ruby.[fn:ruby]
 
-   + To compute the normalized 2D Hirshfeld surface /fingerprint
-     maps/, the Fortran code has to be compiled.  Examples of freely
-     available compilers include =gcc=,[fn:7] or =gfortran.=[fn:12]
-     After accessing the folder containing =fingerprint.f90=, an
-     executable is compiled by the instruction of
-     #+BEGIN_SRC shell
-       gfortran fingerprint.f90 -o fingerprint.x
-     #+END_SRC
-     In an environment of Unix / Linux / Cygwin, the executable is
-     subsequently deployed in a a pattern of
-     #+BEGIN_SRC shell
-       ./fingerprint.x  input.cxs [standard | translated | extended] output.dat
-     #+END_SRC
-     Either =standard=, =translated=, or =extended= as map ranges
-     about the interval of $(0.40,2.60)$, $(0.80,3.00)$, or
-     $(0.40,3.00)\,\mathrm{\mbox{\AA}}$ along $(d_e,d_i)$ are available
-     for normalized 2D fingerprints saved in file =output.dat=.
+  The figures below illustrate the visual output using defaults (first
+  row), or with optional parameters (second row).  Each row depicts two
+  normalized fingerprints either compared with ImageMagick's =compare=,
+  or as a computed difference map.
 
-     If working in Windows, the instruction to use the compiled
-     executable is in line of
-     #+BEGIN_SRC shell
-       fingerprint.x  input.cxs [standard | translated | extended] output.dat
-     #+END_SRC
-     without leading point and forward slash.
-
-   + The computation of the /difference map/ of 2D fingerprints
-     requires the compilation of =diff_finger.c=.  Using the freely
-     available =gcc=,[fn:7] the instruction is
-     #+BEGIN_SRC shell
-       gcc diff_finger.c -o diff_finger
-     #+END_SRC
-     For the subsequent deployment of the executable, identify two
-     normalized fingerprint =.dat= files of same map range type.  The
-     instruction follows the pattern of
-     #+BEGIN_SRC shell
-       ./diff_finger input_A.dat input_B.dat > difference.dat  # in Linux
-       ./diff_finger input_A.dat input_B.dat > difference.dat  # in Windows
-     #+END_SRC
-     to deposit the results in file =difference.dat=.
-
-   + With an installation of Ruby, the difference maps may be
-     condensed to a single figure of merit.  The instruction
-     of
-     #+BEGIN_SRC shell
-     ruby sum_abs_diffs.rb difference.dat
-     #+END_SRC
-     will print the difference number about =difference.dat=
-     scrutinized to the CLI.  Any difference in =difference.dat= will
-     be add up as absolute contribution.  The larger the difference
-     number, the more different the two fingerprints summed up to
-     =difference.dat= are.
-
-
-** Moderated interaction
-
-   Python script =hirshfeld_moderator.py= provides the user a unified
-   interface to access the functionalities of the original code.  The
-   script will manage the data by CrystalExplorer, launch of the
-   analyses, and provision of the results.
-
-   On Linux and Windows, the moderator script may relay the
-   visualization of the fingerprints or difference maps to an
-   installation of =gnuplot=.  In its absence, the scatter plots may
-   be drawn with Python's library of =matplotlib=, too.
-
-   With assisting =fingerprint_kahan.py=, the moderated analysis may
-   be performed exclusively in Python, too.  Core computations of
-   these scripts are written with portability in mind, allowing this
-   code to work with current Python3, legacy Python2, or performance
-   improved pypy.
-
-   The following sequence describes the analysis of the two benzamide
-   model data on Linux Xubuntu 18.04.3LTS, with results visualized
-   with =gnuplot= (version 5.2.7beta):
-   
-   + Deposit the Python script, =hirshfeld_moderator.py= either in the
-     folder containing the =.cxs= of interest, or one level above the
-     corresponding sub-folders.  In case you intend to perform the
-     analysis with Python only, deposit its assistance script,
-     =fingerprint_kahan.py= into the same folder as
-     =hirshfeld_moderator.py=.  Check the accessibility of this folder
-     for your Python environment (e.g., WinPython).
-
-     If you want to benefit from any of the code =fingerprint.f90=
-     (normalized fingerprints), =diff_finger.c= (difference maps), or
-     =sum_abs_diffs.rb= (difference number), /i/) deposit the
-     corresponding additional scripts in the same folder as
-     =hirshfeld_moderator.py=, too.  Ensure you /ii/) equally have
-     installed the compilers (=gcc=, =gfortran=) and Ruby, too.
-
-   + You access the moderator interface from the CLI by
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator.py -h
-     #+END_SRC
-     -- which works the same for either current Python 3, legacy
-     Python 2, or pypy.
-
-   + The =.cxs= files accessible for the moderator script are
-     /listed/, and /copies/ of these files are /joined/ into a newly
-     created working directory in common, =cxs_workshop=.  These
-     actions are triggered by either
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator.py -l
-       python hirshfeld_moderator.py -j
-     #+END_SRC
-
-     Depending on the source of the =.cif= files read by
-     CrystalExplorer, the =.cxs= files about the Hirshfeld surfaces
-     may contain underscores, e.g., =example_example.cxs=.  To render
-     file management (including optional visualization of the results)
-     easier, the moderator script truncates the file names of these
-     =.cxs= copied into folder =cxs_workshop= to yield the pattern of
-     =example.cxs=.  -- The original =.cxs= files will not be altered.
-
-   + To compute /normalized/ 2D Hirshfeld surface /fingerprints/,
-     call either one of the two instructions
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator.py -n
-       python hirshfeld_moderator.py -N
-     #+END_SRC
-     To work successfully, the Python-based approach (toggle =-n=)
-     requires the simultaneous presence of =fingerprint_kahan.py= in
-     the same folder as =hirshfeld_moderator.py=.  It is highly
-     recommended to use =pypy= instead of "default Python" (especially
-     =CPython3=).  For details, see the technical section.
-
-     Otherwise, assuming either a callable installation of =gcc= or
-     =gfortran=, toggle =-N= launches the compilation of
-     =fingerprint.f90=, shuttles the executable to the data, and
-     triggers the computation of the fingerprint maps.
-
-   + The pairwise /comparison/ of fingerprints yielding difference
-     maps is triggered by either
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator.py -c
-       python hirshfeld_moderator.py -C
-     #+END_SRC
-     The toggle of =-c= triggers the analysis by Python, while toggle
-     =-C= (upper case) triggers its analogue with =diff_finger.c=.
-     Again, the moderator script attempts in the background the
-     compilation of an executable (=gcc=), which is shuttled to the
-     data to work there.
-
-     While not as much demanding as the computation of normalized
-     fingerprints, there is a noticeable gain in performance if the
-     Python approach relies on =pypy= instead of =CPython=.
-
-   + For the computation of the /difference number/, initially
-     provided by the ruby script, use either of the instructions
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator -r
-       python hirshfeld_moderator -R
-     #+END_SRC
-     to perform the task with either Python (=-r=), or Ruby (=-R=).
-
-   The subsequent visualization of the results stored in
-   ASCII-readable files is optional.  If accessible, the moderator
-   script may relay the necessary instructions to =gnuplot=.[fn:17] As
-   an alternative, Python's =matplotlib=[fn:16] may be used instead.
-
-   + To survey quickly the fingerprints and difference maps,
-     call either
-     #+BEGIN_SRC shell -n1
-       python hirshfeld_moderator -o  # gnuplot instance
-       python hirshfeld_moderator -O  # matplotlib instance
-     #+END_SRC
-     which will generate bitmap =.png= intentionally kept at small
-     dimension for /an overview/.  While displaying the /extended map
-     range/ \((0.40,3.00)\,\mathrm{\mbox{\AA}}\), dashed lines
-     indicate the upper limit of the /standard map range/ of
-     \((0.40,3.00)\,\mathrm{\mbox{\AA}}\).  At the same time, the
-     lower bounds of the /translated map range/
-     \((0.80,3.00)\,\mathrm{\mbox{\AA}}\) are indicated by dotted
-     lines.  These assist in the selection of a map range in common
-     for the synoptic inspection of multiple fingerprints at higher
-     quality.
-
-     Both surveys equally read out the minimal and maximal
-     \((d_i,d_e)\)-bin value per =*.dat= file.  These characteristics
-     are both stamped on the =.png= generated, as well as deposit as
-     ASCII-readable report (=gp_log.txt=) in the workshop directory
-     and may be used to adjust the later =-zmax= scaling (/vide
-     infra/).
-
-   + The instructions yielding visualizations in higher quality
-     combine the nature of the map (either fingerprint, or difference
-     map), the output file format (either bitmap =.png=, or vector
-     =.pdf=), as well as the map range (either [s]tandard,
-     [t]ranslated, or [e]xtended).  Thus, basic instructions follow
-     the /mandatory/ pattern of
-     #+BEGIN_SRC shell -n3
-       python hirshfeld_moderator.py --fpng s  # calling a gnuplot instance
-       python hirshfeld_moderator.py --Dpdf e  # calling a matplotlib instance
-     #+END_SRC
-     to generate either a series of fingerprint maps as =.png= in the
-     standard map range (example of the gnuplot instance), or generate
-     a synoptic series of difference maps as =.pdf= using the extended
-     map range (second example, Python =matplotlib=).
-
-   + The moderator script equally offers four /optional/ parameters
-     which may be used in any combination of with each other in
-     presence of the former mandatory parameters:
-
-     + =-a= to use an /alternative/ color scheme.  This substitutes
-       the jet-like color scheme used in the fingerprints by
-       cubehelix, and the blue-white-red diverging map by Kenneth
-       Moreland's "bent-cool-warm" map with 64 levels.  Both color
-       schemes are perceptual safer, e.g., for some types of color
-       blindness, than the default.  The cubehelix equally represents
-       the continuous character of the data better than the jet-based
-       scheme if constrained to gray scale (e.g., Xerox copies).
-
-     + =-g= to use a neuter gray background.  This may ease the visual
-       inspection of the maps.
-
-     + =--zmax= adjusts the \(z\)-range of the scatter plots.  The
-       visual surveys by either =gnuplot=, or =matplotlib=, constrain
-       the projection of the third dimension to \(0 \le{} z \le{}
-       0.08\) for fingerprints, and \(|0 \le{} z \le{} 0.025|\) for
-       difference maps.  For each map, the actual readouts of minimal
-       and maximal \((d_i,d_e)\)-bin entry are provided with
-       =gp_log.txt= and the stamps on the images.
-
-       Only the non-surveying visualizations offer to adjust these
-       limits in combination of =--zmax= as the keyword. As example,
-       the instruction
-       #+BEGIN_SRC shell -n5
-	 python hirshfeld_moderator.py --dpdf e -a -g --zmax 0.01
-       #+END_SRC
-       will trigger the synoptic fingerprint generation as =.pdf=
-       files, generated by =gnuplot= for the extended map range with
-       the alternative color scheme, gray background and \(z\)-range
-       of \(-0.01 \le{} z \le{} +0.01\).  The significance of the
-       \(z\)-range is described later.
-
-     + =-b=.  By default, the visualizations in higher quality
-       provided by =matplotlib= /do not/ contain the lateral color
-       bar.  Using this optional parameter will add the color bar to
-       the image.
-
-       This responds to observations processing images further, e.g.,
-       with inkscape.[fn:18] Contrary to the =.pdf= generated by
-       =gnuplot=, the optional use of the neuter gray background
-       yields very dark images for export.
-
-     #+NAME:  provision_overview
-     #+CAPTION:  Example survey of 2D fingerprint maps (left, center) and difference map plot (right). Intended as guidance for setting up subsequent plots in high resolution, frames mark standard map range (left bottom, dashes) and translated map range (right atop, dots), respectively, while displaying the extended range.  The right bottom corner reports the maximal and minimal /z/-value read from the =.dat= file.
-     #+ATTR_LATEX:  :width 15cm
-     #+ATTR_HTML:   :width 75%
-     [[./doc_support/survey.png]]
-
-  Below, the effect of color palette and background selection is
-  illustrated.  They each display the fingerprint about either CSD
-  model =BZAMID01=, or =BZAMID11=; the difference plot for the two
-  fingerprints as determined by ImageMagick's =compare=, and the
-  computed difference map as displayed by gnuplot.
+  #+NAME:  alignment_normal
+  #+ATTR_HTML:  :width 75%
+  #+ATTR_LATEX: :width 16cm
+  [[./documentation/doc_support/alignment_normal.png]]
   
-  #+NAME:    alignment_normal
-  #+CAPTION: Gnuplot's output of 2D fingerprint maps (very left, left center), ImageMagick's difference with =compare= (right center), and gnuplot's difference map in default mode.
-  #+ATTR_LATEX:  :width 15cm
-  #+ATTR_HTML:  :width 75%
-  [[./doc_support/alignment_normal.png]]
-
-  #+NAME:  alignment_normal_gray
-  #+CAPTION: Processing the data with the optional optional neutral gray background (toggle =-g=), default color palettes.
-  #+ATTR_LATEX:  :width 15cm
-  #+ATTR_HTML:  :width 75%
-  [[./doc_support/alignment_normal_gray.png]]
-
-  #+NAME:  alternate
-  #+CAPTION: Optional processing with the alternate, perceptual safer color palettes =cubehelix= in 2D fingerprints, and Kenneth Moreland's improved diverging palette =bent-cool-warm= (64 levels); toggle =-a=.  
-  #+ATTR_LATEX:  :width 15cm
-  #+ATTR_HTML:  :width 75%
-  [[./doc_support/alignment_alternate.png]]
-
-  #+NAME:  alternate_gray
-  #+CAPTION: Optional simultaneous processing with the alternate color palettes (toggle =-a=) and the optional neutral gray background (toggle =-g=).
-  #+ATTR_LATEX:  :width 15cm
+  #+NAME:  alignment_alternate_gray
   #+ATTR_HTML:   :width 75%
-  [[./doc_support/alignment_alternate_gray.png]]
+  #+ATTR_LATEX:  :width 16cm
+  [[./documentation/doc_support/alignment_alternate_gray.png]]
 
-  While preparing the diagrams plot as either =*.png=, or resolution
-  independent format =*.pdf=, the vector-based files tend to be the
-  smaller ones as their savings by the /conditional plotting/,[fn:8]
-  are more pronounced, than for the bitmap images.
 
-* Technical background
+* Basic use, local computer
 
-** Computation of the fingerprint maps
+   This approach prioritizes the portability of the analysis. By
+   consequence, computations by scripts =moderator_hirshfeld.py= and
+   =fingerprint_kahan.py= are set up to interact well with either
+   Python 3,[fn:python] legacy Python 2, or pypy.[fn:pypy] It requires
+   at least /both/ =hirshfeld_moderator.py= and =fingerprint_kahan.py=
+   to access CrystalExplorer's =.cxs= files from the same folder.
 
-   The difference Hirshfeld analysis uses a portion of
-   CrystalExplorer's results stored in the =.cxs= files.  They define
-   the Hirshfeld surface as a mesh of vertices with coordinates
-   \((x,y,z)\) listed below the keyword =begin vertices=.  Three
-   vertices each constitute an elementary triangle defined by the
-   indices of its vertices (section =begin indices=) as short hand for
-   the corresponding apex coordinates.  These later are used to
-   compute the individual triangle surfaces, eventually summed up to
-   the integral Hirshfeld surface area.
+  + To prepare the analysis, consider the following instructions from
+    the CLI:
+    #+BEGIN_SRC shell
+      python hirshfeld_moderator.py -h   # access the script's help menu
+      python hirshfeld_moderator.py -l   # list the .cxs accessible
+      python hirshfeld_moderator.py -j   # join copies of .cxs to cxs_workshop folder
+    #+END_SRC
 
-   The vertices' $d_i$ and $d_e$ are listed in sections starting with
-   the keywords =begin d_i= and =begin d_e=, respectively.  The
-   previous vertices-based definition of individual triangles allows
-   to compute for each triangle the arithmetical mean value of its
-   apexes' $d_i$ to yield the triangle's $d_i$ value.  Similar to
-   this, the $d_e$ value representative for the triangle is the
-   average of the three apex $d_e$.
+  + Subsequently, the recommended consecution of computations is the
+    following:
+    #+BEGIN_SRC shell
+      python hirshfeld_moderator.py -n   # generate normalized fingerprints
+      python hirshfeld_moderator.py -c   # compare normalized fingerprints
+      python hirshfeld_moderator.py -r   # compute the difference number
+    #+END_SRC
+    Because of the computational demand of these computations, the use
+    of pypy[fn:pypy] /instead/ of default Python is recommend if
+    opting for an analysis with Python-only.  On the CLI, this only
+    substitutes =python= by =pypy=, e.g.
+    #+BEGIN_SRC shell
+      pypy hirshfeld_moderator.py -n   # generate normalized fingerprints    
+    #+END_SRC
 
-   To yield a fingerprint map, the individual triangle areas are
-   binned along both $d_i$ and $d_e$ with an increment of 0.01 \AA.
-   The bin-wise sums of individual triangle areas are then normalized
-   against the integral Hirshfeld surface area, stored with their
-   corresponding $(d_i, d_e)$ as =*.dat= file.
+  + It is possible to use the moderator script to interact with the
+    original scripts as well.  Only then these additional files
+    (=fingerprint.f90=, =diff_finger.c=, =sum_abs_diffs.rb=) should
+    equally be pasted into the same folder as the moderator script.
+    Beside Python, this approach equally requires the callable
+    installation of a compiler like gcc[fn:gcc] and Ruby.[fn:ruby]
 
-** Determination of the triangle area
+    After preparing the data as above, a call with the upper-case
+    variants of the parameters then relays the work to the compiled
+    languages instead:
+    #+BEGIN_SRC shell
+      python hirshfeld_moderator.py -N   # generate normalized fingerprints (Fortran)
+      python hirshfeld_moderator.py -C   # compare normalized fingerprints (C)
+      python hirshfeld_moderator.py -R   # compute the difference number (Ruby)
+    #+END_SRC
 
-   The reference implementation in =fingerprint.f90= by Andrew Rohl
-   and Paolo Raiteri relies on vector algebra outlined in the figure
-   below.  It considers triangles only if all three side lengths are
-   equal or longer than 10E-5 \AA.  The Fortran-based analysis is
-   accessed from the moderator by
-   #+BEGIN_SRC shell -n1
-     python hirshfeld_moderator.py -N
-   #+END_SRC
+  + In presence of an installation of =gnuplot=, or Python's
+    =matplotlib=, a rapid /overview/ of the results may be generated.
+    As outlined further in the manual, these =.png= images help to
+    adjust parameters for subsequent images of higher quality:
+    #+BEGIN_SRC shell
+      python hirshfeld_moderator -o   # relay to gnuplot
+      python hirshfeld_moderator -O   # relay to Python matplotlib
+    #+END_SRC
+    Note that the second path with =matplotlib= is assisted by the
+    =numpy=, both modules which are not part of the Python standard
+    library.  These may require additional installation (e.g., with
+    =pip=).  Note that /both/ visualization approaches, as well as
+    performing the analysis with Python, are known to work without
+    installation in a =bash= session on repl.it.
 
-   #+NAME:    triangle_area
-   #+CAPTION: Computation of triangle area, probed approaches.
-   #+ATTR_LATEX:  :width 13cm
-   #+ATTR_HTML:   :width 75%
-   [[./doc_support/triangle_equations.png]]
+  Further details how to use the moderator script (e.g., plotting the
+  maps in higher quality, export as =.pdf= file, adjustment of map
+  range) or how to access the code by Andrew Rohl and Paolo Raiteri
+  directly are described in the documentation.
 
-   Knowing the side lengths of a triangle, and hence equally its
-   semi-perimeter, allows to compute the triangle area by the Heron
-   formula.  Kahan presented an approach alternative to Heron,
-   improving the area computation of needle-shaped triangles.[fn:19]  This
-   extends the general scope of the former.
+* Basic use, remote instance on repl.it
 
-   All three approaches were implemented in Python scripts which may
-   work independently to the moderator script, =fingerprint_rr.py=,
-   =fingerprint_heron.py=, and =fingerprint_kahan.py=.  For the
-   Python-based generation of normalized surface fingerprints,
-   #+BEGIN_SRC shell -n1
-     python hirshfeld_moderator.py -n
-   #+END_SRC
-   the presence and module-like use of script =fingerprint_kahan.py=
-   by the moderator script is assumed as default.  By modification of
-   the =import fingerprint_kahan= instruction, the moderator script
-   may use the other assisting scripts instead.
+  The computation of normalized 2D Hirshfeld surface fingerprints and
+  difference maps may be performed remotely on repl.it[fn:replit]
+  which offers Linux-Ubuntu instance already meeting the requirements
+  for this analysis.  On this site, the button "start coding" opens a
+  pull down menu, choose here =bash= among the languages and confirm
+  this choice with "Create Repl".  After a few moments, the interface
+  changes into a window similar to the one in the upper section of the
+  next image.
 
-** Computation of difference map
+  #+NAME:       remote_instance_replit
+  #+CAPTION:    Documenting a remote instance on repl.it.
+  #+ATTR_LATEX: :width 15cm
+  #+ATTR_HTML:  
+  [[./documentation/doc_support/replit_pane_40percent.png]]
 
-   With $n$ fingerprint =.dat= files in folder =cxs_workshop=, the
-   number of unique comparisons equates to $n \cdot (n - 1)/2$ tests.
-   The moderator script however only submits pairs of fingerprints
-   with matching map range to this scrutiny.
+  At any time, a new session may be started from scratch with the
+  button "new repl" (0), which is named randomly (1).  The left of the
+  three columns (A) is the remote repository of any files to work with
+  or about files which were created.  Additional files (e.g., =.cxs=
+  files and code scripts) may be imported into (A) by
+  drag-and-drop as shown (3).  By default, the =bash= profile is initialized
+  with the script =main.sh= (2) whose content is displayed in the
+  central editor pane (B).  The right hand column (C) is the Linux
+  Ubuntu-backed terminal running =bash=, awaiting your instructions.
 
-   If you compute the difference map directly with script
-   =diff_finger.c=, it is your responsibility to ensure both
-   fingerprints depict either the standard, translated, or extended
-   map range.
+  The lower section of the figure displays the situation after a
+  minimal analysis by
+  #+BEGIN_SRC shell
+    python hirshfeld_moderator.py -j  # join .cxs copies in a workshop directory
+    python hirshfeld_moderator.py -n  # compute normalized 2D fingerprints
+    python hirshfeld_moderator.py -o  # generate survey plots with gnuplot
+  #+END_SRC
+  File =fingerprint_kahan.pyc= (4) is not of further interest for the
+  analysis.  As expected, the moderator created folder =cxs_workshop=
+  (5) contains the copied =BZAMID01.cxs= file, the normalized 2D
+  Hirshfeld surface fingerprint (=BZAMID01.dat=), the =gnuplot=-based
+  plot of this map, =BZAMID01.png= (6), and the logging
+  =gp_report.txt= (see documentation).  The center pane (B) is capable
+  to display the =.png= image if the corresponding file was
+  marked (6).  A click on the three vertical dots (7) provides a mean
+  to retrieve all data for local storage.
 
-** Visualization of the results
+  At present (April 2020), the =bash= profile on =repl.it= offers
+  access to Python 3 and legacy Python 2.7.17 to perform the
+  computations, and with =gnuplot= and Python's =numpy= and
+  =matplotlib= the tools to visualize the results in either =.png=, or
+  =.pdf=.  With =gcc= and =Ruby=, the scripts by Andrew Rohl and Paolo
+  Raiteri may equally be used here directly as outlined in the
+  documentation.
 
-   /At present/, the default color schemes used by the higher quality
-   visualizations echo the ones initially proposed, i.e., a =rainbow=
-   / =jet=-like scheme for the continuous character in the fingerprint
-   maps, and =blue-white-red= about the diverging character in the
-   difference maps.
 
-   /Perceptually/, these maps are not considered as save.  The
-   /alternate/ color schemes, accessible in the moderator script by
-   optional toggle =-a= thus account for example Kenneth Moreland's
-   recommendations about this topic and use his =bent_cool_warm=
-   palette to plot the difference maps instead.
-
-   The =cubehelix= palette used as alternative to visualize
-   fingerprints benefits from a continuous increase of luminosity and
-   hence is perceptually save.  It is a much more robust palette than
-   =jet= if the output is constrained to gray scale only (e.g., a
-   Xerox copy) and accounts for some types of color blindness, too.
-   
- 
-* Footnotes
-
-[fn:19] "Miscalculating Area and Angles of a Needle-like Triangle (from
-Lecture Notes for Introductory Numerical Analysis Classes)", accessed at
-http://http.cs.berkeley.edu/~wkahan/Triangle.pdf
-
-[fn:18] This editor is freely available at [[https://www.inkscape.org]].
-
-[fn:17] The =gnuplot= program is freely available at
-[[http://www.gnuplot.info]].
-
-[fn:16] The =matplotlib=-based visualization is assisted by =numpy=.
-Note, neither =numpy=, nor =matplotlib= are part of Python's standard
-library.  It is thus possible that these have to be installed by
-yourself in advance, e.g., with =pip=.  /The possible absence/ of
-Python modules =numpy= and =matplotlib= however does not hinder the
-moderator's action to manage =.cxs= files and the analyses'
-computations.
-
-[fn:15] Script =hirshfeld_moderator_windows.py= in the same directory
-reduces the dependency of the calculations to CPython (e.g., the
-portable WinPython 3.6.7) and Fortran (e.g., gfortran) for an analysis
-in either Windows or Linux.  At present, the script's subsequent
-visualization of the maps with gnuplot works only from Linux.
-
-[fn:14] Users of other operating systems (e.g., Windows) may find
-=diff_finger.py= and =sum_abs_diffs.py= useful.  These proofs of
-concept mimic the action of the C, and of the ruby script in CPython.
-For one, to work with them, a dedicated C or ruby compiler is not
-required.  However, their functionality is not yet implemented into
-the moderator script, =hirshfeld_moderator.py=.
-
-[fn:13] In preparation of this guide, =Gnuplot.py= in version 1.8 was
-used successfully.
-
-[fn:12] In preparation of this guide, =gfortran= in version 7.4.0 was
-used successfully.
-
-[fn:11] The entries may be sorted, e.g., by =sort -k4 -n input.txt -o
-output.txt=, as  =sort= is part of the GNU coreutils.
-
-[fn:10] http://gnuplot.info
-
-[fn:9] Note that if you would like to use these bash =.sh= scripts as
-gnuplot =.plt= files, occasionally instructions like =\$= (with
-backslash) escaping the shell need to be reset as =$= (without
-backslash).
-
-[fn:8] This implementation considers only scatter-plot bins for display
-with (|z| > 10E-7).  Thanks to Ethan Merrit who suggested this
-additional improvement in a private communication.
-
-[fn:7] In preparation of this guide, =gcc= in version 7.4.0 was used
-successfully.
-
-[fn:6] The script successfully works with gfortran (version 7.4.0).
-The optimization of the executable (=-O= parameter) does not offer a
-noticeable advantage if comparing a few model data.
-
-[fn:5] https://imagemagick.org/ Within the bundle, the instruction
-following the basic pattern of =compare image_A image_B= provides a
-check.  Additional information on
-https://imagemagick.org/script/compare.php.
-
-[fn:4] "Difference Hirshfeld fingerprint plots: a tool for studying
-polymorphs." Carter, D. J.; Raiteri, P.; Barnard, K. R.; Gielink, R.;
-Mocerino, M.; Skelton, B. W.; Vaughan, J. G.; Ogden, M. I.; Rohl,
-A. L. in CrystEngComm, 2017, 19, 2207--2215, DOI: [[https://pubs.rsc.org/en/content/articlelanding/2017/ce/c6ce02535h#!divAbstract][10.1039/c6ce02535h]].
-
-[fn:3] "Fingerprinting Intermolecular Interactions in Molecular
-Crystals", Spackman, M. A.; McKinnon, J. J. in CrystEngComm, 2002, 4,
-378--392, doi [[https://pubs.rsc.org/en/content/articlelanding/2002/ce/b203191b#!divAbstract][10.1039/B203191B]].
-
-[fn:2]  a) "A novel definition of a molecule in a crystal", Spackman,
-M. A.; Byrom, P. G. in Chem. Phys. Lett., 1997, 267, 215--220, doi
-[[https://www.sciencedirect.com/science/article/pii/S0009261497001000?via%3Dihub][10.1016/S0009-2614(97)00100-0]]. b) "Novel tools for visualizing and
-exploring intermolecular interactions in molecular crystals",
-McKinnon, J. J.; Spackman, M. A.; Mitchell, A. S. in Acta Cryst. B,
-2004, 60, 627-- 668, doi [[http://scripts.iucr.org/cgi-bin/paper?S0108768104020300][10.1107/S0108768104020300]]. c)
+[fn:Hirshfeld_surface] a) "A novel definition of a molecule in a
+crystal", Spackman, M. A.; Byrom, P. G. in Chem. Phys. Lett., 1997,
+267, 215--220, doi: [[https://www.sciencedirect.com/science/article/pii/S0009261497001000?via%3Dihub][10.1016/S0009-2614(97)00100-0]]. b) "Novel tools for
+visualizing and exploring intermolecular interactions in molecular
+crystals", McKinnon, J. J.; Spackman, M. A.; Mitchell, A. S. in Acta
+Cryst. B, 2004, 60, 627-- 668, doi: [[http://scripts.iucr.org/cgi-bin/paper?S0108768104020300][10.1107/S0108768104020300]]. c)
 http://130.95.176.70/wiki/index.php/The_Hirshfeld_Surface
 
-[fn:1] http://crystalexplorer.scb.uwa.edu.au/
+[fn:CrystalExplorer] CrystalExplorer is distributed by the University
+of Western Australia at http://crystalexplorer.scb.uwa.edu.au/.
 
-# END
+[fn:2Dfingerprint] "Fingerprinting Intermolecular Interactions in
+Molecular Crystals", Spackman, M. A.; McKinnon, J. J. in CrystEngComm,
+2002, 4, 378--392, doi: [[https://pubs.rsc.org/en/content/articlelanding/2002/ce/b203191b#!divAbstract][10.1039/B203191B]].
+
+[fn:Carter_2017] "Difference Hirshfeld fingerprint plots: a tool for
+studying polymorphs." Carter, D. J.; Raiteri, P.; Barnard, K. R.;
+Gielink, R.; Mocerino, M.; Skelton, B. W.; Vaughan, J. G.; Ogden,
+M. I.; Rohl, A. L. in CrystEngComm, 2017, 19, 2207--2215, doi:
+[[https://pubs.rsc.org/en/content/articlelanding/2017/ce/c6ce02535h#!divAbstract][10.1039/c6ce02535h]].
+
+[fn:compare_command] For further documentation about the program
+suite, see https://imagemagick.org/ An instruction in line of =compare
+image_A.png image_B.png difference_A_B.png= tests =image_A.png=
+against =image_B.png= of same file dimension.  It reports identified
+dissimilarities by a red pixel in the newly written file
+=difference_A_B.png=.  For additional information about the image
+comparison, see https://imagemagick.org/script/compare.php.
+
+[fn:arohl_delta_hirshfeld] https://github.com/arohl/Hirshfeld_surfaces_fingerprint
+
+[fn:WinPython] For further documentation, see
+https://winpython.github.io/. This highly flexible approach for
+"Python on the go" for Windows does not require an installation.  It
+already includes the two non-standard modules NumPy and Matplotlib
+mentioned and hence allows /both/ the computation along the
+"Python-only" path /and/ the visualization of the results as =.png=
+and =.pdf=.
+
+[fn:replit] Entry page at https://repl.it/.
+
+[fn:gnuplot] For further documentation, see http://gnuplot.info/.
+
+[fn:matplotlib] For further documentation, see https://matplotlib.org/.
+
+[fn:python] See, for example, https://www.python.org/.
+
+[fn:pypy] For further information, see https://www.pypy.org/.
+
+[fn:gcc] For further information, see https://gcc.gnu.org/.
+
+[fn:ruby] For further information, see https://www.ruby-lang.org/en/.
+
