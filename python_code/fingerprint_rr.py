@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 # name:   fingerprint_rr.py
 # author: nbehrnd@yahoo.com
 # date:   2020-02-11 (YYYY-MM-DD)
-# edit:   2020-03-04 (YYYY-MM-DD)
+# edit:   2020-04-21 (YYYY-MM-DD)
 #
 """ Normalized 2D Hirshfeld surface fingerprints by 'RR formula''.
 

@@ -1,8 +1,9 @@
+#!/usr/bin/env python
 # name:    hirshfeld_moderator.py
 # author:  nbehrnd@yahoo.com
 # license: GPL version 2
 # date:    2019-11-14 (YYYY-MM-DD)
-# edit:    2020-03-12 (YYYY-MM-DD)
+# edit:    2020-04-21 (YYYY-MM-DD)
 #
 """ This is a moderator script for Python to either moderate a Difference
 Hirshfeld surface analysis introduced with

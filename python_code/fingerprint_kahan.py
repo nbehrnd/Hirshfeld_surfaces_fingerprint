@@ -1,7 +1,8 @@
+#!/usr/bin/env python
 # name:   fingerprint_kahan.py
 # author: nbehrnd@yahoo.com
 # date:   2020-01-30 (YYYY-MM-DD)
-# edit:   2020-03-04 (YYYY-MM-DD)
+# edit:   2020-04-21 (YYYY-MM-DD)
 #
 """ Normalized 2D Hirshfeld surface fingerprints by Kahan formula.
 
