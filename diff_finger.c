@@ -3,7 +3,7 @@
 **          Andrew Rohl (a.rohl@curtin.edu.au),
 **          Norwid Behrnd (nbehrnd@yahoo.com)
 ** license: GPLv2 or (at your option) any later
-** edit:    2019-11-08 (YYYY-MM-DD)
+** edit:    2022-10-10 (YYYY-MM-DD)
 **
 ** This C program was developed in the Computational Materials Science
 ** group at Curtin University (Australia) to extend the analysis of
@@ -100,7 +100,7 @@ int main (int argc, char *argv[]) {
     }
     else if (args_assigned1 == 3) { /* have x, y, z triplet from file 1 */
       if (args_assigned2 == 3) { /* and triplet in file 2 */
-        printf("%f %f %f\n", x1, y1, z1-z2);
+        printf("%f %f %9.6f\n", x1, y1, z1-z2);
       }
       else {
         printf("Invalid line in %s: %s", argv[2], line_file2);
