@@ -100,7 +100,7 @@ int main (int argc, char *argv[]) {
     }
     else if (args_assigned1 == 3) { /* have x, y, z triplet from file 1 */
       if (args_assigned2 == 3) { /* and triplet in file 2 */
-        printf("%f %f %9.6f\n", x1, y1, z1-z2);
+        printf("%4.2f %4.2f %9.6f\n", x1, y1, z1-z2);
       }
       else {
         printf("Invalid line in %s: %s", argv[2], line_file2);
