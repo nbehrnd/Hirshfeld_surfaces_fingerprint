@@ -270,7 +270,7 @@ program fingerprint
 !      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
       write(123,'(2F5.2, F15.12)')xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
     enddo
-    write(123,*)
+!    write(123,*)  ! Visualizations by gnuplot don't require this separator.
   enddo
   close(123)
  
