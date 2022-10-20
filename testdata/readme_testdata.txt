@@ -1,5 +1,5 @@
 # name: readme_testdata.txt
-# edit: 2019-11-05 (YYYY-MM-DD)
+# edit: [2022-10-10 Mon]
 
 This folder contains 'typical data' to work with the scripts provided
 in this repository.  Both crystallographic model data, BZAMID01.cif
@@ -21,13 +21,7 @@ a half with Imagemagick's mogrify
 
 mogrify -scale 1836 example.png
 
-File compare_BZAMID01_11.png is the result of comparing gnuplot's scaled
-.png with Imagemagick, i.e.
-
-compare BZAMID01.png BZAMID11.png compare_BZAMID01_BZAMID11.png
-
-which (currently) works for compare only for RGB .png, excluding the RGBa
-type maps with alpha (transparency) channel and 'conditional plotting'.
+for BZAMID01.zip and BZAMID11.zip
 
 md5sums for files in this folder, excluding this readme:
 
@@ -35,6 +29,5 @@ b6b814e169cb6765ced480af51479b88  BZAMID01.cif
 6d505724651cf3d6294c6fcbe4042c40  BZAMID01.zip
 3f1a9955894f8454e7aa8f87b553630b  BZAMID11.cif
 23023068cccd74e3dca88f384c8a6c12  BZAMID11.zip
-1b4415f25a55445df4b80fbdeef7943e  difference_BZAMID01_BZAMID11.zip
-
+5ae3c09f231207e74d530642412ace5b  difference_BZAMID01_BZAMID11.zip
 END
