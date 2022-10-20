@@ -3,7 +3,7 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    2019-11-21 (YYYY-MM-DD)
+! edit:    [2022-10-20 Thu]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
@@ -267,7 +267,8 @@ program fingerprint
   dist=100.*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
-      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
+!      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
+      write(123,'(2F5.2, F15.12)')xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
     enddo
     write(123,*)
   enddo
