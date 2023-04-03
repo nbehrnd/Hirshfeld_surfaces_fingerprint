@@ -144,7 +144,9 @@ program fingerprint
 ! Reading the second command line argument - fingerprint output filename
   call getarg(3,outfile)
   write(*,'(a,a)')"Opening output file       :: ",trim(outfile)
-  open(123,file=outfile,status='unknown',form='formatted')
+  !open(123,file=outfile,status='unknown',form='formatted')
+  open(newunit=outputunit, file=outfile, status="unknown", form="formatted", &
+    action="write")
 
 ! Reading the input file
 ! The Hirshfeld surface is constructed by a collection of edges-sharing triangles
@@ -288,11 +290,11 @@ program fingerprint
   do idi=1,nbin
     do ide=1,nbin
 !      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
-      write(123,'(2F5.2, F15.12)')xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
+      write(outputunit,'(2F5.2, F15.12)')xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
     enddo
 !    write(123,*)  ! Visualizations by gnuplot don't require this separator.
   enddo
-  close(123)
+  close(outputunit)
 
   stop
 100 write(0,*)"Error in reading the data file"
