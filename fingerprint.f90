@@ -114,23 +114,25 @@ program fingerprint
 
 ! Reading the type of range for the fingerprint map
   call getarg(2,lrange)
-  if (lrange=="standard") then
+
+  select case(lrange)
+  case("standard")
     xmin=0.4_dp
     xmax=2.6_dp
     write(*,'(a)')"Fingerprint map range     :: standard"
-  elseif (lrange=="translated") then
+  case("translated")
     xmin=0.8_dp
     xmax=3.0_dp
     write(*,'(a)')"Fingerprint map range     :: translated"
-  elseif (lrange=="extended") then
+  case("extended")
     xmin=0.4_dp
     xmax=3.0_dp
     write(*,'(a)')"Fingerprint map range     :: extended"
-  else
+  case default
     write(0,'(a)')"Invalid fingerprint map range type"
     write(0,'(a)')"Choose from standard, translated or extended"
     stop
-  endif
+  end select
   nbin=int((xmax-xmin)/dx)+1
 
 ! Reading the second command line argument - fingerprint output filename
