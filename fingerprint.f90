@@ -112,7 +112,11 @@ program fingerprint
 
 ! Reading the type of range for the fingerprint map
   call getarg(2,lrange)
-  if (lrange=="translated") then
+  if (lrange=="standard") then
+    xmin=0.4d0
+    xmax=2.6d0
+    write(*,'(a)')"Fingerprint map range     :: standard"
+  elseif (lrange=="translated") then
     xmin=0.8d0
     xmax=3.0d0
     write(*,'(a)')"Fingerprint map range     :: translated"
@@ -120,10 +124,6 @@ program fingerprint
     xmin=0.4d0
     xmax=3.0d0
     write(*,'(a)')"Fingerprint map range     :: extended"
-  elseif (lrange=="standard") then
-    xmin=0.4d0
-    xmax=2.6d0
-    write(*,'(a)')"Fingerprint map range     :: standard"
   else
     write(0,'(a)')"Invalid fingerprint map range type"
     write(0,'(a)')"Choose from standard, translated or extended"
