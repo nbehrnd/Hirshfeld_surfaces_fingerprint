@@ -94,6 +94,9 @@ program fingerprint
 
   logical :: lflag
 
+! file processing
+  integer(kind=ip) :: inputunit, outputunit, error
+
 ! Parameters for the definition of the grid as in Crystal Explorer
   dx=0.01_dp
 
@@ -110,7 +113,10 @@ program fingerprint
 ! Reading the first command line argument - cxs input filename
   call getarg(1,inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
-  open(11,file=inpfile,status='old',form='formatted')
+!  open(11,file=inpfile,status='old',form='formatted')
+  open(newunit=inputunit, file=inpfile, status="old", form="formatted", &
+      action="read", iostat=error)
+      if (error /= 0) stop "Indicated input file is not accessible."
 
 ! Reading the type of range for the fingerprint map
   call getarg(2,lrange)
@@ -148,7 +154,7 @@ program fingerprint
 ! - the distance of each vertex to the closest internal atom (d_i)
 ! - the distance of each vertex to the closest external atom (d_e)
   do
-    read(11,'(a100)',end=100,err=100)line
+    read(inputunit,'(a100)',end=100,err=100)line
     if (len_trim(line)==0) cycle
     read(line,*)chr
     if (chr/="begin") cycle
@@ -160,7 +166,7 @@ program fingerprint
       write(*,'(a,i10  )')"Number of vertices points :: ",nvert
       allocate(vert(3,nvert))
       do i=1,nvert
-        read(11,*)vert(1:3,i)
+        read(inputunit,*)vert(1:3,i)
       enddo
     endif
 
@@ -170,7 +176,7 @@ program fingerprint
       write(*,'(a,i10  )')"Number of indices points  :: ",nidx
       allocate(idx(3,nidx))
       do i=1,nidx
-        read(11,*)itmp(1:3)
+        read(inputunit,*)itmp(1:3)
         idx(1:3,i)=itmp(1:3)+1
       enddo
 
@@ -183,7 +189,7 @@ program fingerprint
       write(*,'(a,i10  )')"Number of d_i points      :: ",nd
       allocate(di(nd))
       do i=1,nd
-        read(11,*)di(i)
+        read(inputunit,*)di(i)
       enddo
     endif
 
@@ -194,13 +200,13 @@ program fingerprint
       write(*,'(a,i10  )')"Number of d_e points      :: ",nd
       allocate(de(nd))
       do i=1,nd
-        read(11,*)de(i)
+        read(inputunit,*)de(i)
       enddo
       exit
     endif
 
   enddo
-  close(11)
+  close(inputunit)
 
 ! Allocate the fingerprint array
   allocate(dist(nbin,nbin))
