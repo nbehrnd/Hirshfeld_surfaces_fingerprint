@@ -64,28 +64,30 @@
 ! #--------------------------#
 !
 program fingerprint
+  use iso_fortran_env, only : ip => int32, dp => real64
+
   implicit none
 ! vertices
-  integer :: nvert
-  real*8, allocatable, dimension(:,:) :: vert
+  integer(kind=ip) :: nvert
+  real(kind=dp), allocatable, dimension(:,:) :: vert
 
 ! indices
-  integer :: nidx, itmp(3)
-  integer, allocatable, dimension(:,:) :: idx
+  integer(kind=ip) :: nidx, itmp(3)
+  integer(kind=ip), allocatable, dimension(:,:) :: idx
 
 ! d_i and d_e
-  integer :: nd
-  real*8 :: ddi, dde
-  integer :: idi, ide
-  real*8, allocatable, dimension(:) :: di, de
+  integer(kind=ip) :: nd
+  real(kind=dp) :: ddi, dde
+  integer(kind=ip) :: idi, ide
+  real(kind=dp), allocatable, dimension(:) :: di, de
 
-  integer :: i, j
+  integer(kind=ip) :: i, j
 
 ! distribution
-  integer :: nbin
-  real*8 :: xmin, xmax, dx, area, rtmp
-  real*8 :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
-  real*8, allocatable, dimension(:,:) :: dist
+  integer(kind=ip) :: nbin
+  real(kind=dp) :: xmin, xmax, dx, area, rtmp
+  real(kind=dp) :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
+  real(kind=dp), allocatable, dimension(:,:) :: dist
 
   character(len=5) :: chr, field
   character(len=100) :: inpfile, outfile, line , lrange
@@ -93,7 +95,7 @@ program fingerprint
   logical :: lflag
 
 ! Parameters for the definition of the grid as in Crystal Explorer
-  dx=0.01d0
+  dx=0.01_dp
 
 ! a minimal check and reminder for the CLI
   if (command_argument_count() /= 3) then
@@ -113,16 +115,16 @@ program fingerprint
 ! Reading the type of range for the fingerprint map
   call getarg(2,lrange)
   if (lrange=="standard") then
-    xmin=0.4d0
-    xmax=2.6d0
+    xmin=0.4_dp
+    xmax=2.6_dp
     write(*,'(a)')"Fingerprint map range     :: standard"
   elseif (lrange=="translated") then
-    xmin=0.8d0
-    xmax=3.0d0
+    xmin=0.8_dp
+    xmax=3.0_dp
     write(*,'(a)')"Fingerprint map range     :: translated"
   elseif (lrange=="extended") then
-    xmin=0.4d0
-    xmax=3.0d0
+    xmin=0.4_dp
+    xmax=3.0_dp
     write(*,'(a)')"Fingerprint map range     :: extended"
   else
     write(0,'(a)')"Invalid fingerprint map range type"
@@ -200,7 +202,7 @@ program fingerprint
 
 ! Allocate the fingerprint array
   allocate(dist(nbin,nbin))
-  dist=0.
+  dist=0.0_dp
 
   write(*,'(a,f10.5)')"xmin                      :: ",xmin
   write(*,'(a,f10.5)')"xmax                      :: ",xmax
@@ -232,14 +234,14 @@ program fingerprint
     endif
 
 ! Calculating the d_i for each triangle as the average of the d_i of the vertices
-    ddi=0.
+    ddi=0.0_dp
     do j=1,3
       ddi=ddi+di(idx(j,i))
     enddo
     ddi=ddi/3.
 
 ! Calculating the d_e for each triangle as the average of the d_i of the vertices
-    dde=0
+    dde=0.0_dp
     do j=1,3
       dde=dde+de(idx(j,i))
     enddo
