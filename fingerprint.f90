@@ -113,7 +113,6 @@ program fingerprint
 ! Reading the first command line argument - cxs input filename
   call getarg(1,inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
-!  open(11,file=inpfile,status='old',form='formatted')
   open(newunit=inputunit, file=inpfile, status="old", form="formatted", &
       action="read", iostat=error)
       if (error /= 0) stop "Indicated input file is not accessible."
@@ -144,7 +143,6 @@ program fingerprint
 ! Reading the second command line argument - fingerprint output filename
   call getarg(3,outfile)
   write(*,'(a,a)')"Opening output file       :: ",trim(outfile)
-  !open(123,file=outfile,status='unknown',form='formatted')
   open(newunit=outputunit, file=outfile, status="unknown", form="formatted", &
     action="write")
 
@@ -181,7 +179,6 @@ program fingerprint
         read(inputunit,*)itmp(1:3)
         idx(1:3,i)=itmp(1:3)+1
       enddo
-
     endif
 
 ! d_i
@@ -289,10 +286,9 @@ program fingerprint
   dist=100.*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
-!      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
-      write(outputunit,'(2F5.2, F15.12)')xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
+      write(outputunit,'(2(F4.2, x), F14.12)') xmin+dx*(idi-1), &
+        xmin+dx*(ide-1), dist(idi,ide)
     enddo
-!    write(123,*)  ! Visualizations by gnuplot don't require this separator.
   enddo
   close(outputunit)
 
