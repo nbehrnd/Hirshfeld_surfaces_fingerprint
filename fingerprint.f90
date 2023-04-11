@@ -3,27 +3,27 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    2019-11-21 (YYYY-MM-DD)
+! edit:    [2023-04-03 Mon]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
 ! of Hirshfeld surfaces produced by Crystal Explorer
 ! http://crystalexplorer.scb.uwa.edu.au/index.html
-! 
+!
 ! This program is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU General Public License
 ! as published by the Free Software Foundation; either version 2
 ! of the License, or (at your option) any later version.
-! 
+!
 ! This program is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU General Public License for more details.
-! 
+!
 ! The GNU GPL can also be found at http://www.gnu.org
 !
 ! Compilation instructions:
-! The program can be compiled with gfortran 
+! The program can be compiled with gfortran
 ! gfortran fingerprint.f90 -o fingerprint.x
 !
 ! or the intel fortran compiler
@@ -32,11 +32,11 @@
 ! Usage instructions:
 ! ./fingerprint.x  input.cxs [standard | translated | extended] output.dat
 !
-! input.cxs contains the Hirshfeld surfaces generated using the 
-! CrystalExplorer code at very high resolution by unchecking 
-! the Remove working files option with the Expert plane 
+! input.cxs contains the Hirshfeld surfaces generated using the
+! CrystalExplorer code at very high resolution by unchecking
+! the Remove working files option with the Expert plane
 ! of the Preferences dialog box
-! 
+!
 ! output.dat contains the 2D fingerprint map that can be plotted
 ! using for example the gnuplot program (a sample plotting script
 ! is provided below)
@@ -44,7 +44,7 @@
 ! ###--- gnuplot script ---###
 ! set term png size 4096,4096 font "Arial,64" enha lw 10
 ! set output 'output.png'
-! set pm3d map 
+! set pm3d map
 ! set palette defined (0  1.0 1.0 1.0, \
 !                    0.00001  0.0 0.0 1.0, \
 !                    1  0.0 0.5 1.0, \
@@ -54,77 +54,97 @@
 !                    5  1.0 0.5 0.0, \
 !                    6  1.0 0.0 0.0 )
 ! set grid lw 0.25
-! set size square 
+! set size square
 ! set xtics format "%3.1f"
 ! set ytics format "%3.1f"
-! set xtics 0.4,0.2 
-! set ytics 0.4,0.2 
+! set xtics 0.4,0.2
+! set ytics 0.4,0.2
 ! set cbrange [0:0.08]
 ! sp[0.4:2.6][0.4:2.6][:]'output.dat' u 1:2:3  w p pt 5 lc palette z
 ! #--------------------------#
 !
 program fingerprint
+  use iso_fortran_env, only : ip => int32, dp => real64
+
   implicit none
 ! vertices
-  integer :: nvert
-  real*8, allocatable, dimension(:,:) :: vert 
+  integer(kind=ip) :: nvert
+  real(kind=dp), allocatable, dimension(:,:) :: vert
 
 ! indices
-  integer :: nidx, itmp(3)
-  integer, allocatable, dimension(:,:) :: idx
+  integer(kind=ip) :: nidx, itmp(3)
+  integer(kind=ip), allocatable, dimension(:,:) :: idx
 
 ! d_i and d_e
-  integer :: nd
-  real*8 :: ddi, dde
-  integer :: idi, ide
-  real*8, allocatable, dimension(:) :: di, de
+  integer(kind=ip) :: nd
+  real(kind=dp) :: ddi, dde
+  integer(kind=ip) :: idi, ide
+  real(kind=dp), allocatable, dimension(:) :: di, de
 
-  integer :: i, j
+  integer(kind=ip) :: i, j
 
 ! distribution
-  integer :: nbin
-  real*8 :: xmin, xmax, dx, area, rtmp
-  real*8 :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
-  real*8, allocatable, dimension(:,:) :: dist
+  integer(kind=ip) :: nbin
+  real(kind=dp) :: xmin, xmax, dx, area, rtmp
+  real(kind=dp) :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
+  real(kind=dp), allocatable, dimension(:,:) :: dist
 
   character(len=5) :: chr, field
   character(len=100) :: inpfile, outfile, line , lrange
 
   logical :: lflag
 
+! file processing
+  integer(kind=ip) :: inputunit, outputunit, error
+
 ! Parameters for the definition of the grid as in Crystal Explorer
-  dx=0.01d0
+  dx=0.01_dp
+
+! a minimal check and reminder for the CLI
+  if (command_argument_count() /= 3) then
+    print *, "After compilation of an executable `exe`, the anticipated input is"
+    print *, ""
+    print *, "    ./exe input.cxs [standard | translated | extended] output.dat"
+    print *, ""
+    print *, "to cover de and di in a range of [0.4-2.6], [0.8-3.0], or [0.4-3.0] Angstrom."
+    stop
+  end if
 
 ! Reading the first command line argument - cxs input filename
   call getarg(1,inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
-  open(11,file=inpfile,status='old',form='formatted')
+  open(newunit=inputunit, file=inpfile, status="old", form="formatted", &
+      action="read", iostat=error)
+      if (error /= 0) stop "Indicated input file is not accessible."
 
 ! Reading the type of range for the fingerprint map
   call getarg(2,lrange)
-  if (lrange=="translated") then
-    xmin=0.8d0
-    xmax=3.0d0
-    write(*,'(a)')"Fingerprint map range     :: translated"
-  elseif (lrange=="extended") then
-    xmin=0.4d0
-    xmax=3.0d0
-    write(*,'(a)')"Fingerprint map range     :: extended"
-  elseif (lrange=="standard") then
-    xmin=0.4d0
-    xmax=2.6d0
+
+  select case(lrange)
+  case("standard")
+    xmin=0.4_dp
+    xmax=2.6_dp
     write(*,'(a)')"Fingerprint map range     :: standard"
-  else
+  case("translated")
+    xmin=0.8_dp
+    xmax=3.0_dp
+    write(*,'(a)')"Fingerprint map range     :: translated"
+  case("extended")
+    xmin=0.4_dp
+    xmax=3.0_dp
+    write(*,'(a)')"Fingerprint map range     :: extended"
+  case default
     write(0,'(a)')"Invalid fingerprint map range type"
     write(0,'(a)')"Choose from standard, translated or extended"
     stop
-  endif
+  end select
   nbin=int((xmax-xmin)/dx)+1
 
 ! Reading the second command line argument - fingerprint output filename
   call getarg(3,outfile)
   write(*,'(a,a)')"Opening output file       :: ",trim(outfile)
-  open(123,file=outfile,status='unknown',form='formatted')
+  open(newunit=outputunit, file=outfile, status="unknown", form="formatted", &
+    action="write")
 
 ! Reading the input file
 ! The Hirshfeld surface is constructed by a collection of edges-sharing triangles
@@ -134,7 +154,7 @@ program fingerprint
 ! - the distance of each vertex to the closest internal atom (d_i)
 ! - the distance of each vertex to the closest external atom (d_e)
   do
-    read(11,'(a100)',end=100,err=100)line
+    read(inputunit,'(a100)',end=100,err=100)line
     if (len_trim(line)==0) cycle
     read(line,*)chr
     if (chr/="begin") cycle
@@ -146,7 +166,7 @@ program fingerprint
       write(*,'(a,i10  )')"Number of vertices points :: ",nvert
       allocate(vert(3,nvert))
       do i=1,nvert
-        read(11,*)vert(1:3,i)
+        read(inputunit,*)vert(1:3,i)
       enddo
     endif
 
@@ -156,10 +176,9 @@ program fingerprint
       write(*,'(a,i10  )')"Number of indices points  :: ",nidx
       allocate(idx(3,nidx))
       do i=1,nidx
-        read(11,*)itmp(1:3)
+        read(inputunit,*)itmp(1:3)
         idx(1:3,i)=itmp(1:3)+1
       enddo
- 
     endif
 
 ! d_i
@@ -169,7 +188,7 @@ program fingerprint
       write(*,'(a,i10  )')"Number of d_i points      :: ",nd
       allocate(di(nd))
       do i=1,nd
-        read(11,*)di(i)
+        read(inputunit,*)di(i)
       enddo
     endif
 
@@ -180,17 +199,17 @@ program fingerprint
       write(*,'(a,i10  )')"Number of d_e points      :: ",nd
       allocate(de(nd))
       do i=1,nd
-        read(11,*)de(i)
+        read(inputunit,*)de(i)
       enddo
       exit
     endif
 
   enddo
-  close(11)
+  close(inputunit)
 
 ! Allocate the fingerprint array
   allocate(dist(nbin,nbin))
-  dist=0.
+  dist=0.0_dp
 
   write(*,'(a,f10.5)')"xmin                      :: ",xmin
   write(*,'(a,f10.5)')"xmax                      :: ",xmax
@@ -222,14 +241,14 @@ program fingerprint
     endif
 
 ! Calculating the d_i for each triangle as the average of the d_i of the vertices
-    ddi=0.
+    ddi=0.0_dp
     do j=1,3
       ddi=ddi+di(idx(j,i))
     enddo
     ddi=ddi/3.
 
 ! Calculating the d_e for each triangle as the average of the d_i of the vertices
-    dde=0
+    dde=0.0_dp
     do j=1,3
       dde=dde+de(idx(j,i))
     enddo
@@ -261,20 +280,20 @@ program fingerprint
 
   enddo
   write(*,'(a,f10.5)')"Total surface area        :: ",sum(dist)
-  write(*,*) " " ! place holder between multiple data sets 
+  write(*,*) " " ! place holder between multiple data sets
 
 ! Writing the fingerprint map to a file
   dist=100.*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
-      write(123,*)xmin+dx*(idi-1),xmin+dx*(ide-1),dist(idi,ide)
+      write(outputunit,'(2(F4.2, x), F14.12)') xmin+dx*(idi-1), &
+        xmin+dx*(ide-1), dist(idi,ide)
     enddo
-    write(123,*)
   enddo
-  close(123)
- 
+  close(outputunit)
+
   stop
 100 write(0,*)"Error in reading the data file"
 
- stop
+  stop
 end program fingerprint
