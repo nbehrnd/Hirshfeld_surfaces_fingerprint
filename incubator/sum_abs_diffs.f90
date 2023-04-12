@@ -2,7 +2,7 @@
 ! author:  nbehrnd@yahoo.com
 ! license: GPLv2, 2023
 ! date:    [2023-04-04 Tue]
-! edit:
+! edit:    [2023-04-12 Wed]
 !
 ! Within the line of thought of a Hirschfeld difference map analysis for which
 ! the principal computations are provided by Fortran, the compiled executable of
@@ -35,7 +35,7 @@ program diff_number
       difference_number = difference_number + abs(z)
 
       if (error /= 0) then  ! reaching the end of the file is a plausible cause
-         write (*, '(A, 1x, F8.4)') trim(filename), difference_number
+         write (*, '(A, 1x, F9.5)') trim(filename), difference_number
          stop
       end if
    end do
