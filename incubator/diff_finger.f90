@@ -49,7 +49,7 @@ program diff_finger_f90
    array_c(3, :) = array_a(3, :) - array_b(3, :)
 
    do i = 1, length_a
-      write (*, "(2(F4.2, x), F15.12)") array_c(:, i)
+      write (*, "(2(F4.2, x), F9.6)") array_c(:, i)
    end do
 
 contains
