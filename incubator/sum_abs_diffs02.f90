@@ -1,7 +1,7 @@
 ! name:    sum_abs_diffs02.f90
 ! author:  nbehrnd@yahoo.com
 ! license: GPLv2, 2023
-! date:    [2023-04-12 Wed]
+! date:    [2023-04-20 Thu]
 ! edit:
 !
 ! Within the line of thought of a Hirschfeld difference map analysis for which
@@ -36,7 +36,7 @@ program diff_number02
 
    read (fileunit, '(2(F4.2, 1x), F9.6)', iostat=error) array_data
 
-   write (*, '(A, x, F9.5)') trim(filename), sum(abs(array_data(3, :)))
+   write (*, '(A, 1x, F9.5)') trim(filename), sum(abs(array_data(3, :)))
    close (fileunit)
 
 end program diff_number02
