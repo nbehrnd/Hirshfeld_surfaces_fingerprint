@@ -109,14 +109,14 @@ program fingerprint
   end if
 
 ! Reading the first command line argument - cxs input filename
-  call getarg(1,inpfile)
+  call get_command_argument(1, inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
   open(newunit=inputunit, file=inpfile, status="old", form="formatted", &
       action="read", iostat=error)
       if (error /= 0) stop "Indicated input file is not accessible."
 
 ! Reading the type of range for the fingerprint map
-  call getarg(2,lrange)
+  call get_command_argument(2, lrange)
 
   select case(lrange)
   case("standard")
@@ -139,7 +139,7 @@ program fingerprint
   nbin=int((xmax-xmin)/dx)+1
 
 ! Reading the second command line argument - fingerprint output filename
-  call getarg(3,outfile)
+  call get_command_argument(3, outfile)
   write(*,'(a,a)')"Opening output file       :: ",trim(outfile)
   open(newunit=outputunit, file=outfile, status="unknown", form="formatted", &
     action="write")
