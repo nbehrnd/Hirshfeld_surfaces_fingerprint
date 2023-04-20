@@ -3,7 +3,7 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    [2023-04-03 Mon]
+! edit:    [2023-04-20 Thu]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
@@ -256,8 +256,8 @@ program fingerprint
 
 ! Calculating the 2D fingerprint of the surface
 ! indices of the bins
-    idi = (ddi-xmin) / dx + 1
-    ide = (dde-xmin) / dx + 1
+    idi = int((ddi-xmin) / dx) + 1
+    ide = int((dde-xmin) / dx) + 1
 
     if (idi>nbin) cycle
     if (ide>nbin) cycle
