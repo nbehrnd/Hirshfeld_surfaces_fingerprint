@@ -284,7 +284,7 @@ program fingerprint
   dist=100.*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
-      write(outputunit,'(2(F4.2, x), F14.12)') xmin+dx*(idi-1), &
+      write(outputunit,'(2(F4.2, 1x), F14.12)') xmin+dx*(idi-1), &
         xmin+dx*(ide-1), dist(idi,ide)
     enddo
   enddo
