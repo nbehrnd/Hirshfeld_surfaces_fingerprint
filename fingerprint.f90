@@ -85,14 +85,12 @@ program fingerprint
 
 ! distribution
   integer(kind=ip) :: nbin
-  real(kind=dp) :: xmin, xmax, dx, area, rtmp
+  real(kind=dp) :: xmin, xmax, dx, area
   real(kind=dp) :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
   real(kind=dp), allocatable, dimension(:,:) :: dist
 
   character(len=5) :: chr, field
   character(len=100) :: inpfile, outfile, line , lrange
-
-  logical :: lflag
 
 ! file processing
   integer(kind=ip) :: inputunit, outputunit, error
