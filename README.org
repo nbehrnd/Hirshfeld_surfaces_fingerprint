@@ -2,9 +2,10 @@
 # name:    README.org
 # author:  Norwid Behrnd
 # license: GPLv2
-# edit:    2020-04-20 (YYYY-MM-DD)
+# date:    [2019-11-02 Sat]
+# edit:    [2023-04-25 Tue]
 
-#+OPTIONS: toc:nil
+#+OPTIONS: toc:nil 
 
 #+LATEX_CLASS:    koma-article  
 #+LATEX_HEADER:   \usepackage[a4paper]{geometry}
@@ -18,14 +19,14 @@
 
 * Background
 
-  The electronic interaction of a molecule with its neighbors in the
-  crystalline state may be described by the Hirshfeld
-  surface,[fn:Hirshfeld_surface] accessible by
-  CrystalExplorer.[fn:CrystalExplorer] This 3D surface may be
+  The electronic interaction of a molecule with its neighbors in the crystalline
+  state may be described by the Hirshfeld
+  surface[fn:SpackmanM_1997]^{,} [fn:McKinnonJ_2004]^{,} [fn:HirshfeldSurface]
+  accessible by CrystalExplorer.[fn:CrystalExplorer] This 3D surface may be
   projected as a normalized 2D fingerprint map.[fn:2Dfingerprint]
 
   To identify similarities and differences among crystallographic
-  models with greater ease, Carter /et al./[fn:Carter_2017] suggest
+  models with greater ease, Carter[fn:Carter_2017] suggest
   the inspection of /difference maps/ of these normalized 2D
   fingerprint maps.  This extends the qualitative, visual comparison
   of the maps /as images/, e.g. with ImageMagick's =compare=
@@ -223,26 +224,28 @@
   documentation.
 
 
-[fn:Hirshfeld_surface] a) "A novel definition of a molecule in a
-crystal", Spackman, M. A.; Byrom, P. G. in Chem. Phys. Lett., 1997,
-267, 215--220, doi: [[https://www.sciencedirect.com/science/article/pii/S0009261497001000?via%3Dihub][10.1016/S0009-2614(97)00100-0]]. b) "Novel tools for
-visualizing and exploring intermolecular interactions in molecular
-crystals", McKinnon, J. J.; Spackman, M. A.; Mitchell, A. S. in Acta
-Cryst. B, 2004, 60, 627-- 668, doi: [[http://scripts.iucr.org/cgi-bin/paper?S0108768104020300][10.1107/S0108768104020300]]. c)
-http://130.95.176.70/wiki/index.php/The_Hirshfeld_Surface
+[fn:SpackmanM_1997] Spackman, M. A.; Byrom, P. G. A Novel Definition of a
+Molecule in a Crystal. /Chem. Phys. Lett./ *1997*, /267/, 215–220.
+[[https://doi.org/10.1016/S0009-2614(97)00100-0][doi 10.1016/S0009-2614(97)00100-0]].
+
+[fn:McKinnonJ_2004] McKinnon, J. J.; Spackman, M. A.; Mitchell, A. S. Novel
+Tools for Visualizing and Exploring Intermolecular Interactions in Molecular
+Crystals. /Acta Cryst B Struct Sci/ *2004*, /60/, 627–668.  [[https://doi.org/10.1107/S0108768104020300][doi
+10.1107/S0108768104020300]]
+
+[fn:HirshfeldSurface] [[https://crystalexplorer.net/docs/manual/isosurfaces/hirshfeld-surface/][/The Hirshfeld Surface/]] at CrystalExplorer's project page.
 
 [fn:CrystalExplorer] CrystalExplorer is distributed by the University
-of Western Australia at http://crystalexplorer.scb.uwa.edu.au/.
+of Western Australia at https://crystalexplorer.net/.
 
-[fn:2Dfingerprint] "Fingerprinting Intermolecular Interactions in
-Molecular Crystals", Spackman, M. A.; McKinnon, J. J. in CrystEngComm,
-2002, 4, 378--392, doi: [[https://pubs.rsc.org/en/content/articlelanding/2002/ce/b203191b#!divAbstract][10.1039/B203191B]].
+[fn:2Dfingerprint] Spackman, M. A.; McKinnon, J. J. Fingerprinting
+Intermolecular Interactions in Molecular Crystals. /CrystEngComm/ **2002**, /4/,
+378–392. [[https://doi.org/10.1039/B203191B][doi 10.1039/B203191B]]
 
-[fn:Carter_2017] "Difference Hirshfeld fingerprint plots: a tool for
-studying polymorphs." Carter, D. J.; Raiteri, P.; Barnard, K. R.;
-Gielink, R.; Mocerino, M.; Skelton, B. W.; Vaughan, J. G.; Ogden,
-M. I.; Rohl, A. L. in CrystEngComm, 2017, 19, 2207--2215, doi:
-[[https://pubs.rsc.org/en/content/articlelanding/2017/ce/c6ce02535h#!divAbstract][10.1039/c6ce02535h]].
+[fn:Carter_2017] Carter, D. J.; Raiteri, P.; Barnard, K. R.; Gielink, R.;
+Mocerino, M.; Skelton, B. W.; Vaughan, J. G.; Ogden, M. I.; Rohl,
+A. L. Difference Hirshfeld Fingerprint Plots: A Tool for Studying
+Polymorphs. /CrystEngComm/ *2017*, /19/, 2207–2215.  [[https://doi.org/10.1039/C6CE02535H][doi 10.1039/C6CE02535H]]
 
 [fn:compare_command] For further documentation about the program
 suite, see https://imagemagick.org/ An instruction in line of =compare
