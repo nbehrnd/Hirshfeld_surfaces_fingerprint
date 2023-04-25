@@ -3,7 +3,7 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    [2023-04-03 Mon]
+! edit:    [2023-04-20 Thu]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
@@ -85,14 +85,12 @@ program fingerprint
 
 ! distribution
   integer(kind=ip) :: nbin
-  real(kind=dp) :: xmin, xmax, dx, area, rtmp
+  real(kind=dp) :: xmin, xmax, dx, area
   real(kind=dp) :: v1(3), v2(3), v3(3), cost, sint, l1, l2, l3
   real(kind=dp), allocatable, dimension(:,:) :: dist
 
   character(len=5) :: chr, field
   character(len=100) :: inpfile, outfile, line , lrange
-
-  logical :: lflag
 
 ! file processing
   integer(kind=ip) :: inputunit, outputunit, error
@@ -111,14 +109,14 @@ program fingerprint
   end if
 
 ! Reading the first command line argument - cxs input filename
-  call getarg(1,inpfile)
+  call get_command_argument(1, inpfile)
   write(*,'(a,a)')"Opening input file        :: ",trim(inpfile)
   open(newunit=inputunit, file=inpfile, status="old", form="formatted", &
       action="read", iostat=error)
       if (error /= 0) stop "Indicated input file is not accessible."
 
 ! Reading the type of range for the fingerprint map
-  call getarg(2,lrange)
+  call get_command_argument(2, lrange)
 
   select case(lrange)
   case("standard")
@@ -141,7 +139,7 @@ program fingerprint
   nbin=int((xmax-xmin)/dx)+1
 
 ! Reading the second command line argument - fingerprint output filename
-  call getarg(3,outfile)
+  call get_command_argument(3, outfile)
   write(*,'(a,a)')"Opening output file       :: ",trim(outfile)
   open(newunit=outputunit, file=outfile, status="unknown", form="formatted", &
     action="write")
@@ -256,8 +254,8 @@ program fingerprint
 
 ! Calculating the 2D fingerprint of the surface
 ! indices of the bins
-    idi = (ddi-xmin) / dx + 1
-    ide = (dde-xmin) / dx + 1
+    idi = int((ddi-xmin) / dx) + 1
+    ide = int((dde-xmin) / dx) + 1
 
     if (idi>nbin) cycle
     if (ide>nbin) cycle
@@ -286,7 +284,7 @@ program fingerprint
   dist=100.*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
-      write(outputunit,'(2(F4.2, x), F14.12)') xmin+dx*(idi-1), &
+      write(outputunit,'(2(F4.2, 1x), F14.12)') xmin+dx*(idi-1), &
         xmin+dx*(ide-1), dist(idi,ide)
     enddo
   enddo
