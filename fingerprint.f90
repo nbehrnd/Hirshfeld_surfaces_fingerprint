@@ -3,7 +3,7 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    [2023-04-20 Thu]
+! edit:    [2024-11-18 Mon]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
@@ -227,15 +227,15 @@ program fingerprint
 
 ! Sanity check that the 3 points are non degenerate
     if (abs(l1)<1.e-5 .or. abs(l2)<1.e-5 .or. abs(l3)<1.e-5) then
-      area=0.
+      area=0.0_dp
 ! Calculating the area of each surface triangle
     else
       cost = sum(v1*v2) / l1 / l2
-      sint = 1. - cost**2
-      if (sint>1.) sint=1.
-      if (sint<0.) sint=0.
+      sint = 1.0_dp - cost**2
+      if (sint>1.0_dp) sint=1.0_dp
+      if (sint<0.0_dp) sint=0.0_dp
       sint = sqrt(sint)
-      area = 0.5 * l1 * l2 * sint
+      area = 0.5_dp * l1 * l2 * sint
     endif
 
 ! Calculating the d_i for each triangle as the average of the d_i of the vertices
@@ -243,14 +243,14 @@ program fingerprint
     do j=1,3
       ddi=ddi+di(idx(j,i))
     enddo
-    ddi=ddi/3.
+    ddi=ddi/3.0_dp
 
 ! Calculating the d_e for each triangle as the average of the d_i of the vertices
     dde=0.0_dp
     do j=1,3
       dde=dde+de(idx(j,i))
     enddo
-    dde=dde/3.
+    dde=dde/3.0_dp
 
 ! Calculating the 2D fingerprint of the surface
 ! indices of the bins
@@ -281,7 +281,7 @@ program fingerprint
   write(*,*) " " ! place holder between multiple data sets
 
 ! Writing the fingerprint map to a file
-  dist=100.*dist/sum(dist)
+  dist=100.0_dp*dist/sum(dist)
   do idi=1,nbin
     do ide=1,nbin
       write(outputunit,'(2(F4.2, 1x), F14.12)') xmin+dx*(idi-1), &
