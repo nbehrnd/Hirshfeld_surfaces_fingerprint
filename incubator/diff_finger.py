@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:    2020-01-31 (YYYY-MM-DD)
+# edit:    [2024-12-13 Fri]
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -28,9 +28,10 @@
 
     This script diff_finger.py still is independent to the actions by
     hirshfeld_moderator.py.  It is neither called, nor are its results
-    explicitly used by hirshfeld_moderator.  Except for numpy (1.13.3),
-    all of this script's dependencies are met by the default installation
-    of CPython (version 3.6.9) in Linux Xubuntu 18.04.3 LTS."""
+    explicitly used by hirshfeld_moderator.  This version relies on third
+    party numpy at version 2.1.0 or higher and is known to process with
+    Python 3.12.7 and numpy 2.2.0 (fetched via `requirements.txt` from PyPI)
+    in Linux Debian 13/trixie."""
 
 import fnmatch
 import os
@@ -42,8 +43,9 @@ diff_register = []
 
 # identification of the files to work with:
 for file in os.listdir("."):
-    if fnmatch.fnmatch(file, "*.dat") and \
-            (fnmatch.fnmatch(file, "diff*.dat") is False):
+    if fnmatch.fnmatch(file, "*.dat") and (
+        fnmatch.fnmatch(file, "*diff*.dat") is False
+    ):
 
         diff_register.append(file)
 diff_register.sort()
@@ -53,7 +55,7 @@ while len(diff_register) > 1:
     for entry in diff_register[1:]:
         ref_file = diff_register[0]
         probe_file = entry
-        print("Comparing {} with {}.".format(ref_file, probe_file))
+        print(f"Comparing {ref_file} with {probe_file}.")
 
         # consistency check for de/di
         ref_screen = []
@@ -68,15 +70,14 @@ while len(diff_register) > 1:
                 probe_screen.append(str(line.strip()))
         probe_y_min = str(probe_screen[0].split()[1])[:4]
 
-        if (len(ref_screen) == len(probe_screen)) and (
-                ref_y_min == probe_y_min):
+        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
             pass
         else:
             continue
 
         # branch about the reference file:
         content_ref_file = []
-        with open(ref_file, mode="r") as source_ref:
+        with open(ref_file, mode="r", encoding="utf-8") as source_ref:
             for line in source_ref:
                 trimmed_line = str(line).strip()  # remove line feed
 
@@ -91,11 +92,11 @@ while len(diff_register) > 1:
 
         # convert the list into an array, treat entries as floats
         ref_array = np.array(content_ref_file)
-        ref_array = ref_array.astype(np.float)
+        ref_array = ref_array.astype(float)
 
         # branch about the probe file
         content_probe_file = []
-        with open(probe_file, mode="r") as source_probe:
+        with open(probe_file, mode="r", encoding="utf-8") as source_probe:
             for line2 in source_probe:
                 trimmed_line2 = str(line2).strip()  # remove line feed
 
@@ -110,7 +111,7 @@ while len(diff_register) > 1:
 
         # convert the list into an array, treat entries as floats
         probe_array = np.array(content_probe_file)
-        probe_array = probe_array.astype(np.float)
+        probe_array = probe_array.astype(float)
 
         # work at level of the matrix-like arrays
         # construct an array of the first two columns of the ref_array
@@ -138,33 +139,31 @@ while len(diff_register) > 1:
         # return from array to list level, start a moderated formatting
         result_list = result.tolist()
 
-        output = str("diff_") + str(ref_file)[:-4] + \
-                    str("_") + str(probe_file)
+        output = str("diff_") + str(ref_file)[:-4] + str("_") + str(probe_file)
 
-        with open(output, mode="w") as newfile:
+        with open(output, mode="w", encoding="utf-8") as newfile:
             for result_entry in result_list:
                 to_reformat = str(result_entry).split()
 
-                x_value = str("{:3.2f}".format(
-                    float(str(to_reformat[0])[1:-1])))
-                y_value = str("{:3.2f}".format(
-                    float(str(to_reformat[1])[0:-1])))
-                z_value = str("{:10.8f}".format(
-                    round(float(str(to_reformat[2])[0:-1]), 8)))
+                x_value = str("{:3.2f}".format(float(str(to_reformat[0])[1:-1])))
+                y_value = str("{:3.2f}".format(float(str(to_reformat[1])[0:-1])))
+                z_value = str(
+                    "{:9.6f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
+                )
 
                 # re-insert the blanks met in normalized 2D fingerprints:
-                if float(y_value) == float(ref_y_min):
-                    newfile.write("\n")
+                # if float(y_value) == float(ref_y_min):
+                    # newfile.write("\n")
 
-                retain = str("{} {} {}\n".format(x_value, y_value, z_value))
+                retain = str(f"{x_value} {y_value} {z_value}\n")
                 newfile.write(retain)
 
         # Remove the very first line in the report file (a blank one):
         interim = []
-        with open(output, mode='r') as source:
+        with open(output, mode="r", encoding="utf-8") as source:
             for line in source:
                 interim.append(line)
-        with open(output, mode='w') as newfile:
+        with open(output, mode="w", encoding="utf-8") as newfile:
             for entry in interim[1:]:
                 newfile.write(str(entry))
 
