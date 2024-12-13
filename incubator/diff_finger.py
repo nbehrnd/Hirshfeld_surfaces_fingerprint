@@ -54,7 +54,7 @@ while len(diff_register) > 1:
     for entry in diff_register[1:]:
         ref_file = diff_register[0]
         probe_file = entry
-        print("Comparing {} with {}.".format(ref_file, probe_file))
+        print(f"Comparing {ref_file} with {probe_file}.")
 
         # consistency check for de/di
         ref_screen = []
@@ -77,7 +77,7 @@ while len(diff_register) > 1:
 
         # branch about the reference file:
         content_ref_file = []
-        with open(ref_file, mode="r") as source_ref:
+        with open(ref_file, mode="r", encoding="utf-8") as source_ref:
             for line in source_ref:
                 trimmed_line = str(line).strip()  # remove line feed
 
@@ -96,7 +96,7 @@ while len(diff_register) > 1:
 
         # branch about the probe file
         content_probe_file = []
-        with open(probe_file, mode="r") as source_probe:
+        with open(probe_file, mode="r", encoding="utf-8") as source_probe:
             for line2 in source_probe:
                 trimmed_line2 = str(line2).strip()  # remove line feed
 
@@ -142,7 +142,7 @@ while len(diff_register) > 1:
         output = str("diff_") + str(ref_file)[:-4] + \
                     str("_") + str(probe_file)
 
-        with open(output, mode="w") as newfile:
+        with open(output, mode="w", encoding="utf-8") as newfile:
             for result_entry in result_list:
                 to_reformat = str(result_entry).split()
 
@@ -157,15 +157,15 @@ while len(diff_register) > 1:
                 if float(y_value) == float(ref_y_min):
                     newfile.write("\n")
 
-                retain = str("{} {} {}\n".format(x_value, y_value, z_value))
+                retain = str(f"{x_value} {y_value} {z_value}\n")
                 newfile.write(retain)
 
         # Remove the very first line in the report file (a blank one):
         interim = []
-        with open(output, mode='r') as source:
+        with open(output, mode='r', encoding="utf-8") as source:
             for line in source:
                 interim.append(line)
-        with open(output, mode='w') as newfile:
+        with open(output, mode='w', encoding="utf-8") as newfile:
             for entry in interim[1:]:
                 newfile.write(str(entry))
 
