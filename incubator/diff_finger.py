@@ -44,7 +44,7 @@ diff_register = []
 # identification of the files to work with:
 for file in os.listdir("."):
     if fnmatch.fnmatch(file, "*.dat") and \
-            (fnmatch.fnmatch(file, "diff*.dat") is False):
+            (fnmatch.fnmatch(file, "*diff*.dat") is False):
 
         diff_register.append(file)
 diff_register.sort()
