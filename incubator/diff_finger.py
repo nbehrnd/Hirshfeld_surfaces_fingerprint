@@ -4,7 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
-# edit:    2020-01-31 (YYYY-MM-DD)
+# edit:    [2024-12-13 Fri]
 """ Compute difference maps of normalized 2D Hirshfeld surface maps
 
     The number of programming languages around the computation of already
@@ -28,9 +28,10 @@
 
     This script diff_finger.py still is independent to the actions by
     hirshfeld_moderator.py.  It is neither called, nor are its results
-    explicitly used by hirshfeld_moderator.  Except for numpy (1.13.3),
-    all of this script's dependencies are met by the default installation
-    of CPython (version 3.6.9) in Linux Xubuntu 18.04.3 LTS."""
+    explicitly used by hirshfeld_moderator.  This version relies on third
+    party numpy at version 2.1.0 or higher and is known to process with
+    Python 3.12.7 and numpy 2.2.0 (fetched via `requirements.txt` from PyPI)
+    in Linux Debian 13/trixie."""
 
 import fnmatch
 import os
@@ -91,7 +92,7 @@ while len(diff_register) > 1:
 
         # convert the list into an array, treat entries as floats
         ref_array = np.array(content_ref_file)
-        ref_array = ref_array.astype(np.float)
+        ref_array = ref_array.astype(float)
 
         # branch about the probe file
         content_probe_file = []
@@ -110,7 +111,7 @@ while len(diff_register) > 1:
 
         # convert the list into an array, treat entries as floats
         probe_array = np.array(content_probe_file)
-        probe_array = probe_array.astype(np.float)
+        probe_array = probe_array.astype(float)
 
         # work at level of the matrix-like arrays
         # construct an array of the first two columns of the ref_array
