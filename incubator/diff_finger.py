@@ -148,12 +148,12 @@ while len(diff_register) > 1:
                 x_value = str("{:3.2f}".format(float(str(to_reformat[0])[1:-1])))
                 y_value = str("{:3.2f}".format(float(str(to_reformat[1])[0:-1])))
                 z_value = str(
-                    "{:10.8f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
+                    "{:9.6f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
                 )
 
                 # re-insert the blanks met in normalized 2D fingerprints:
-                if float(y_value) == float(ref_y_min):
-                    newfile.write("\n")
+                # if float(y_value) == float(ref_y_min):
+                    # newfile.write("\n")
 
                 retain = str(f"{x_value} {y_value} {z_value}\n")
                 newfile.write(retain)
