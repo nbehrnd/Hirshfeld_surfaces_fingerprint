@@ -43,8 +43,9 @@ diff_register = []
 
 # identification of the files to work with:
 for file in os.listdir("."):
-    if fnmatch.fnmatch(file, "*.dat") and \
-            (fnmatch.fnmatch(file, "*diff*.dat") is False):
+    if fnmatch.fnmatch(file, "*.dat") and (
+        fnmatch.fnmatch(file, "*diff*.dat") is False
+    ):
 
         diff_register.append(file)
 diff_register.sort()
@@ -69,8 +70,7 @@ while len(diff_register) > 1:
                 probe_screen.append(str(line.strip()))
         probe_y_min = str(probe_screen[0].split()[1])[:4]
 
-        if (len(ref_screen) == len(probe_screen)) and (
-                ref_y_min == probe_y_min):
+        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
             pass
         else:
             continue
@@ -139,19 +139,17 @@ while len(diff_register) > 1:
         # return from array to list level, start a moderated formatting
         result_list = result.tolist()
 
-        output = str("diff_") + str(ref_file)[:-4] + \
-                    str("_") + str(probe_file)
+        output = str("diff_") + str(ref_file)[:-4] + str("_") + str(probe_file)
 
         with open(output, mode="w", encoding="utf-8") as newfile:
             for result_entry in result_list:
                 to_reformat = str(result_entry).split()
 
-                x_value = str("{:3.2f}".format(
-                    float(str(to_reformat[0])[1:-1])))
-                y_value = str("{:3.2f}".format(
-                    float(str(to_reformat[1])[0:-1])))
-                z_value = str("{:10.8f}".format(
-                    round(float(str(to_reformat[2])[0:-1]), 8)))
+                x_value = str("{:3.2f}".format(float(str(to_reformat[0])[1:-1])))
+                y_value = str("{:3.2f}".format(float(str(to_reformat[1])[0:-1])))
+                z_value = str(
+                    "{:10.8f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
+                )
 
                 # re-insert the blanks met in normalized 2D fingerprints:
                 if float(y_value) == float(ref_y_min):
@@ -162,10 +160,10 @@ while len(diff_register) > 1:
 
         # Remove the very first line in the report file (a blank one):
         interim = []
-        with open(output, mode='r', encoding="utf-8") as source:
+        with open(output, mode="r", encoding="utf-8") as source:
             for line in source:
                 interim.append(line)
-        with open(output, mode='w', encoding="utf-8") as newfile:
+        with open(output, mode="w", encoding="utf-8") as newfile:
             for entry in interim[1:]:
                 newfile.write(str(entry))
 
