@@ -4,6 +4,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    2019-12-19 (YYYY-MM-DD)
+# edit:    [2025-02-25 Tue]
 #
 """ computation of the difference number
 
@@ -28,26 +29,49 @@
     hirshfeld-moderator.py.  All modules imported are members of the
     Python standard library. """
 
+import argparse
 import fnmatch
 import os
 import sys
 from decimal import Decimal
 
-# identification of the files to work on:
-file_register = []
-for file in os.listdir("."):
-    if fnmatch.fnmatch(file, "diff*.dat"):
-        file_register.append(file)
-file_register.sort()
 
-# computation of the difference number:
-for entry in file_register:
+def get_args():
+    """collect the command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="compute the map's difference number",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument(
+        "file",
+        help="One or multiple difference map files to process",
+        metavar="FILE",
+        type=argparse.FileType("rt"),
+        nargs="+",
+    )
+
+    return parser.parse_args()
+
+
+def compute_difference_number(map_file):
+    """compute the a map_file's difference number"""
     diff_number = 0
 
-    with open(entry, mode="r") as source:
+    with open(map_file, mode="r") as source:
         for line in source:
             if len(line) > 2:
                 diff_number += abs(Decimal(str(line.strip()).split()[2]))
-    print("{}:  {}".format(entry, diff_number))
+    print("{}:  {}".format(map_file, diff_number))
 
-sys.exit(0)
+
+def main():
+    """join the functionalities"""
+    args = get_args()
+    list_of_files = args.file
+    for map_file in list_of_files:
+        compute_difference_number(map_file.name)
+
+
+if __name__ == "__main__":
+    main()
