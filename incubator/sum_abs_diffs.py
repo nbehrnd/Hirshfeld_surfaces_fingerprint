@@ -1,38 +1,25 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-2.0-only
 
 # name:    sum_abs_diffs.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
-# date:    2019-12-19 (YYYY-MM-DD)
+# date:    [2019-12-19 Thu]
 # edit:    [2025-02-25 Tue]
 #
-""" computation of the difference number
+""" computation of the maps' difference number
 
-    This script rebuilds the ruby script of same name,
-    sum_abs_diff.rb, from the code basis shared by Andrew Rohl
-    and Paolo Raiteri, as CPython script.  The script's action is
-    to add the absolute difference values, stored as the third
-    dimension in the Hirshfeld surface difference maps, and state
-    the corresponding sum:  the larger this difference number,
-    the more the two normalized 2D Hirshfeld surface fingerprints
-    compared with each other differ.
+    Similar to sum_abs_diff.rb provided by Andrew Rohl and Paolo
+    Raiteri, this Python script computes and eventually reports
+    the absolute difference values of previously calculated
+    Hirshfeld surface difference maps.
 
-    The script is written with the same intent; to ease access to the
-    computation and eventual, comprehension of difference Hirshfeld
-    surface maps by offering a less diverge code basis.  As there
-    already is a moderating script, hirshfeld-moderator.py, and to
-    compute the differences between 2D Hirshfeld surface fingerprints,
-    diff_finger.py, this is an extension of the 'concept study'.
-
-    Written for the CLI of Python (version 3.6.8) of Linux Xubuntu
-    (version 18.04.3 LTS), independent in its action to the by
-    hirshfeld-moderator.py.  All modules imported are members of the
-    Python standard library. """
+    The script was equally was written with the intent to offer
+    an analysis in Python alone.  This particular script only
+    requires modules of Python's standard library."""
 
 import argparse
-import fnmatch
-import os
-import sys
 from decimal import Decimal
 
 
@@ -58,11 +45,14 @@ def compute_difference_number(map_file):
     """compute the a map_file's difference number"""
     diff_number = 0
 
-    with open(map_file, mode="r") as source:
-        for line in source:
-            if len(line) > 2:
-                diff_number += abs(Decimal(str(line.strip()).split()[2]))
-    print("{}:  {}".format(map_file, diff_number))
+    try:
+        with open(map_file, mode="r", encoding="utf-8") as source:
+            for line in source:
+                if len(line) > 2:
+                    diff_number += abs(Decimal(str(line.strip()).split()[2]))
+        print(f"{map_file}:  {diff_number}")
+    except OSError as e:
+        print(f"Problem to access '{map_file}' ({e})")
 
 
 def main():
