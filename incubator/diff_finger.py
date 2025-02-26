@@ -100,6 +100,14 @@ def consistency_check(data_a, data_b):
     return True
 
 
+def compute_difference(data_a, data_b):
+    """compute the difference of the z-component of array a and b"""
+    difference_vector = data_a[:, 2] - data_b[:, 2]
+    difference_map = np.column_stack((data_a[:, :2], difference_vector))
+
+    return difference_map
+
+
 def main():
     """join the functionalities"""
     args = get_args()
@@ -116,98 +124,14 @@ def main():
 
             if (consistency_check(data_a, data_b)):
                 print(f"{ref_file} vs {probe_file}")
+                difference_map = compute_difference(data_a, data_b)
 
-#        # branch about the reference file:
-#        content_ref_file = []
-#        with open(ref_file, mode="r", encoding="utf-8") as source_ref:
-#            for line in source_ref:
-#                trimmed_line = str(line).strip()  # remove line feed
-
-#                split = trimmed_line.split()
-#                # branch about lines just prior to y-reset:
-#                if len(split) is None:
-#                    pass
-#                # branch about lines 'with visible entries':
-#                if len(split) == 3:
-#                    retain = split
-#                    content_ref_file.append(retain)
-
-#        # convert the list into an array, treat entries as floats
-#        ref_array = np.array(content_ref_file)
-#        ref_array = ref_array.astype(float)
-
-#        # branch about the probe file
-#        content_probe_file = []
-#        with open(probe_file, mode="r", encoding="utf-8") as source_probe:
-#            for line2 in source_probe:
-#                trimmed_line2 = str(line2).strip()  # remove line feed
-
-#                split2 = trimmed_line2.split()
-#                # branch about lines just prior to y-reset:
-#                if len(split2) is None:
-#                    pass
-#                # branch about lines 'with visible entries':
-#                if len(split2) == 3:
-#                    retain2 = split2
-#                    content_probe_file.append(retain2)
-
-#        # convert the list into an array, treat entries as floats
-#        probe_array = np.array(content_probe_file)
-#        probe_array = probe_array.astype(float)
-
-#        # work at level of the matrix-like arrays
-#        # construct an array of the first two columns of the ref_array
-#        coordinates_array = ref_array
-#        coordinates_array = np.delete(coordinates_array, 2, axis=1)
-
-#        # subtract z-values of probe_file from z-values of ref_file;
-#        # prior to this, remove 'x-' and 'y-coordinate column'
-#        z_probe_array = np.delete(probe_array, 0, axis=1)
-#        z_probe_array = np.delete(z_probe_array, 0, axis=1)
-
-#        z_ref_array = np.delete(ref_array, 0, axis=1)
-#        z_ref_array = np.delete(z_ref_array, 0, axis=1)
-
-#        diff_array = z_ref_array - z_probe_array
-
-#        # append diff_array to the coordinates_array:
-#        result = np.append(coordinates_array, diff_array, axis=1)
-
-#        # deposit a permanent record of results by numpy 'as-such'
-#        # This lacks the linefeed to be re-inserted, and often carries
-#        # many more decimals, than wished.
-#        # np.savetxt("result_subtraction.csv", result)
-
-#        # return from array to list level, start a moderated formatting
-#        result_list = result.tolist()
-
-#        output = str("diff_") + str(ref_file)[:-4] + str("_") + str(probe_file)
-
-#        with open(output, mode="w", encoding="utf-8") as newfile:
-#            for result_entry in result_list:
-#                to_reformat = str(result_entry).split()
-
-#                x_value = str("{:3.2f}".format(float(str(to_reformat[0])[1:-1])))
-#                y_value = str("{:3.2f}".format(float(str(to_reformat[1])[0:-1])))
-#                z_value = str(
-#                    "{:9.6f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
-#                )
-
-#                # re-insert the blanks met in normalized 2D fingerprints:
-#                # if float(y_value) == float(ref_y_min):
-#                    # newfile.write("\n")
-
-#                retain = str(f"{x_value} {y_value} {z_value}\n")
-#                newfile.write(retain)
-
-#        # Remove the very first line in the report file (a blank one):
-#        interim = []
-#        with open(output, mode="r", encoding="utf-8") as source:
-#            for line in source:
-#                interim.append(line)
-#        with open(output, mode="w", encoding="utf-8") as newfile:
-#            for entry in interim[1:]:
-#                newfile.write(str(entry))
+                output_name = "_".join(["diff", ref_file[:-4], probe_file])
+                output_format = "%4.2f %4.2f %9.6f"
+                try:
+                    np.savetxt(output_name, difference_map, fmt=output_format)
+                except OSError as e:
+                    print(f"Problem in write process of '{output_name}'.")
 
         # enter the next round of the Round robin tournament:
         del file_names[0]
