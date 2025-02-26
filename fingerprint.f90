@@ -3,7 +3,7 @@
 !          Andrew Rohl (arohl@curtins.edu.au)
 !          Norwid Behrnd (nbehrnd@yahoo.com)
 ! licence: GPLv2 or (at your option) any later version
-! edit:    [2024-11-18 Mon]
+! edit:    [2025-02-25 Wed]
 !
 ! Program developed in the Computational Materials Science group
 ! at Curtin University for the calculation of the fingerprints
@@ -278,7 +278,7 @@ program fingerprint
 
   enddo
   write(*,'(a,f10.5)')"Total surface area        :: ",sum(dist)
-  write(*,*) " " ! place holder between multiple data sets
+  write(*,*) " "  ! place holder between multiple data sets
 
 ! Writing the fingerprint map to a file
   dist=100.0_dp*dist/sum(dist)
