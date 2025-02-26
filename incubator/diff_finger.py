@@ -64,6 +64,42 @@ CD) and to store the results accordingly.""",
     return parser.parse_args()
 
 
+def file_reader(file_name):
+    """access the data of a normalized Hirschfeld map
+
+    This returns the content of the .dat files as np arrays."""
+    try:
+        data = np.loadtxt(file_name, delimiter = " ")
+    except ValueError as e:
+        print(f"Problematic input by file '{file_name}' ({e}).")
+
+    return data
+
+
+def consistency_check(data_a, data_b):
+    """identify mutually incompatible Hirshfeld maps
+
+    Hirschfeld maps computed by CrystalExplorer have a lower
+    limit of d_e = d_i, and a upper limit of d_e = d_i.  Hence
+    a check if
+
+    - the lower limit of d_e,
+    - the upper limit of d_e, as well as
+    - the line count of the array
+
+    for data set a and b is deemed sufficient to identify a
+    pair of two Hirschfeld maps mutually unsuitable to compute
+    a difference map."""
+    if data_a[0, 0] != data_b[0, 0]:
+        return False
+    if data_a[-1, 0] != data_b[-1, 0]:
+        return False
+    if data_a.shape[0] != data_b.shape[0]:
+        return False
+
+    return True
+
+
 def main():
     """join the functionalities"""
     args = get_args()
@@ -76,26 +112,10 @@ def main():
         for entry in file_names[1:]:
             ref_file = file_names[0]
             probe_file = entry
-            print(f"Comparing {ref_file} with {probe_file}.")
+            data_a, data_b = file_reader(ref_file), file_reader(probe_file)
 
-
-#        # consistency check for de/di
-#        ref_screen = []
-#        with open(ref_file, mode="r") as ref_source:
-#            for line in ref_source:
-#                ref_screen.append(str(line.strip()))
-#        ref_y_min = str(ref_screen[0].split()[1])[:4]
-
-#        probe_screen = []
-#        with open(probe_file, mode="r") as probe_source:
-#            for line in probe_source:
-#                probe_screen.append(str(line.strip()))
-#        probe_y_min = str(probe_screen[0].split()[1])[:4]
-
-#        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
-#            pass
-#        else:
-#            continue
+            if (consistency_check(data_a, data_b)):
+                print(f"{ref_file} vs {probe_file}")
 
 #        # branch about the reference file:
 #        content_ref_file = []
