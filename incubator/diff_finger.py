@@ -74,6 +74,7 @@ def file_reader(file_name):
         data = np.loadtxt(file_name, delimiter=" ")
     except ValueError as e:
         print(f"Problematic input by file '{file_name}' ({e}).")
+        return None
 
     return data
 
@@ -117,26 +118,32 @@ def main():
     file_names = [data_file.name for data_file in list_of_files]
     file_names.sort()
 
-    # comparing the normalized 2D Hirshfeld surface maps
-    while len(file_names) > 1:
+    while len(file_names) >= 2:
         for entry in file_names[1:]:
             ref_file = file_names[0]
-            probe_file = entry
-            data_a, data_b = file_reader(ref_file), file_reader(probe_file)
+            data_a = file_reader(ref_file)
+            if data_a is None:
+                continue
 
-            if consistency_check(data_a, data_b):
-                print(f"{ref_file} vs {probe_file}")
-                difference_map = compute_difference(data_a, data_b)
+            for entry in file_names[1:]:
+                probe_file = entry
+                data_b = file_reader(probe_file)
+                if data_b is None:
+                    continue
 
-                output_name = "_".join(["diff", ref_file[:-4], probe_file])
-                output_format = "%4.2f %4.2f %9.6f"
-                try:
-                    np.savetxt(output_name, difference_map, fmt=output_format)
-                except OSError as e:
-                    print(f"Problem while writing '{output_name}' ({e}).")
+                if consistency_check(data_a, data_b):
+                    print(f"{ref_file} vs {probe_file}")
+                    difference_map = compute_difference(data_a, data_b)
 
-        # enter the next round of the Round robin tournament:
-        del file_names[0]
+                    output_name = "_".join(["diff", ref_file[:-4], probe_file])
+                    output_format = "%4.2f %4.2f %9.6f"
+                    try:
+                        np.savetxt(output_name, difference_map, fmt=output_format)
+                    except OSError as e:
+                        print(f"Problem while writing '{output_name}' ({e}).")
+
+            # enter the next round of the Round robin tournament:
+            del file_names[0]
 
 
 if __name__ == "__main__":
