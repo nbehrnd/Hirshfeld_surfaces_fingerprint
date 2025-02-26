@@ -1,37 +1,43 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-2.0-only
 
 # name:    diff_finger.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
-# date:    2019-12-19 (YYYY-MM-DD)
+# date:    [2019-12-19 Thu]
 # edit:    [2025-02-26 Wed]
 """Compute difference maps of normalized 2D Hirshfeld surface maps
 
-The number of programming languages around the computation of already
-normalized 2D Hirshfeld surface maps and difference Hirshfeld surface
-maps may be considered as higher, than necessary.  Potentially, their
-number may be lowered.  There already is one moderator script written
-in CPython, i.e., Hirshfeld_moderator.py, suggesting to continue with
-this language, too.
+In line with other Python scripts in this project, the overall goal to
+add this script is to perform each step of the analysis with Python.
+Similar to `diff_finger.c` provided by the authors of the publication,
+this scripts provides computes a Hirschfeld difference map given two
+normalized Hirschfeld maps where
 
-This script serves as a proof-of-concept for the comparison of two 2D
-Hirshfeld surface fingerprint maps (by fingerprint.f90)
-in a round-Robin tournament.  It probes the two .dat files subject to
-comparison match in terms of map ranges de/di: both the number of
-entries (lines) must be equal, as the lowest y_value.  This allows to
-probe standard, translated, or extended map range, respectively.
+```shell
+python diff_finger.py data_a.dat data_b.dat
+```
 
-To work with, place the script in the directory of (then already
-normalized) .dat files.  It is launched from the CLI by
+will write a new file `diff_data_a_data_b.dat` with the difference
+Hirschfeld map.  In an operational system like Linux Debian, a call by
 
-python3 diff_finger.py
+```bash
+python ./diff_finger.py *.dat
+```
 
-This script diff_finger.py still is independent to the actions by
-hirshfeld_moderator.py.  It is neither called, nor are its results
-explicitly used by hirshfeld_moderator.  This version relies on third
-party numpy at version 2.1.0 or higher and is known to process with
-Python 3.12.7 and numpy 2.2.0 (fetched via `requirements.txt` from PyPI)
-in Linux Debian 13/trixie."""
+attempts to process all `*.dat` files in the current working directory.
+Compared to the compiled executable of `diff_finger.c` (or the equally
+added `diff_finger.f90` for Fortran), despite relying on numpy, this
+scripts performance will be a bit slower.  The numeric results, for
+instance with `BZAMID01.dat` and `BZAMID11.dat` provided as test data
+to yield `diff_BZAMID01_BZAMID11.dat` occasionally differ slightly from
+the one provided by the compiled executable for C.  So far, they were
+not significant at the scale of eventually plotting the difference maps,
+nor in the eventual computation of the difference number.
+
+Revised and tested in an instance of Linux Debian 13/trixie with
+Python 3.13.1 and numpy 2.2.2."""
 
 import argparse
 import numpy as np
