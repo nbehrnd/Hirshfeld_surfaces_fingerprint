@@ -68,26 +68,16 @@ def main():
     """join the functionalities"""
     args = get_args()
     list_of_files = args.file
-    print([data_file.name for data_file in list_of_files])
+    file_names = [data_file.name for data_file in list_of_files]
+    file_names.sort()
 
+    # comparing the normalized 2D Hirshfeld surface maps
+    while len(file_names) > 1:
+        for entry in file_names[1:]:
+            ref_file = file_names[0]
+            probe_file = entry
+            print(f"Comparing {ref_file} with {probe_file}.")
 
-# diff_register = []
-
-## identification of the files to work with:
-# for file in os.listdir("."):
-#    if fnmatch.fnmatch(file, "*.dat") and (
-#        fnmatch.fnmatch(file, "*diff*.dat") is False
-#    ):
-
-#        diff_register.append(file)
-# diff_register.sort()
-
-## comparing the normalized 2D Hirshfeld surface maps
-# while len(diff_register) > 1:
-#    for entry in diff_register[1:]:
-#        ref_file = diff_register[0]
-#        probe_file = entry
-#        print(f"Comparing {ref_file} with {probe_file}.")
 
 #        # consistency check for de/di
 #        ref_screen = []
@@ -199,10 +189,8 @@ def main():
 #            for entry in interim[1:]:
 #                newfile.write(str(entry))
 
-#    # enter the next round of the Round robin tournament:
-#    del diff_register[0]
-# print("done")
-# sys.exit(0)
+        # enter the next round of the Round robin tournament:
+        del file_names[0]
 
 if __name__ == "__main__":
     main()
