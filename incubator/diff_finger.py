@@ -34,10 +34,6 @@ Python 3.12.7 and numpy 2.2.0 (fetched via `requirements.txt` from PyPI)
 in Linux Debian 13/trixie."""
 
 import argparse
-import fnmatch
-import os
-import sys
-
 import numpy as np
 
 
@@ -69,7 +65,7 @@ def file_reader(file_name):
 
     This returns the content of the .dat files as np arrays."""
     try:
-        data = np.loadtxt(file_name, delimiter = " ")
+        data = np.loadtxt(file_name, delimiter=" ")
     except ValueError as e:
         print(f"Problematic input by file '{file_name}' ({e}).")
 
@@ -122,7 +118,7 @@ def main():
             probe_file = entry
             data_a, data_b = file_reader(ref_file), file_reader(probe_file)
 
-            if (consistency_check(data_a, data_b)):
+            if consistency_check(data_a, data_b):
                 print(f"{ref_file} vs {probe_file}")
                 difference_map = compute_difference(data_a, data_b)
 
@@ -131,10 +127,11 @@ def main():
                 try:
                     np.savetxt(output_name, difference_map, fmt=output_format)
                 except OSError as e:
-                    print(f"Problem in write process of '{output_name}'.")
+                    print(f"Problem while writing '{output_name}' ({e}).")
 
         # enter the next round of the Round robin tournament:
         del file_names[0]
+
 
 if __name__ == "__main__":
     main()
