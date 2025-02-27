@@ -116,6 +116,9 @@ def main():
     """join the functionalities"""
     args = get_args()
     list_of_files = args.file
+    if len(list_of_files) < 2:
+        raise ValueError("Provide 2, or more than 2 files to process.")
+
     file_names = [data_file.name for data_file in list_of_files]
     file_names.sort()
 
