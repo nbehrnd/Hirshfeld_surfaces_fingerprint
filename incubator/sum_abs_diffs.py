@@ -6,7 +6,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    [2019-12-19 Thu]
-# edit:    [2025-02-25 Tue]
+# edit:    [2025-02-27 Thu]
 #
 """ computation of the maps' difference number
 
@@ -20,19 +20,19 @@
     requires modules of Python's standard library."""
 
 import argparse
-from decimal import Decimal
+import decimal
 
 
 def get_args():
     """collect the command line arguments"""
     parser = argparse.ArgumentParser(
-        description="compute the map's difference number",
+        description="compute the difference number of a difference map",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     parser.add_argument(
         "file",
-        help="One or multiple difference map files to process",
+        help="one or multiple Hirschfeld difference map files to process",
         metavar="FILE",
         type=argparse.FileType("rt"),
         nargs="+",
@@ -47,12 +47,19 @@ def compute_difference_number(map_file):
 
     try:
         with open(map_file, mode="r", encoding="utf-8") as source:
-            for line in source:
-                if len(line) > 2:
-                    diff_number += abs(Decimal(str(line.strip()).split()[2]))
-        print(f"{map_file}:  {diff_number}")
+            for line_num, line in enumerate(source, 1):
+                columns = line.strip().split()
+                if len(columns) == 3:
+                    try:
+                        diff_number += abs(decimal.Decimal(columns[2]))
+                    except decimal.InvalidOperation as e:
+                        print(
+                            f"Non-numeric value in file '{map_file}', line {line_num}: '{line.strip()}' ({e})"
+                        )
+        return diff_number
     except OSError as e:
-        print(f"Problem to access '{map_file}' ({e})")
+        print(f"Problem to access file '{map_file}' ({e})")
+        return None
 
 
 def main():
@@ -60,7 +67,9 @@ def main():
     args = get_args()
     list_of_files = args.file
     for map_file in list_of_files:
-        compute_difference_number(map_file.name)
+        result = compute_difference_number(map_file.name)
+        if result is not None:
+            print(f"{map_file.name} {result}")
 
 
 if __name__ == "__main__":
