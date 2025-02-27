@@ -6,7 +6,7 @@
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
 # date:    [2019-12-19 Thu]
-# edit:    [2025-02-26 Wed]
+# edit:    [2025-02-27 Thu]
 """Compute difference maps of normalized 2D Hirshfeld surface maps
 
 In line with other Python scripts in this project, the overall goal to
@@ -40,6 +40,7 @@ Revised and tested in an instance of Linux Debian 13/trixie with
 Python 3.13.1 and numpy 2.2.2."""
 
 import argparse
+import itertools
 import numpy as np
 
 
@@ -118,32 +119,26 @@ def main():
     file_names = [data_file.name for data_file in list_of_files]
     file_names.sort()
 
-    while len(file_names) >= 2:
-        for entry in file_names[1:]:
-            ref_file = file_names[0]
-            data_a = file_reader(ref_file)
-            if data_a is None:
-                continue
+    # ensure data_a and data_b are arrays of only floating numbers:
+    for ref_file, probe_file in itertools.combinations(file_names, 2):
+        data_a = file_reader(ref_file)
+        if data_a is None:
+            continue
 
-            for entry in file_names[1:]:
-                probe_file = entry
-                data_b = file_reader(probe_file)
-                if data_b is None:
-                    continue
+        data_b = file_reader(probe_file)
+        if data_b is None:
+            continue
 
-                if consistency_check(data_a, data_b):
-                    print(f"{ref_file} vs {probe_file}")
-                    difference_map = compute_difference(data_a, data_b)
+        if consistency_check(data_a, data_b):
+            print(f"{ref_file} vs {probe_file}")
+            difference_map = compute_difference(data_a, data_b)
 
-                    output_name = "_".join(["diff", ref_file[:-4], probe_file])
-                    output_format = "%4.2f %4.2f %9.6f"
-                    try:
-                        np.savetxt(output_name, difference_map, fmt=output_format)
-                    except OSError as e:
-                        print(f"Problem while writing '{output_name}' ({e}).")
-
-            # enter the next round of the Round robin tournament:
-            del file_names[0]
+            output_name = "_".join(["diff", ref_file[:-4], probe_file])
+            output_format = "%4.2f %4.2f %9.6f"
+            try:
+                np.savetxt(output_name, difference_map, fmt=output_format)
+            except OSError as e:
+                print(f"Problem while writing '{output_name}' ({e}).")
 
 
 if __name__ == "__main__":
