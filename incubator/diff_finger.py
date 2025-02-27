@@ -84,21 +84,23 @@ def consistency_check(data_a, data_b):
     """identify mutually incompatible Hirshfeld maps
 
     Hirschfeld maps computed by CrystalExplorer have a lower
-    limit of d_e = d_i, and a upper limit of d_e = d_i.  Hence
+    limit of d_i = d_e, and a upper limit of d_i = d_e.  Hence
     a check if
 
-    - the lower limit of d_e,
-    - the upper limit of d_e, as well as
+    - the lower limit of d_i,
+    - the upper limit of d_i, as well as
     - the line count of the array
 
     for data set a and b is deemed sufficient to identify a
     pair of two Hirschfeld maps mutually unsuitable to compute
-    a difference map."""
-    if data_a[0, 0] != data_b[0, 0]:
+    a difference map.  In the normalized Hirschfeld map file,
+    each point is described by the tuple of `xmin+dx*(idi-1)`,
+    `xmin+dx*(ide-1)` and `dist(idi,ide)`, respectively."""
+    if data_a[0, 0] != data_b[0, 0]:  # lower limit of d_i
         return False
-    if data_a[-1, 0] != data_b[-1, 0]:
+    if data_a[-1, 0] != data_b[-1, 0]:  # upper limit of d_i
         return False
-    if data_a.shape[0] != data_b.shape[0]:
+    if data_a.shape[0] != data_b.shape[0]:  # number of data points
         return False
 
     return True
@@ -142,7 +144,8 @@ def main():
                 np.savetxt(output_name, difference_map, fmt=output_format)
             except OSError as e:
                 print(f"Problem while writing '{output_name}' ({e}).")
-
+        else:
+            print(f"Maps {ref_file} and {probe_file} can not yield a difference map.")
 
 if __name__ == "__main__":
     main()
