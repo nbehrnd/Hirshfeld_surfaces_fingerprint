@@ -1,173 +1,151 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-2.0-only
 
 # name:    diff_finger.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
-# date:    2019-12-19 (YYYY-MM-DD)
-# edit:    [2024-12-13 Fri]
-""" Compute difference maps of normalized 2D Hirshfeld surface maps
+# date:    [2019-12-19 Thu]
+# edit:    [2025-02-27 Thu]
+"""Compute difference maps of normalized 2D Hirshfeld surface maps
 
-    The number of programming languages around the computation of already
-    normalized 2D Hirshfeld surface maps and difference Hirshfeld surface
-    maps may be considered as higher, than necessary.  Potentially, their
-    number may be lowered.  There already is one moderator script written
-    in CPython, i.e., Hirshfeld_moderator.py, suggesting to continue with
-    this language, too.
+In line with other Python scripts in this project, the overall goal to
+add this script is to perform each step of the analysis with Python.
+Similar to `diff_finger.c` provided by the authors of the publication,
+this scripts provides computes a Hirschfeld difference map given two
+normalized Hirschfeld maps where
 
-    This script serves as a proof-of-concept for the comparison of two 2D
-    Hirshfeld surface fingerprint maps (by fingerprint.f90)
-    in a round-Robin tournament.  It probes the two .dat files subject to
-    comparison match in terms of map ranges de/di: both the number of
-    entries (lines) must be equal, as the lowest y_value.  This allows to
-    probe standard, translated, or extended map range, respectively.
+```shell
+python diff_finger.py data_a.dat data_b.dat
+```
 
-    To work with, place the script in the directory of (then already
-    normalized) .dat files.  It is launched from the CLI by
+will write a new file `diff_data_a_data_b.dat` with the difference
+Hirschfeld map.  In an operational system like Linux Debian, a call by
 
-    python3 diff_finger.py
+```bash
+python ./diff_finger.py *.dat
+```
 
-    This script diff_finger.py still is independent to the actions by
-    hirshfeld_moderator.py.  It is neither called, nor are its results
-    explicitly used by hirshfeld_moderator.  This version relies on third
-    party numpy at version 2.1.0 or higher and is known to process with
-    Python 3.12.7 and numpy 2.2.0 (fetched via `requirements.txt` from PyPI)
-    in Linux Debian 13/trixie."""
+attempts to process all `*.dat` files in the current working directory.
+Compared to the compiled executable of `diff_finger.c` (or the equally
+added `diff_finger.f90` for Fortran), despite relying on numpy, this
+scripts performance will be a bit slower.  The numeric results, for
+instance with `BZAMID01.dat` and `BZAMID11.dat` provided as test data
+to yield `diff_BZAMID01_BZAMID11.dat` occasionally differ slightly from
+the one provided by the compiled executable for C.  So far, they were
+not significant at the scale of eventually plotting the difference maps,
+nor in the eventual computation of the difference number.
 
-import fnmatch
-import os
-import sys
+Revised and tested in an instance of Linux Debian 13/trixie with
+Python 3.13.1 and numpy 2.2.2."""
 
+import argparse
+import itertools
 import numpy as np
 
-diff_register = []
 
-# identification of the files to work with:
-for file in os.listdir("."):
-    if fnmatch.fnmatch(file, "*.dat") and (
-        fnmatch.fnmatch(file, "*diff*.dat") is False
-    ):
+def get_args():
+    """collect the command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="""
+With two Hirschfeld maps A (provided by file `A.dat`) and B (file `B.dat`), a
+difference map can be computed; the script writes the result of this into file
+`diff_A_B.dat`.  More generally, for a list of maps e.g., A, B, C, D the script
+launches a round-Robin approach to check all permutations (AB, AC, AD, BC, BD,
+CD) and to store the results accordingly.""",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-        diff_register.append(file)
-diff_register.sort()
+    parser.add_argument(
+        "file",
+        help="provide two, or more Hirshfeld map files to process",
+        metavar="FILE",
+        type=argparse.FileType("rt"),
+        nargs="+",
+    )
 
-# comparing the normalized 2D Hirshfeld surface maps
-while len(diff_register) > 1:
-    for entry in diff_register[1:]:
-        ref_file = diff_register[0]
-        probe_file = entry
-        print(f"Comparing {ref_file} with {probe_file}.")
+    return parser.parse_args()
 
-        # consistency check for de/di
-        ref_screen = []
-        with open(ref_file, mode="r") as ref_source:
-            for line in ref_source:
-                ref_screen.append(str(line.strip()))
-        ref_y_min = str(ref_screen[0].split()[1])[:4]
 
-        probe_screen = []
-        with open(probe_file, mode="r") as probe_source:
-            for line in probe_source:
-                probe_screen.append(str(line.strip()))
-        probe_y_min = str(probe_screen[0].split()[1])[:4]
+def file_reader(file_name):
+    """access the data of a normalized Hirschfeld map
 
-        if (len(ref_screen) == len(probe_screen)) and (ref_y_min == probe_y_min):
-            pass
-        else:
+    This returns the content of the .dat files as np arrays."""
+    try:
+        data = np.loadtxt(file_name, delimiter=" ")
+    except ValueError as e:
+        print(f"Problematic input by file '{file_name}' ({e}).")
+        return None
+
+    return data
+
+
+def consistency_check(data_a, data_b):
+    """identify mutually incompatible Hirshfeld maps
+
+    Hirschfeld maps computed by CrystalExplorer have a lower
+    limit of d_i = d_e, and a upper limit of d_i = d_e.  Hence
+    a check if
+
+    - the lower limit of d_i,
+    - the upper limit of d_i, as well as
+    - the line count of the array
+
+    for data set a and b is deemed sufficient to identify a
+    pair of two Hirschfeld maps mutually unsuitable to compute
+    a difference map.  In the normalized Hirschfeld map file,
+    each point is described by the tuple of `xmin+dx*(idi-1)`,
+    `xmin+dx*(ide-1)` and `dist(idi,ide)`, respectively."""
+    if data_a[0, 0] != data_b[0, 0]:  # lower limit of d_i
+        return False
+    if data_a[-1, 0] != data_b[-1, 0]:  # upper limit of d_i
+        return False
+    if data_a.shape[0] != data_b.shape[0]:  # number of data points
+        return False
+
+    return True
+
+
+def compute_difference(data_a, data_b):
+    """compute the difference of the z-component of array a and b"""
+    difference_vector = data_a[:, 2] - data_b[:, 2]
+    difference_map = np.column_stack((data_a[:, :2], difference_vector))
+
+    return difference_map
+
+
+def main():
+    """join the functionalities"""
+    args = get_args()
+    list_of_files = args.file
+    if len(list_of_files) < 2:
+        raise ValueError("Provide 2, or more than 2 files to process.")
+
+    file_names = [data_file.name for data_file in list_of_files]
+    file_names.sort()
+
+    # ensure data_a and data_b are arrays of only floating numbers:
+    for ref_file, probe_file in itertools.combinations(file_names, 2):
+        data_a = file_reader(ref_file)
+        if data_a is None:
             continue
 
-        # branch about the reference file:
-        content_ref_file = []
-        with open(ref_file, mode="r", encoding="utf-8") as source_ref:
-            for line in source_ref:
-                trimmed_line = str(line).strip()  # remove line feed
+        data_b = file_reader(probe_file)
+        if data_b is None:
+            continue
 
-                split = trimmed_line.split()
-                # branch about lines just prior to y-reset:
-                if len(split) is None:
-                    pass
-                # branch about lines 'with visible entries':
-                if len(split) == 3:
-                    retain = split
-                    content_ref_file.append(retain)
+        if consistency_check(data_a, data_b):
+            print(f"{ref_file} vs {probe_file}")
+            difference_map = compute_difference(data_a, data_b)
 
-        # convert the list into an array, treat entries as floats
-        ref_array = np.array(content_ref_file)
-        ref_array = ref_array.astype(float)
+            output_name = "_".join(["diff", ref_file[:-4], probe_file])
+            output_format = "%4.2f %4.2f %9.6f"
+            try:
+                np.savetxt(output_name, difference_map, fmt=output_format)
+            except OSError as e:
+                print(f"Problem while writing '{output_name}' ({e}).")
+        else:
+            print(f"Maps {ref_file} and {probe_file} can not yield a difference map.")
 
-        # branch about the probe file
-        content_probe_file = []
-        with open(probe_file, mode="r", encoding="utf-8") as source_probe:
-            for line2 in source_probe:
-                trimmed_line2 = str(line2).strip()  # remove line feed
-
-                split2 = trimmed_line2.split()
-                # branch about lines just prior to y-reset:
-                if len(split2) is None:
-                    pass
-                # branch about lines 'with visible entries':
-                if len(split2) == 3:
-                    retain2 = split2
-                    content_probe_file.append(retain2)
-
-        # convert the list into an array, treat entries as floats
-        probe_array = np.array(content_probe_file)
-        probe_array = probe_array.astype(float)
-
-        # work at level of the matrix-like arrays
-        # construct an array of the first two columns of the ref_array
-        coordinates_array = ref_array
-        coordinates_array = np.delete(coordinates_array, 2, axis=1)
-
-        # subtract z-values of probe_file from z-values of ref_file;
-        # prior to this, remove 'x-' and 'y-coordinate column'
-        z_probe_array = np.delete(probe_array, 0, axis=1)
-        z_probe_array = np.delete(z_probe_array, 0, axis=1)
-
-        z_ref_array = np.delete(ref_array, 0, axis=1)
-        z_ref_array = np.delete(z_ref_array, 0, axis=1)
-
-        diff_array = z_ref_array - z_probe_array
-
-        # append diff_array to the coordinates_array:
-        result = np.append(coordinates_array, diff_array, axis=1)
-
-        # deposit a permanent record of results by numpy 'as-such'
-        # This lacks the linefeed to be re-inserted, and often carries
-        # many more decimals, than wished.
-        # np.savetxt("result_subtraction.csv", result)
-
-        # return from array to list level, start a moderated formatting
-        result_list = result.tolist()
-
-        output = str("diff_") + str(ref_file)[:-4] + str("_") + str(probe_file)
-
-        with open(output, mode="w", encoding="utf-8") as newfile:
-            for result_entry in result_list:
-                to_reformat = str(result_entry).split()
-
-                x_value = str("{:3.2f}".format(float(str(to_reformat[0])[1:-1])))
-                y_value = str("{:3.2f}".format(float(str(to_reformat[1])[0:-1])))
-                z_value = str(
-                    "{:9.6f}".format(round(float(str(to_reformat[2])[0:-1]), 8))
-                )
-
-                # re-insert the blanks met in normalized 2D fingerprints:
-                # if float(y_value) == float(ref_y_min):
-                    # newfile.write("\n")
-
-                retain = str(f"{x_value} {y_value} {z_value}\n")
-                newfile.write(retain)
-
-        # Remove the very first line in the report file (a blank one):
-        interim = []
-        with open(output, mode="r", encoding="utf-8") as source:
-            for line in source:
-                interim.append(line)
-        with open(output, mode="w", encoding="utf-8") as newfile:
-            for entry in interim[1:]:
-                newfile.write(str(entry))
-
-    # enter the next round of the Round robin tournament:
-    del diff_register[0]
-print("done")
-sys.exit(0)
+if __name__ == "__main__":
+    main()

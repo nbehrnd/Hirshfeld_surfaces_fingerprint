@@ -2,7 +2,7 @@
 ! author:  nbehrnd@yahoo.com
 ! license: GPLv2, 2023
 ! date:    [2023-04-04 Tue]
-! edit:
+! edit:    [2025-02-25 Wed]
 !
 ! Within the greater aim to provide a delta-Hirshfeld analysis where the
 ! principal computations are provided by Fortran, the compiled executable of
@@ -91,7 +91,7 @@ contains
       allocate (array(3, length))
       read (fileunit, '(2(F4.2, 1x), F14.12)') ( &
          (array(i, j), i=1, 3), j=1, length - 1)
-      if (error /= 0) stop ! reaching the file end is a plausible cause
+      if (error /= 0) stop  ! reaching the file end is a plausible cause
 
       close (fileunit)
    end function array_reader

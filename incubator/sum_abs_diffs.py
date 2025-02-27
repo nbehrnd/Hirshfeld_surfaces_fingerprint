@@ -1,53 +1,76 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-2.0-only
 
 # name:    sum_abs_diffs.py
 # author:  nbehrnd@yahoo.com
 # license: 2019, GPLv2
-# date:    2019-12-19 (YYYY-MM-DD)
+# date:    [2019-12-19 Thu]
+# edit:    [2025-02-27 Thu]
 #
-""" computation of the difference number
+""" computation of the maps' difference number
 
-    This script rebuilds the ruby script of same name,
-    sum_abs_diff.rb, from the code basis shared by Andrew Rohl
-    and Paolo Raiteri, as CPython script.  The script's action is
-    to add the absolute difference values, stored as the third
-    dimension in the Hirshfeld surface difference maps, and state
-    the corresponding sum:  the larger this difference number,
-    the more the two normalized 2D Hirshfeld surface fingerprints
-    compared with each other differ.
+    Similar to sum_abs_diff.rb provided by Andrew Rohl and Paolo
+    Raiteri, this Python script computes and eventually reports
+    the absolute difference values of previously calculated
+    Hirshfeld surface difference maps.
 
-    The script is written with the same intent; to ease access to the
-    computation and eventual, comprehension of difference Hirshfeld
-    surface maps by offering a less diverge code basis.  As there
-    already is a moderating script, hirshfeld-moderator.py, and to
-    compute the differences between 2D Hirshfeld surface fingerprints,
-    diff_finger.py, this is an extension of the 'concept study'.
+    The script was equally was written with the intent to offer
+    an analysis in Python alone.  This particular script only
+    requires modules of Python's standard library."""
 
-    Written for the CLI of Python (version 3.6.8) of Linux Xubuntu
-    (version 18.04.3 LTS), independent in its action to the by
-    hirshfeld-moderator.py.  All modules imported are members of the
-    Python standard library. """
+import argparse
+import decimal
 
-import fnmatch
-import os
-import sys
-from decimal import Decimal
 
-# identification of the files to work on:
-file_register = []
-for file in os.listdir("."):
-    if fnmatch.fnmatch(file, "diff*.dat"):
-        file_register.append(file)
-file_register.sort()
+def get_args():
+    """collect the command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="compute the difference number of a difference map",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
 
-# computation of the difference number:
-for entry in file_register:
+    parser.add_argument(
+        "file",
+        help="one or multiple Hirschfeld difference map files to process",
+        metavar="FILE",
+        type=argparse.FileType("rt"),
+        nargs="+",
+    )
+
+    return parser.parse_args()
+
+
+def compute_difference_number(map_file):
+    """compute the a map_file's difference number"""
     diff_number = 0
 
-    with open(entry, mode="r") as source:
-        for line in source:
-            if len(line) > 2:
-                diff_number += abs(Decimal(str(line.strip()).split()[2]))
-    print("{}:  {}".format(entry, diff_number))
+    try:
+        with open(map_file, mode="r", encoding="utf-8") as source:
+            for line_num, line in enumerate(source, 1):
+                columns = line.strip().split()
+                if len(columns) == 3:
+                    try:
+                        diff_number += abs(decimal.Decimal(columns[2]))
+                    except decimal.InvalidOperation as e:
+                        print(
+                            f"Non-numeric value in file '{map_file}', line {line_num}: '{line.strip()}' ({e})"
+                        )
+        return diff_number
+    except OSError as e:
+        print(f"Problem to access file '{map_file}' ({e})")
+        return None
 
-sys.exit(0)
+
+def main():
+    """join the functionalities"""
+    args = get_args()
+    list_of_files = args.file
+    for map_file in list_of_files:
+        result = compute_difference_number(map_file.name)
+        if result is not None:
+            print(f"{map_file.name} {result}")
+
+
+if __name__ == "__main__":
+    main()
